@@ -1,0 +1,35 @@
+{
+  "vishal@wani.ai": {
+    "name": "Vishal Hargude (Founder & CEO)",
+    "password_hash": "691df4545d947190ee0d5924719b9a67a070fa5dbba70cdbfe09b4ec8b6cb00f",
+    "mobile": "+91 98220 54321",
+    "plan": "STUDIO MASTER 🚀",
+    "trials_used_today": 0,
+    "last_trial_date": "2026-10-19",
+    "credits": 999999,
+    "is_admin": true,
+    "joined": "2026-10-18"
+  },
+  "creator@wani.ai": {
+    "name": "Creator Pro Member",
+    "password_hash": "2f40bfa1e97682f6e594ee88eb48cf30a59b20757753e16c87cf295a04eb921c",
+    "mobile": "+91 98220 12345",
+    "plan": "CREATOR PRO 👑",
+    "trials_used_today": 0,
+    "last_trial_date": "2026-10-19",
+    "credits": 999999,
+    "is_admin": false,
+    "joined": "2026-10-18"
+  },
+  "guest@wani.ai": {
+    "name": "Guest Explorer (Free Trial)",
+    "password_hash": "c0be42ff0910f54546522cbb54d008bb7b36f1cda0eb1c4637b420286bfa3ae7",
+    "mobile": "+91 98220 99999",
+    "plan": "FREE TRIAL 🎁",
+    "trials_used_today": 0,
+    "last_trial_date": "2026-10-19",
+    "credits": 2,
+    "is_admin": false,
+    "joined": "2026-10-19"
+  }
+}
