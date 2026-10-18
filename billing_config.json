@@ -1,0 +1,10 @@
+{
+  "razorpay_key_id": "rzp_test_WaniVoice2026",
+  "razorpay_key_secret": "sec_WaniSecretKey2026TestMode",
+  "razorpay_webhook_secret": "whsec_WaniVoiceWebhookMaster2026",
+  "currency": "INR",
+  "default_grace_period_days": 3,
+  "timezone": "Asia/Kolkata",
+  "test_mode": true,
+  "mock_fallback": true
+}

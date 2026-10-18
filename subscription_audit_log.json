@@ -1,0 +1,350 @@
+[
+  {
+    "timestamp": "2026-10-19T01:53:43.554362+05:30",
+    "user_email": "test_user_initial@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_5e253f40 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:43.582139+05:30",
+    "user_email": "test_user_initial@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_init_1792355023 verified. Plan STARTER active until 2026-11-18T01:53:43.569627+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:43.606297+05:30",
+    "user_email": "test_user_renewal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_51defe73 (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:43.654414+05:30",
+    "user_email": "test_user_renewal@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_renew_01_1792355023 verified. Plan PRO active until 2026-11-18T01:53:43.618661+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:43.755277+05:30",
+    "user_email": "test_user_renewal@wani.ai",
+    "action": "WEBHOOK_SUBSCRIPTION_CHARGED",
+    "details": "Event ID: evt_renew_1792355023. Subscription sub_wani_pro_monthly_51defe73 successfully subscription.charged (renewed). Next billing: 2026-11-18T01:53:43.719827+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:43.815598+05:30",
+    "user_email": "test_user_renewal@wani.ai",
+    "action": "WEBHOOK_SUBSCRIPTION_CHARGED",
+    "details": "Event ID: evt_dup_test_1792355023. Subscription sub_wani_pro_monthly_51defe73 successfully subscription.charged (renewed). Next billing: 2026-11-18T01:53:43.801515+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:43.850181+05:30",
+    "user_email": "test_user_failure@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_d0263b4a (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:43.899335+05:30",
+    "user_email": "test_user_failure@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_f1_1792355023 verified. Plan STARTER active until 2026-11-18T01:53:43.862299+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:43.936774+05:30",
+    "user_email": "test_user_failure@wani.ai",
+    "action": "WEBHOOK_SUBSCRIPTION_PENDING",
+    "details": "Event ID: subscription.pending_sub_wani_starter_monthly_d0263b4a_1792355023. Payment failed for sub_wani_starter_monthly_d0263b4a. Grace period activated until 2026-10-22T01:53:43.911782+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:43.973727+05:30",
+    "user_email": "test_user_delayed@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_29ae0177 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.029194+05:30",
+    "user_email": "test_user_delayed@wani.ai",
+    "action": "WEBHOOK_SUBSCRIPTION_ACTIVATED",
+    "details": "Event ID: subscription.activated_sub_wani_starter_monthly_29ae0177_1792355023. Subscription sub_wani_starter_monthly_29ae0177 successfully subscription.activated (renewed). Next billing: 2026-11-18T01:53:43.998360+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.053569+05:30",
+    "user_email": "test_user_cancel_end@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_fb40a613 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.093453+05:30",
+    "user_email": "test_user_cancel_end@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_ce_1792355024 verified. Plan STARTER active until 2026-11-18T01:53:44.065289+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.116929+05:30",
+    "user_email": "test_user_cancel_end@wani.ai",
+    "action": "SUBSCRIPTION_CANCELLED",
+    "details": "Cancelled starter (Cycle End: True)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.152649+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_0dc7bf3b (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.197318+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_imm_1792355024 verified. Plan PRO active until 2026-11-18T01:53:44.164455+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.221497+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_CANCELLED",
+    "details": "Cancelled pro (Cycle End: False)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.243996+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created BUSINESS (yearly) checkout: sub_wani_business_yearly_dd587b7a (₹19999)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.289762+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_resub_1792355024 verified. Plan BUSINESS active until 2027-10-19T01:53:44.256425+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.313266+05:30",
+    "user_email": "test_user_upgrade@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_2b1ddd0a (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.359074+05:30",
+    "user_email": "test_user_upgrade@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_up_1792355024 verified. Plan STARTER active until 2026-11-18T01:53:44.325708+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.398477+05:30",
+    "user_email": "test_user_upgrade@wani.ai",
+    "action": "PLAN_CHANGE_REQUESTED",
+    "details": "From starter to pro (Cycle End: False)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.422915+05:30",
+    "user_email": "test_user_upgrade@wani.ai",
+    "action": "PLAN_CHANGE_REQUESTED",
+    "details": "From pro to starter (Cycle End: True)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.445917+05:30",
+    "user_email": "system",
+    "action": "FORGED_WEBHOOK_REJECTED",
+    "details": "Webhook received with invalid HMAC signature. Rejected with HTTP 400."
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.458721+05:30",
+    "user_email": "attacker@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_a629d145 (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.473400+05:30",
+    "user_email": "attacker@wani.ai",
+    "action": "UNAUTHORIZED_CHECKOUT_ATTEMPT_REJECTED",
+    "details": "Forged checkout signature rejected for sub: sub_wani_pro_monthly_a629d145"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.499497+05:30",
+    "user_email": "test_user_quota@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_cd8e4ae9 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:44.546463+05:30",
+    "user_email": "test_user_quota@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_q_1792355024 verified. Plan STARTER active until 2026-11-18T01:53:44.509444+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:53:54.054938+05:30",
+    "user_email": "http_user@wani.ai",
+    "action": "WEBHOOK_SUBSCRIPTION_CHARGED",
+    "details": "Event ID: evt_http_001. Subscription sub_test_http_8504 successfully subscription.charged (renewed). Next billing: 2026-11-18T01:53:54.018009+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:54:15.285808+05:30",
+    "user_email": "system",
+    "action": "FORGED_WEBHOOK_REJECTED",
+    "details": "Webhook received with invalid HMAC signature. Rejected with HTTP 400."
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.058937+05:30",
+    "user_email": "test_user_initial@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_6e72e550 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.109433+05:30",
+    "user_email": "test_user_initial@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_init_1792355304 verified. Plan STARTER active until 2026-11-18T01:58:24.073763+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.139945+05:30",
+    "user_email": "test_user_renewal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_deacb2ba (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.190699+05:30",
+    "user_email": "test_user_renewal@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_renew_01_1792355304 verified. Plan PRO active until 2026-11-18T01:58:24.151709+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.304823+05:30",
+    "user_email": "test_user_renewal@wani.ai",
+    "action": "WEBHOOK_SUBSCRIPTION_CHARGED",
+    "details": "Event ID: evt_renew_1792355304. Subscription sub_wani_pro_monthly_deacb2ba successfully subscription.charged (renewed). Next billing: 2026-11-18T01:58:24.264446+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.369574+05:30",
+    "user_email": "test_user_renewal@wani.ai",
+    "action": "WEBHOOK_SUBSCRIPTION_CHARGED",
+    "details": "Event ID: evt_dup_test_1792355304. Subscription sub_wani_pro_monthly_deacb2ba successfully subscription.charged (renewed). Next billing: 2026-11-18T01:58:24.353531+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.407136+05:30",
+    "user_email": "test_user_failure@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_aa8f1068 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.458339+05:30",
+    "user_email": "test_user_failure@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_f1_1792355304 verified. Plan STARTER active until 2026-11-18T01:58:24.420317+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.496945+05:30",
+    "user_email": "test_user_failure@wani.ai",
+    "action": "WEBHOOK_SUBSCRIPTION_PENDING",
+    "details": "Event ID: subscription.pending_sub_wani_starter_monthly_aa8f1068_1792355304. Payment failed for sub_wani_starter_monthly_aa8f1068. Grace period activated until 2026-10-22T01:58:24.472479+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.547610+05:30",
+    "user_email": "test_user_delayed@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_cbe6afcb (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.609523+05:30",
+    "user_email": "test_user_delayed@wani.ai",
+    "action": "WEBHOOK_SUBSCRIPTION_ACTIVATED",
+    "details": "Event ID: subscription.activated_sub_wani_starter_monthly_cbe6afcb_1792355304. Subscription sub_wani_starter_monthly_cbe6afcb successfully subscription.activated (renewed). Next billing: 2026-11-18T01:58:24.573856+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.636024+05:30",
+    "user_email": "test_user_cancel_end@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_72311435 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.682053+05:30",
+    "user_email": "test_user_cancel_end@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_ce_1792355304 verified. Plan STARTER active until 2026-11-18T01:58:24.647171+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.709946+05:30",
+    "user_email": "test_user_cancel_end@wani.ai",
+    "action": "SUBSCRIPTION_CANCELLED",
+    "details": "Cancelled starter (Cycle End: True)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.754446+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_14628720 (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.805676+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_imm_1792355304 verified. Plan PRO active until 2026-11-18T01:58:24.768379+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.830286+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_CANCELLED",
+    "details": "Cancelled pro (Cycle End: False)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.855422+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created BUSINESS (yearly) checkout: sub_wani_business_yearly_d336504c (₹19999)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.902108+05:30",
+    "user_email": "test_user_imm_cancel@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_resub_1792355304 verified. Plan BUSINESS active until 2027-10-19T01:58:24.865574+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.926218+05:30",
+    "user_email": "test_user_upgrade@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_c7e8fd45 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:24.971381+05:30",
+    "user_email": "test_user_upgrade@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_up_1792355304 verified. Plan STARTER active until 2026-11-18T01:58:24.938370+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:25.006219+05:30",
+    "user_email": "test_user_upgrade@wani.ai",
+    "action": "PLAN_CHANGE_REQUESTED",
+    "details": "From starter to pro (Cycle End: False)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:25.030269+05:30",
+    "user_email": "test_user_upgrade@wani.ai",
+    "action": "PLAN_CHANGE_REQUESTED",
+    "details": "From pro to starter (Cycle End: True)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:25.054643+05:30",
+    "user_email": "system",
+    "action": "FORGED_WEBHOOK_REJECTED",
+    "details": "Webhook received with invalid HMAC signature. Rejected with HTTP 400."
+  },
+  {
+    "timestamp": "2026-10-19T01:58:25.068461+05:30",
+    "user_email": "attacker@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_c4de5721 (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:25.079851+05:30",
+    "user_email": "attacker@wani.ai",
+    "action": "UNAUTHORIZED_CHECKOUT_ATTEMPT_REJECTED",
+    "details": "Forged checkout signature rejected for sub: sub_wani_pro_monthly_c4de5721"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:25.105953+05:30",
+    "user_email": "test_user_quota@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_47ca0d55 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T01:58:25.156366+05:30",
+    "user_email": "test_user_quota@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_q_1792355305 verified. Plan STARTER active until 2026-11-18T01:58:25.118862+05:30"
+  }
+]

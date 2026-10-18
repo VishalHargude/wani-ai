@@ -1,0 +1,46 @@
+[
+  {
+    "txn_id": "txn_1792355024569_0",
+    "timestamp": "2026-10-19T01:53:44.557458+05:30",
+    "user_email": "test_user_quota@wani.ai",
+    "plan_code": "starter",
+    "words": 45000,
+    "paragraphs": 50,
+    "translations": 0,
+    "audio_minutes": 0.0,
+    "voice": "standard"
+  },
+  {
+    "txn_id": "txn_1792355024606_1",
+    "timestamp": "2026-10-19T01:53:44.582874+05:30",
+    "user_email": "test_user_quota@wani.ai",
+    "plan_code": "starter",
+    "words": 10000,
+    "paragraphs": 10,
+    "translations": 0,
+    "audio_minutes": 0.0,
+    "voice": "standard"
+  },
+  {
+    "txn_id": "txn_1792355305189_2",
+    "timestamp": "2026-10-19T01:58:25.168626+05:30",
+    "user_email": "test_user_quota@wani.ai",
+    "plan_code": "starter",
+    "words": 45000,
+    "paragraphs": 50,
+    "translations": 0,
+    "audio_minutes": 0.0,
+    "voice": "standard"
+  },
+  {
+    "txn_id": "txn_1792355305223_3",
+    "timestamp": "2026-10-19T01:58:25.202700+05:30",
+    "user_email": "test_user_quota@wani.ai",
+    "plan_code": "starter",
+    "words": 10000,
+    "paragraphs": 10,
+    "translations": 0,
+    "audio_minutes": 0.0,
+    "voice": "standard"
+  }
+]

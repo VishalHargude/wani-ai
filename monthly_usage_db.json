@@ -1,0 +1,92 @@
+{
+  "test_user_initial@wani.ai": {
+    "period_start": "2026-10-19T01:58:24.073763+05:30",
+    "words_used": 0,
+    "paragraphs_used": 0,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 0,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T01:58:24.073763+05:30"
+  },
+  "test_user_renewal@wani.ai": {
+    "period_start": "2026-10-19T01:58:24.353531+05:30",
+    "words_used": 0,
+    "paragraphs_used": 0,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 0,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T01:58:24.353531+05:30"
+  },
+  "test_user_failure@wani.ai": {
+    "period_start": "2026-10-19T01:58:24.420317+05:30",
+    "words_used": 0,
+    "paragraphs_used": 0,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 0,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T01:58:24.420317+05:30"
+  },
+  "test_user_delayed@wani.ai": {
+    "period_start": "2026-10-19T01:58:24.573856+05:30",
+    "words_used": 0,
+    "paragraphs_used": 0,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 0,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T01:58:24.573856+05:30"
+  },
+  "test_user_cancel_end@wani.ai": {
+    "period_start": "2026-10-19T01:58:24.647171+05:30",
+    "words_used": 0,
+    "paragraphs_used": 0,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 0,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T01:58:24.647171+05:30"
+  },
+  "test_user_imm_cancel@wani.ai": {
+    "period_start": "2026-10-19T01:58:24.865574+05:30",
+    "words_used": 0,
+    "paragraphs_used": 0,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 0,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T01:58:24.865574+05:30"
+  },
+  "test_user_upgrade@wani.ai": {
+    "period_start": "2026-10-19T01:58:24.981672+05:30",
+    "words_used": 0,
+    "paragraphs_used": 0,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 0,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T01:58:24.981672+05:30"
+  },
+  "test_user_quota@wani.ai": {
+    "period_start": "2026-10-19T01:58:25.200857+05:30",
+    "words_used": 10000,
+    "paragraphs_used": 10,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 0,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T01:58:25.200857+05:30"
+  },
+  "http_user@wani.ai": {
+    "period_start": "2026-10-19T01:53:54.018009+05:30",
+    "words_used": 0,
+    "paragraphs_used": 0,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 0,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T01:53:54.018009+05:30"
+  }
+}

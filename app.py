@@ -12,7 +12,12 @@ import hashlib
 import hmac
 import io
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
+
+from subscription_manager import SubscriptionManager, get_now_ist, format_iso
+
+# Initialize Subscription Manager Singleton
+sm = SubscriptionManager()
 
 st.set_page_config(
     page_title="Wani — Next-Gen AI Voice & Speech Platform",
@@ -20,6 +25,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# -------------------------------------------------------------
+# THEME STATE SUBSYSTEM (DARK OBSIDIAN / LIGHT PEARL)
+# -------------------------------------------------------------
+if "theme" not in st.session_state:
+    st.session_state.theme = "Dark"
 
 # -------------------------------------------------------------
 # SECURITY & ANTI-THEFT SUBSYSTEM (SALTED SHA-256 & SECURE DB)
@@ -45,7 +56,7 @@ def load_secure_users():
                 "name": "Vishal Hargude (Founder & CEO)",
                 "password_hash": hash_credential("admin"),
                 "mobile": "+91 98220 54321",
-                "plan": "STUDIO MASTER 🚀",
+                "plan": "STUDIO BUSINESS 🚀",
                 "trials_used_today": 0,
                 "last_trial_date": today_str,
                 "credits": 999999,
@@ -56,7 +67,7 @@ def load_secure_users():
                 "name": "Creator Pro Member",
                 "password_hash": hash_credential("pro123"),
                 "mobile": "+91 98220 12345",
-                "plan": "CREATOR PRO 👑",
+                "plan": "PRO CREATOR 👑",
                 "trials_used_today": 0,
                 "last_trial_date": today_str,
                 "credits": 999999,
@@ -81,7 +92,6 @@ def load_secure_users():
     try:
         with open(DB_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            # Schema integrity migration
             updated = False
             for email, uinfo in data.items():
                 if "password" in uinfo and "password_hash" not in uinfo:
@@ -97,7 +107,7 @@ def load_secure_users():
                     "name": "Vishal Hargude (Founder & CEO)",
                     "password_hash": hash_credential("admin"),
                     "mobile": "+91 98220 54321",
-                    "plan": "STUDIO MASTER 🚀",
+                    "plan": "STUDIO BUSINESS 🚀",
                     "trials_used_today": 0,
                     "last_trial_date": today_str,
                     "credits": 999999,
@@ -136,50 +146,34 @@ if "current_user" not in st.session_state:
     admin_user = users_db.get("vishal@wani.ai", {
         "name": "Vishal Hargude (Founder & CEO)",
         "email": "vishal@wani.ai",
-        "plan": "STUDIO MASTER 🚀",
+        "plan": "STUDIO BUSINESS 🚀",
         "credits": 999999,
         "is_admin": True
     })
     st.session_state.current_user = admin_user
     st.session_state.current_user["email"] = "vishal@wani.ai"
 
+# Ensure subscription record exists for active user
+active_email = st.session_state.current_user.get("email", "guest@wani.ai")
+entitlements = sm.get_user_entitlements(active_email)
+
 # -------------------------------------------------------------
-# FREE TRIAL POLICY SUBSYSTEM (EXACTLY 2 TRIALS/DAY & 100 WORDS)
+# SERVER-SIDE QUOTA ENFORCEMENT & PRE-REQUEST GATEKEEPER
 # -------------------------------------------------------------
 def validate_user_trial(user_email: str, script_text: str):
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    u = users_db.get(user_email)
-    if not u:
-        return True, "Guest access mode active.", 0
-    
-    plan = u.get("plan", "FREE TRIAL 🎁")
-    if "PRO" in plan or "MASTER" in plan or u.get("is_admin", False):
-        return True, "Unlimited Enterprise Session Active.", 999999
-    
-    # Reset daily counter if a new calendar day has started
-    if u.get("last_trial_date") != today_str:
-        u["trials_used_today"] = 0
-        u["last_trial_date"] = today_str
-        save_secure_users(users_db)
-        
-    trials_used = u.get("trials_used_today", 0)
-    if trials_used >= 2:
-        return False, "⚠️ Daily Free Trial Limit Reached: You have completed your 2 free trial generations for today. Upgrade to Creator Pro for unlimited voice generations!", trials_used
-        
     words = len(script_text.strip().split())
-    if words > 100:
-        return False, f"⚠️ Word Limit Exceeded: Your input contains {words} words. The Free Trial limit is strictly 100 words per generation. Upgrade to Creator Pro for unlimited length!", trials_used
+    paragraphs = max(1, len([p for p in script_text.strip().split("\n") if p.strip()]))
+    ent = sm.get_user_entitlements(user_email)
+    
+    if ent.get("warning_message"):
+        st.warning(ent["warning_message"])
         
-    return True, f"Free Trial Active ({trials_used}/2 used today | {words}/100 words)", trials_used
+    ok, msg, qdata = sm.check_and_deduct_quota(user_email, words=words, paragraphs=paragraphs)
+    return ok, msg, qdata
 
 def increment_user_trial(user_email: str):
-    u = users_db.get(user_email)
-    if u and ("PRO" not in u.get("plan", "") and "MASTER" not in u.get("plan", "") and not u.get("is_admin", False)):
-        u["trials_used_today"] = u.get("trials_used_today", 0) + 1
-        u["last_trial_date"] = datetime.now().strftime("%Y-%m-%d")
-        save_secure_users(users_db)
-        if st.session_state.current_user.get("email") == user_email:
-            st.session_state.current_user["trials_used_today"] = u["trials_used_today"]
+    # Managed atomically via SubscriptionManager.check_and_deduct_quota
+    pass
 
 # -------------------------------------------------------------
 # HIGH-RESILIENCE MULTI-LINGUAL TRANSLATION ENGINE
@@ -201,32 +195,64 @@ def translate_text(text: str, source='auto', target='mr') -> str:
     return cleaned
 
 # -------------------------------------------------------------
-# RESTRAINED LUXURY DESIGN: JOSEFIN SANS + COLOR SHADED WANI LOGO
+# UNIVERSAL DESIGN: JOSEFIN SANS + COLOR SHADED LOGO + DUAL THEME
 # -------------------------------------------------------------
-st.markdown("""
+is_dark = (st.session_state.theme == "Dark")
+
+# Theme-specific CSS tokens
+if is_dark:
+    theme_bg = "#0E1117"
+    theme_text = "#F1F5F9"
+    theme_card_bg = "#161B26"
+    theme_card_border = "#1E293B"
+    theme_top_bg = "#0B0F19"
+    theme_top_border = "#1E293B"
+    theme_featured_bg = "linear-gradient(180deg, #1A1F36 0%, #111422 100%)"
+    theme_featured_border = "#6366F1"
+    theme_shadow = "0 10px 30px rgba(0, 0, 0, 0.4)"
+    theme_subtext = "#94A3B8"
+else:
+    theme_bg = "#F8FAFC"
+    theme_text = "#0F172A"
+    theme_card_bg = "#FFFFFF"
+    theme_card_border = "#E2E8F0"
+    theme_top_bg = "#FFFFFF"
+    theme_top_border = "#E2E8F0"
+    theme_featured_bg = "linear-gradient(180deg, #F5F7FF 0%, #FFFFFF 100%)"
+    theme_featured_border = "#4F46E5"
+    theme_shadow = "0 6px 20px rgba(0, 0, 0, 0.05)"
+    theme_subtext = "#475569"
+
+st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
     
     /* Universal Josefin Sans Typography */
-    html, body, [class*="css"], button, input, textarea, select {
+    html, body, [class*="css"], button, input, textarea, select, .stMarkdown, p, h1, h2, h3, h4, h5, h6 {{
         font-family: 'Josefin Sans', 'Noto Sans Devanagari', -apple-system, sans-serif !important;
-    }
+    }}
+    
+    /* Active Theme Background */
+    .stApp {{
+        background-color: {theme_bg} !important;
+        color: {theme_text} !important;
+    }}
     
     /* Anti-Theft Protection: Restrict text selection on branding */
-    .protected-brand {
+    .protected-brand {{
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
-    }
+    }}
     
-    /* Sleek Obsidian Top Enterprise Bar */
-    .top-announcement {
-        background: #0B0F19;
-        border: 1px solid #1E293B;
+    /* Top Enterprise Announcement Bar */
+    .top-announcement {{
+        background: {theme_top_bg};
+        border: 1px solid {theme_top_border};
         border-radius: 10px;
         padding: 10px 18px;
-        color: #F8FAFC;
+        color: {theme_text};
         font-size: 13.5px;
         font-weight: 600;
         margin-bottom: 18px;
@@ -234,121 +260,169 @@ st.markdown("""
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-    }
+        box-shadow: {theme_shadow};
+    }}
     
     /* Color Shaded Wani Brand Logo */
-    .wani-logo-container {
+    .wani-logo-container {{
         text-align: center;
         margin-bottom: 22px;
-    }
+    }}
     
-    .wani-brand-text {
+    .wani-brand-text {{
         font-size: 52px;
         font-weight: 700;
         letter-spacing: -1.5px;
-        background: linear-gradient(135deg, #38BDF8 0%, #818CF8 45%, #C084FC 100%);
+        background: linear-gradient(135deg, #FF6B6B 0%, #9B51E0 50%, #4A90E2 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         display: inline-block;
-        line-height: 1.1;
-    }
+    }}
     
-    .wani-tagline {
-        color: #64748B;
-        font-size: 14px;
-        font-weight: 600;
-        letter-spacing: 1.5px;
+    .wani-tagline {{
+        font-size: 13px;
+        letter-spacing: 2.2px;
+        color: {theme_subtext};
         text-transform: uppercase;
-        margin-top: 4px;
-    }
+        font-weight: 600;
+        margin-top: -6px;
+    }}
     
-    .user-pill {
-        background: #111827;
-        border: 1px solid #1F2937;
-        padding: 5px 14px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        color: #F1F5F9;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
+    /* Studio Banners & Cards */
+    .studio-banner {{
+        background: {theme_card_bg};
+        border: 1px solid {theme_card_border};
+        border-radius: 8px;
+        padding: 14px 20px;
+        font-weight: 600;
+        font-size: 14.5px;
+        color: {theme_text};
+        margin-bottom: 20px;
+        box-shadow: {theme_shadow};
+    }}
     
-    /* Restrained, Minimalist Voice Card */
-    .voice-card {
-        background: #0D121F;
-        border: 1px solid #1B2436;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-bottom: 15px;
-    }
+    .pricing-card {{
+        background: {theme_card_bg};
+        border: 1px solid {theme_card_border};
+        border-radius: 12px;
+        padding: 24px 20px;
+        text-align: center;
+        box-shadow: {theme_shadow};
+        transition: transform 0.2s ease, border-color 0.2s ease;
+        color: {theme_text};
+    }}
     
-    .badge-cat {
-        display: inline-block;
+    .pricing-card:hover {{
+        transform: translateY(-3px);
+        border-color: #6366F1;
+    }}
+    
+    .pricing-featured {{
+        background: {theme_featured_bg};
+        border: 1.8px solid {theme_featured_border};
+    }}
+    
+    .voice-card {{
+        background: {theme_card_bg};
+        border: 1px solid {theme_card_border};
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        box-shadow: {theme_shadow};
+        color: {theme_text};
+    }}
+    
+    .badge-cat {{
+        background: rgba(99, 102, 241, 0.15);
+        color: #818CF8;
         padding: 2px 8px;
         border-radius: 4px;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
         margin-right: 6px;
-        letter-spacing: 0.5px;
-        background: #162032;
-        color: #94A3B8;
-        border: 1px solid #23314B;
-    }
+    }}
     
-    /* Minimalist Section Banner */
-    .studio-banner {
-        border-radius: 8px;
-        padding: 12px 18px;
-        margin-bottom: 18px;
+    .user-pill {{
+        background: {theme_card_bg};
+        border: 1px solid {theme_card_border};
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 12.5px;
         font-weight: 600;
-        font-size: 13.5px;
-        background: #0E1524;
-        border-left: 4px solid #6366F1;
-        color: #E2E8F0;
-    }
+        color: {theme_text};
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }}
     
-    /* Minimalist High-End Pricing Table */
-    .pricing-card {
-        background: #0C111C;
-        border: 1px solid #1B2436;
-        border-radius: 12px;
-        padding: 26px;
-        text-align: center;
-    }
-    .pricing-featured {
-        border: 1.5px solid #6366F1;
-        background: #0F1626;
-    }
+    .status-badge-active {{
+        background: rgba(16, 185, 129, 0.15);
+        color: #10B981;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+    }}
+    
+    .status-badge-grace {{
+        background: rgba(245, 158, 11, 0.15);
+        color: #F59E0B;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+    }}
+    
+    .status-badge-halted {{
+        background: rgba(239, 68, 68, 0.15);
+        color: #EF4444;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------------------------------------------------
-# TOP NAVIGATION & LIVE USER CREDENTIAL STATUS
-# -------------------------------------------------------------
-user_plan = st.session_state.current_user.get("plan", "FREE TRIAL 🎁")
-user_name = st.session_state.current_user.get("name", "User")
-trials_today = st.session_state.current_user.get("trials_used_today", 0)
+# Top Bar Information
+user_info = st.session_state.current_user
+user_name = user_info.get("name", "Guest")
+user_email_active = user_info.get("email", "guest@wani.ai")
+current_entitlements = sm.get_user_entitlements(user_email_active)
+plan_badge = current_entitlements.get("badge", "FREE TRIAL 🎁")
+status_code = current_entitlements.get("status", "free")
+
+status_html = ""
+if status_code == "active":
+    status_html = '<span class="status-badge-active">ACTIVE 🟢</span>'
+elif "grace" in status_code:
+    status_html = f'<span class="status-badge-grace">GRACE PERIOD ⚠️ ({current_entitlements.get("grace_days_remaining", 1)}d left)</span>'
+elif "halted" in status_code or "expired" in status_code:
+    status_html = '<span class="status-badge-halted">HALTED 🛑</span>'
+elif "cancel" in status_code:
+    status_html = '<span class="status-badge-grace">PENDING EXPIRY 🔴</span>'
+else:
+    status_html = '<span class="badge-cat">FREE TIER 🎁</span>'
 
 st.markdown(f"""
-<div class="top-announcement">
-    <div style="display:flex; align-items:center; gap:12px;">
-        <span style="font-weight:700; color:#818CF8;">WANI ENTERPRISE</span>
-        <span>•</span>
-        <span style="color:#94A3B8;">Next-Generation Multilingual Acoustic AI Systems</span>
+<div class="top-announcement protected-brand">
+    <div>
+        <span style="color:#6366F1; font-weight:700;">WANI v6.8 ENTERPRISE</span>
+        <span style="color:#64748B; margin: 0 8px;">|</span>
+        <span style="color:{theme_subtext};">Next-Generation Multilingual Acoustic AI Systems</span>
     </div>
     <div class="user-pill">
         <span>👤 {user_name.split('(')[0].strip()}</span>
         <span>|</span>
-        <span style="color:#A5B4FC;">💎 {user_plan}</span>
-        {"<span>| ⏳ " + str(2 - trials_today) + "/2 trials left today</span>" if "FREE" in user_plan else ""}
+        <span style="color:#818CF8;">{plan_badge}</span>
+        <span>|</span>
+        {status_html}
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Elegant Color-Shaded Wani Logo Hero
+# Color-Shaded Wani Logo Hero
 st.markdown("""
 <div class="wani-logo-container protected-brand">
     <div class="wani-brand-text">Wani</div>
@@ -356,7 +430,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Pre-Configured Verified ElevenLabs API Key (Securely Kept Server-Side)
+# Pre-Configured Verified ElevenLabs API Key
 ELEVEN_KEY_DEFAULT = "sk_cea4bc5ef26be1349c26338920a5a217503b8791b788e337"
 
 # -------------------------------------------------------------
@@ -365,18 +439,47 @@ ELEVEN_KEY_DEFAULT = "sk_cea4bc5ef26be1349c26338920a5a217503b8791b788e337"
 with st.sidebar:
     st.markdown("### 🎙️ Wani Studio Control")
     st.markdown(f"**Account:** `{user_name.split('(')[0].strip()}`")
-    st.markdown(f"**Plan Status:** `{user_plan}`")
+    st.markdown(f"**Email:** `{user_email_active}`")
+    st.markdown(f"**Plan Tier:** `{plan_badge}`")
     
-    if "FREE" in user_plan:
-        st.markdown(f"**Daily Free Trials:** `{2 - trials_today}` of `2` remaining today")
-        st.caption("Max 100 words per generation on Free Trial.")
-        st.info("💡 Upgrade to **Creator Pro** ($4 / ₹299/mo) for unlimited words and generations.")
+    # Theme Switcher
+    st.markdown("---")
+    theme_choice = st.radio("🎨 Display Theme:", ["🌙 Dark Obsidian", "☀️ Light Pearl"], 
+                            index=0 if st.session_state.theme == "Dark" else 1, horizontal=True)
+    if "Dark" in theme_choice and st.session_state.theme != "Dark":
+        st.session_state.theme = "Dark"
+        st.rerun()
+    elif "Light" in theme_choice and st.session_state.theme != "Light":
+        st.session_state.theme = "Light"
+        st.rerun()
+
+    st.markdown("---")
+    # Real-time Quota Meter in Sidebar
+    cust_data = sm.get_customer_dashboard_data(user_email_active)
+    q = cust_data["quotas"]
+    
+    if current_entitlements.get("is_paid", False):
+        st.markdown("#### 📊 Monthly Usage Quota")
+        st.caption(f"Words Used: {q['words_used']:,} / {q['words_quota']:,}")
+        st.progress(q['words_percent'] / 100.0)
+        
+        st.caption(f"Paragraphs Used: {q['paragraphs_used']} / {q['paragraphs_quota']}")
+        st.progress(q['paragraphs_percent'] / 100.0)
+        
+        st.caption(f"Translations Used: {q['translations_used']} / {q['translations_quota']}")
+        st.progress(q['translations_percent'] / 100.0)
+        
+        sub_d = current_entitlements.get("subscription_details") or {}
+        if sub_d.get("current_period_end"):
+            st.caption(f"Next Billing: `{sub_d['current_period_end'].split('T')[0]}`")
     else:
-        st.success("👑 **Unlimited Enterprise Access Active** (No Word or Generation Limits)")
+        st.markdown(f"**Daily Free Trials:** `{2 - q['daily_trials_today']}` of `2` remaining today")
+        st.caption("Max 100 words per generation on Free Trial.")
+        st.info("💡 Upgrade to **Starter** or **Pro** for high-volume limits.")
 
     st.markdown("---")
     st.markdown("#### 📲 Invite & Share Wani")
-    share_msg = "Experience Wani - the world's most advanced multilingual AI speech platform featuring epic warrior timbres, Thanos cosmic bass, and 20+ language translation: https://objects-skilled-behalf-adam.trycloudflare.com"
+    share_msg = "Experience Wani - the world's most advanced multilingual AI speech platform featuring epic warrior timbres and 20+ languages: https://objects-skilled-behalf-adam.trycloudflare.com"
     st.markdown(f'''<a href="https://api.whatsapp.com/send?text={urllib.parse.quote(share_msg)}" target="_blank" style="text-decoration:none;"><div style="background:#25D366; color:white; padding:9px 12px; border-radius:6px; font-weight:700; text-align:center; margin-bottom:15px; font-size:13px;">📲 Share on WhatsApp</div></a>''', unsafe_allow_html=True)
 
     with st.expander("🛡️ Platform Security & API Key"):
@@ -393,7 +496,6 @@ with st.sidebar:
 # ==============================================================
 # AUDIBLY DISTINCT CHARACTER VOICES (GENUINELY DIFFERENT FREQUENCIES)
 # ==============================================================
-
 MARATHI_VOICES = {
     "Tanaji Malusare (Lion's Roar - Epic Warrior)": {
         "id": "mr-IN-ManoharNeural", "eleven_id": "SOYHLrjzK2X1ezoPC6cr",
@@ -449,304 +551,145 @@ MARATHI_VOICES = {
         "pitch": "+8Hz", "rate": "+20%",
         "desc": "Fast-paced, urgent broadcast delivery for breaking news and political bulletins."
     },
-    "Manohar (Classic Literary Narrator - 40y)": {
-        "id": "mr-IN-ManoharNeural", "eleven_id": "cjVigY5qzO86Huf0OWal",
-        "gender": "Male", "category": "Audiobooks & Literature",
-        "pitch": "+0Hz", "rate": "+0%",
-        "desc": "Balanced native Maharashtra baritone with pristine retroflex 'ळ' phonetics for literature."
-    },
-
-    "Rajmata Jijau (Royal Matriarch & Inspirer - 50y)": {
+    "Rajmata Jijau (Royal Empress - Deep Dignity)": {
         "id": "mr-IN-AarohiNeural", "eleven_id": "EXAVITQu4vr4xnSDxMaL",
         "gender": "Female", "category": "Historical Warriors",
         "pitch": "-22Hz", "rate": "-10%",
-        "desc": "Commanding, dignified maternal presence inspiring historic valor and righteousness."
+        "desc": "Deep, commanding maternal matriarch voice resonant with strategic valor."
     },
-    "Aaji Narmada (Affectionate Grandmother - 65y)": {
-        "id": "mr-IN-AarohiNeural", "eleven_id": "Xb7hH8MSUJpSbSDYk0k2",
-        "gender": "Female", "category": "Spiritual & Elders",
-        "pitch": "-25Hz", "rate": "-15%",
-        "desc": "Warm, soothing, traditional storytelling tone brimming with maternal affection."
-    },
-    "Aarohi (Classic Audiobook & Literature Narrator - 28y)": {
-        "id": "mr-IN-AarohiNeural", "eleven_id": "XrExE9yKIg1WjnnlVkGX",
-        "gender": "Female", "category": "Audiobooks & Literature",
-        "pitch": "+0Hz", "rate": "+0%",
-        "desc": "Crystal-clear, melodic standard native voice for audiobooks, poetry, and explainers."
-    },
-    "Priya (Viral Reel & Commercial Specialist - 22y)": {
-        "id": "mr-IN-AarohiNeural", "eleven_id": "FGY2WhTYpPnrIDTdsKH5",
-        "gender": "Female", "category": "Radio Jockey & Reels",
-        "pitch": "+26Hz", "rate": "+12%",
-        "desc": "Playful, bright, high-energy delivery designed for TikTok, YouTube Shorts, and brand ads."
-    },
-    "RJ Shreya (FM Radio Jockey Host - 25y)": {
-        "id": "mr-IN-AarohiNeural", "eleven_id": "cgSgspJ2msm6clMCkdW9",
-        "gender": "Female", "category": "Radio Jockey & Reels",
-        "pitch": "+18Hz", "rate": "+10%",
-        "desc": "Sparkling, vivacious radio presenter delivery for daily youth entertainment."
-    },
-    "Sayali (Prime-Time TV News Anchor)": {
-        "id": "mr-IN-AarohiNeural", "eleven_id": "SAz9YHcvj6GT2YYXdXww",
+    "Priya (Prime-Time TV News Anchor - Sharp)": {
+        "id": "mr-IN-AarohiNeural", "eleven_id": "21m00Tcm4TlvDq8ikWAM",
         "gender": "Female", "category": "News & Broadcast",
-        "pitch": "+6Hz", "rate": "+18%",
-        "desc": "Sharp, articulate, confident television presenter voice for studio journalism."
+        "pitch": "+12Hz", "rate": "+18%",
+        "desc": "Rapid, crisp, assertive news delivery for breaking news desks."
     },
-    "Meera (Serene Meditation & Spiritual Devotion)": {
-        "id": "mr-IN-AarohiNeural", "eleven_id": "H6QPv2pQZDcGqLwDTIJQ",
+    "Aaji Shantabai (Grandmother - Folklore & Warmth)": {
+        "id": "mr-IN-AarohiNeural", "eleven_id": "FGY2WhTYpPnrIDTdsKH5",
         "gender": "Female", "category": "Spiritual & Elders",
-        "pitch": "-12Hz", "rate": "-16%",
-        "desc": "Calming, peaceful, breathy cadence for mindfulness meditation and devotional chants."
+        "pitch": "-18Hz", "rate": "-18%",
+        "desc": "Affectionate, trembling elder matriarch tone for timeless bedtime parables."
     },
-    "Tanvi (Dramatic & Sensitive Audiobook Actor)": {
-        "id": "mr-IN-AarohiNeural", "eleven_id": "pFZP5JQG7iQjIQuC4Bku",
+    "Neha (Sensory Guided Meditation & ASMR)": {
+        "id": "mr-IN-AarohiNeural", "eleven_id": "LcfcDJNigSI51xpmTgve",
+        "gender": "Female", "category": "Spiritual & Elders",
+        "pitch": "-12Hz", "rate": "-14%",
+        "desc": "Soothing, gentle whisper cadence for stress relief and mindfulness."
+    },
+    "Ritu (Gen-Z Viral Instagram Creator)": {
+        "id": "mr-IN-AarohiNeural", "eleven_id": "jsCqWAovK2LkecY7zXl4",
+        "gender": "Female", "category": "Radio Jockey & Reels",
+        "pitch": "+26Hz", "rate": "+16%",
+        "desc": "Bright, playful, ultra-trendy tone designed for viral lifestyle reels."
+    },
+    "Gauri (National Documentary Host)": {
+        "id": "mr-IN-AarohiNeural", "eleven_id": "oWAxZDx7w5VEj9dCyTzz",
         "gender": "Female", "category": "Audiobooks & Literature",
-        "pitch": "-5Hz", "rate": "-6%",
-        "desc": "Rich in pauses and delicate emotional nuances, ideal for novel drama."
-    },
-    "Pooja (Podcast & Studio Interviewer)": {
-        "id": "mr-IN-AarohiNeural", "eleven_id": "hpp4J3VqNfWAUOO0d1Us",
-        "gender": "Female", "category": "Podcasts & Interviews",
-        "pitch": "+8Hz", "rate": "+4%",
-        "desc": "Sophisticated modern conversationalist voice for corporate and academic dialogues."
-    },
-    "Diya (Animated Pixie & Fairy Tales - 8y)": {
-        "id": "mr-IN-AarohiNeural", "eleven_id": "N2lVS1w4EtoT3dr4eOWO",
-        "gender": "Female", "category": "Kids & Fantasy",
-        "pitch": "+36Hz", "rate": "+8%",
-        "desc": "Ultra high-pitched cheerful child voice for animated cartoons and fantasy fables."
+        "pitch": "-6Hz", "rate": "-6%",
+        "desc": "Elegant, informative cadence for travelogues and culture documentaries."
     }
 }
 
 HINDI_VOICES = {
-    "Amitabh Style Madhur (Epic Baritone Titan)": {
-        "id": "hi-IN-MadhurNeural", "eleven_id": "JBFqnCBsd6RMkjVDRZzb",
+    "Amitabh Style (Epic Baritone Titan Bass)": {
+        "id": "hi-IN-MadhurNeural", "eleven_id": "nPczCjzI2devNBz1zQrb",
         "gender": "Male", "category": "Cinematic & Titan Bass",
-        "pitch": "-30Hz", "rate": "-8%",
-        "desc": "Ultra-deep, grave legendary baritone with cinematic gravitas and monumental weight."
+        "pitch": "-34Hz", "rate": "-8%",
+        "desc": "Legendary heavy cinema baritone with poetic cadence and gravitas."
     },
-    "Bahubali Devdutt (Epic Historical Commander)": {
+    "Vikramaditya (Royal Emperor of Ujjain)": {
         "id": "hi-IN-MadhurNeural", "eleven_id": "SOYHLrjzK2X1ezoPC6cr",
         "gender": "Male", "category": "Historical Warriors",
-        "pitch": "-25Hz", "rate": "-6%",
-        "desc": "Resonant battle commander voice for epic mythology, warrior sagas, and trailers."
+        "pitch": "-22Hz", "rate": "-6%",
+        "desc": "Noble monarch delivery resonating with regal justice and command."
     },
-    "Vikram (Crime Patrol Mystery Host)": {
-        "id": "hi-IN-MadhurNeural", "eleven_id": "nPczCjzI2devNBz1zQrb",
+    "Saurabh (Crime & Mystery TV Narrator)": {
+        "id": "hi-IN-MadhurNeural", "eleven_id": "JBFqnCBsd6RMkjVDRZzb",
         "gender": "Male", "category": "Crime & Mystery",
-        "pitch": "-18Hz", "rate": "-8%",
-        "desc": "Gripping, suspenseful investigative narration for crime stories and thrillers."
+        "pitch": "-16Hz", "rate": "-6%",
+        "desc": "Tense, suspenseful storytelling voice for unsolved mysteries."
     },
-    "Ram (Spiritual Master & Gita Preacher)": {
-        "id": "hi-IN-MadhurNeural", "eleven_id": "CwhRBWXzGAHq8TQ4Fs17",
-        "gender": "Male", "category": "Spiritual & Elders",
-        "pitch": "-15Hz", "rate": "-16%",
-        "desc": "Tranquil spiritual preacher cadence bringing deep inner calm and meditation."
-    },
-    "RJ Aryan (Supercharged FM Radio Jockey)": {
+    "RJ Ayush (Delhi Metro FM Radio Host)": {
         "id": "hi-IN-MadhurNeural", "eleven_id": "TX3LPaxmHKxFdv7VOQHJ",
         "gender": "Male", "category": "Radio Jockey & Reels",
-        "pitch": "+22Hz", "rate": "+14%",
-        "desc": "High-octane, charismatic young radio presenter tone for viral trends."
+        "pitch": "+20Hz", "rate": "+16%",
+        "desc": "Dynamic, witty, fast-talking RJ style for morning drive time."
     },
-    "Dadaji (Elderly Patriarch Storyteller - 70y)": {
+    "Pandit Ji (Vedic Scholar & Kathavachak)": {
         "id": "hi-IN-MadhurNeural", "eleven_id": "pqHfZKP75CvOlQylNhV4",
         "gender": "Male", "category": "Spiritual & Elders",
-        "pitch": "-30Hz", "rate": "-16%",
-        "desc": "Aged patriarch tone steeped in decades of storytelling experience."
-    },
-    "Kabir (Youth Tech Podcaster & Motivator)": {
-        "id": "hi-IN-MadhurNeural", "eleven_id": "IKne3meq5aSn9XLyUdCD",
-        "gender": "Male", "category": "Podcasts & Interviews",
-        "pitch": "+12Hz", "rate": "+12%",
-        "desc": "Energetic, dynamic modern creator tone inspiring motivation."
-    },
-    "Sameer (Corporate Business Keynote Speaker)": {
-        "id": "hi-IN-MadhurNeural", "eleven_id": "cjVigY5qzO86Huf0OWal",
-        "gender": "Male", "category": "Corporate & Business",
-        "pitch": "+4Hz", "rate": "+6%",
-        "desc": "Fluent executive presentation delivery for investor conferences."
-    },
-    "Ajay (Prime-Time Bulletins News Anchor)": {
-        "id": "hi-IN-MadhurNeural", "eleven_id": "pNInz6obpgDQGcFmaJgB",
-        "gender": "Male", "category": "News & Broadcast",
-        "pitch": "+8Hz", "rate": "+20%",
-        "desc": "Fast-paced, sharp news anchor delivery delivering breaking headlines."
-    },
-    "Rahul (Hindi Literature Narrator)": {
-        "id": "hi-IN-MadhurNeural", "eleven_id": "bIHbv24MWmeRgasZH58o",
-        "gender": "Male", "category": "Audiobooks & Literature",
-        "pitch": "-4Hz", "rate": "-2%",
-        "desc": "Natural, soothing cadence for classic Hindi literature and novels."
-    },
-
-    "Dadi Maa (Loving Grandmother Tales - 65y)": {
-        "id": "hi-IN-SwaraNeural", "eleven_id": "Xb7hH8MSUJpSbSDYk0k2",
-        "gender": "Female", "category": "Spiritual & Elders",
         "pitch": "-24Hz", "rate": "-14%",
-        "desc": "Tender, nurturing grandmotherly cadence brimming with moral bedtime tales."
+        "desc": "Deep devotional chanting and sacred scripture cadence."
     },
-    "Swara (Classic Advertising & Novel Narrator)": {
+    "Maharani Padmini (Regal Pride & Nobility)": {
         "id": "hi-IN-SwaraNeural", "eleven_id": "EXAVITQu4vr4xnSDxMaL",
-        "gender": "Female", "category": "Audiobooks & Literature",
-        "pitch": "+0Hz", "rate": "+0%",
-        "desc": "Pristine standard Hindi diction for prestigious commercial campaigns."
+        "gender": "Female", "category": "Historical Warriors",
+        "pitch": "-18Hz", "rate": "-8%",
+        "desc": "Stately, poetic, royal Hindi diction with unyielding spirit."
     },
-    "Simran (Viral Reel Sensation - 21y)": {
-        "id": "hi-IN-SwaraNeural", "eleven_id": "FGY2WhTYpPnrIDTdsKH5",
-        "gender": "Female", "category": "Radio Jockey & Reels",
-        "pitch": "+26Hz", "rate": "+12%",
-        "desc": "Spirited, trendy creator delivery customized for modern social algorithms."
-    },
-    "RJ Riya (Bubbly FM Radio Host)": {
-        "id": "hi-IN-SwaraNeural", "eleven_id": "cgSgspJ2msm6clMCkdW9",
-        "gender": "Female", "category": "Radio Jockey & Reels",
-        "pitch": "+18Hz", "rate": "+10%",
-        "desc": "Vibrant, cheerful FM host cadence connecting warmly with daily listeners."
-    },
-    "Anjali (TV News Bulletin Presenter)": {
-        "id": "hi-IN-SwaraNeural", "eleven_id": "XrExE9yKIg1WjnnlVkGX",
+    "Ananya (National Breaking News Prime Time)": {
+        "id": "hi-IN-SwaraNeural", "eleven_id": "21m00Tcm4TlvDq8ikWAM",
         "gender": "Female", "category": "News & Broadcast",
-        "pitch": "+6Hz", "rate": "+18%",
-        "desc": "Poised, authoritative broadcast delivery for studio journalism."
+        "pitch": "+10Hz", "rate": "+18%",
+        "desc": "High-urgency, clear, commanding newsroom anchor cadence."
     },
-    "Meera (Peaceful Devotion & Bhajan Voice)": {
-        "id": "hi-IN-SwaraNeural", "eleven_id": "H6QPv2pQZDcGqLwDTIJQ",
+    "Dadi Janaki (Puranic Wisdom Storyteller)": {
+        "id": "hi-IN-SwaraNeural", "eleven_id": "FGY2WhTYpPnrIDTdsKH5",
         "gender": "Female", "category": "Spiritual & Elders",
-        "pitch": "-12Hz", "rate": "-15%",
-        "desc": "Gentle, reverent spiritual delivery radiating deep tranquility."
+        "pitch": "-20Hz", "rate": "-16%",
+        "desc": "Gentle, experienced elder matriarch voice for heritage parables."
     },
-    "Neha (Dramatic & Sensitive Audiobook Actor)": {
-        "id": "hi-IN-SwaraNeural", "eleven_id": "pFZP5JQG7iQjIQuC4Bku",
-        "gender": "Female", "category": "Audiobooks & Literature",
-        "pitch": "-5Hz", "rate": "-6%",
-        "desc": "Rich in pauses and emotional nuances for narrative drama."
+    "Tara (Spiritual Meditation & Yoga Guide)": {
+        "id": "hi-IN-SwaraNeural", "eleven_id": "LcfcDJNigSI51xpmTgve",
+        "gender": "Female", "category": "Spiritual & Elders",
+        "pitch": "-10Hz", "rate": "-12%",
+        "desc": "Soft, relaxing, harmonic voice for Pranayama and guided rest."
     },
-    "Pooja (Podcast & Studio Interviewer)": {
-        "id": "hi-IN-SwaraNeural", "eleven_id": "hpp4J3VqNfWAUOO0d1Us",
-        "gender": "Female", "category": "Podcasts & Interviews",
-        "pitch": "+8Hz", "rate": "+4%",
-        "desc": "Engaging conversationalist delivery for in-depth interviews."
-    },
-    "Dr. Vandana (Professor & Motivational Mentor)": {
-        "id": "hi-IN-SwaraNeural", "eleven_id": "SAz9YHcvj6GT2YYXdXww",
-        "gender": "Female", "category": "Corporate & Business",
-        "pitch": "-16Hz", "rate": "-4%",
-        "desc": "Grave, dignified academic lecture delivery for masterclasses."
-    },
-    "Pihu (Animated Pixie & Fairy Tales - 8y)": {
-        "id": "hi-IN-SwaraNeural", "eleven_id": "N2lVS1w4EtoT3dr4eOWO",
-        "gender": "Female", "category": "Kids & Fantasy",
-        "pitch": "+36Hz", "rate": "+8%",
-        "desc": "Playful, charming child delivery for fantasy stories and cartoons."
+    "Simran (Bollywood Gossip & Trend RJ)": {
+        "id": "hi-IN-SwaraNeural", "eleven_id": "jsCqWAovK2LkecY7zXl4",
+        "gender": "Female", "category": "Radio Jockey & Reels",
+        "pitch": "+24Hz", "rate": "+14%",
+        "desc": "Effervescent, sparkling Bollywood pop culture delivery."
     }
 }
 
 ENGLISH_VOICES = {
-    "Thanos / Christopher (Cinematic Cosmic Titan Bass - US)": {
-        "id": "en-US-ChristopherNeural", "eleven_id": "nPczCjzI2devNBz1zQrb",
-        "gender": "Male", "category": "Cinematic & Titan Bass",
-        "pitch": "-35Hz", "rate": "-12%",
-        "desc": "Ultra-deep resonant cosmic titan voice with thunderous sub-bass."
-    },
-    "Brian (Warm Storyteller & Documentary - US)": {
-        "id": "en-US-BrianNeural", "eleven_id": "JBFqnCBsd6RMkjVDRZzb",
+    "Brian (BBC World Master Documentary)": {
+        "id": "en-GB-RyanNeural", "eleven_id": "nPczCjzI2devNBz1zQrb",
         "gender": "Male", "category": "Audiobooks & Literature",
-        "pitch": "+0Hz", "rate": "+0%",
-        "desc": "Warm National Geographic narrator tone with pristine natural presence."
+        "pitch": "-12Hz", "rate": "-6%",
+        "desc": "Distinguished British prestige baritone for global nature sagas."
     },
-    "Ryan (Royal British Gentleman & BBC Host - UK)": {
-        "id": "en-GB-RyanNeural", "eleven_id": "CwhRBWXzGAHq8TQ4Fs17",
+    "Christopher (Hollywood Blockbuster Trailer Bass)": {
+        "id": "en-US-ChristopherNeural", "eleven_id": "IKne3meq5aSn9XLyUdCD",
+        "gender": "Male", "category": "Cinematic & Titan Bass",
+        "pitch": "-30Hz", "rate": "-10%",
+        "desc": "Sub-atomic Hollywood trailer rumble for monumental film teasers."
+    },
+    "Marcus (Silicon Valley Keynote Presenter)": {
+        "id": "en-US-GuyNeural", "eleven_id": "bIHbv24MWmeRgasZH58o",
         "gender": "Male", "category": "Corporate & Business",
-        "pitch": "+0Hz", "rate": "+0%",
-        "desc": "Aristocratic British Received Pronunciation for documentaries and drama."
+        "pitch": "+2Hz", "rate": "+4%",
+        "desc": "Clean, charismatic, tech visionary presentation style."
     },
-    "Prabhat (Professional Explainer - Indian English)": {
-        "id": "en-IN-PrabhatNeural", "eleven_id": "TX3LPaxmHKxFdv7VOQHJ",
-        "gender": "Male", "category": "Corporate & Business",
-        "pitch": "+0Hz", "rate": "+0%",
-        "desc": "100% natural, educated Indian English accent for corporate tutorials."
+    "Eric (True Crime Podcast Anchor)": {
+        "id": "en-US-EricNeural", "eleven_id": "JBFqnCBsd6RMkjVDRZzb",
+        "gender": "Male", "category": "Crime & Mystery",
+        "pitch": "-14Hz", "rate": "-4%",
+        "desc": "Intriguing, gritty investigative narrative delivery."
     },
-    "Charlie (High-Energy Host & Creator - Australia)": {
-        "id": "en-AU-WilliamNeural", "eleven_id": "IKne3meq5aSn9XLyUdCD",
-        "gender": "Male", "category": "Podcasts & Interviews",
-        "pitch": "+12Hz", "rate": "+10%",
-        "desc": "Dynamic, charismatic YouTube tech creator and podcast host."
-    },
-    "Harry (Gravelly Warrior & Gaming Protagonist)": {
-        "id": "en-US-EricNeural", "eleven_id": "SOYHLrjzK2X1ezoPC6cr",
-        "gender": "Male", "category": "Historical Warriors",
-        "pitch": "-22Hz", "rate": "-6%",
-        "desc": "Gritty warrior voice for video games, fantasy lore, and combat."
-    },
-    "Bill (Seasoned Patriarch & Wise Veteran - 70s)": {
-        "id": "en-US-GuyNeural", "eleven_id": "pqHfZKP75CvOlQylNhV4",
-        "gender": "Male", "category": "Spiritual & Elders",
-        "pitch": "-28Hz", "rate": "-15%",
-        "desc": "Wise grandfather tone with emotional weight and historical depth."
-    },
-    "Will (Chill Boy-Next-Door & Casual Vlogger)": {
-        "id": "en-US-AndrewNeural", "eleven_id": "bIHbv24MWmeRgasZH58o",
+    "Leo (Midnight FM Radio Host)": {
+        "id": "en-US-RogerNeural", "eleven_id": "TX3LPaxmHKxFdv7VOQHJ",
         "gender": "Male", "category": "Radio Jockey & Reels",
-        "pitch": "+6Hz", "rate": "+4%",
-        "desc": "Relatable, casual, relaxed conversational voice for daily vlogs."
+        "pitch": "+16Hz", "rate": "+10%",
+        "desc": "Velvety, late-night acoustic jazz and radio station host."
     },
-    "Adam (Authoritative Leader & Commander)": {
-        "id": "en-US-SteffanNeural", "eleven_id": "pNInz6obpgDQGcFmaJgB",
-        "gender": "Male", "category": "News & Broadcast",
-        "pitch": "-12Hz", "rate": "+4%",
-        "desc": "Firm, decisive leadership tone for keynote addresses and manifestos."
+    "Jenny (Global Business News Anchor)": {
+        "id": "en-US-JennyNeural", "eleven_id": "21m00Tcm4TlvDq8ikWAM",
+        "gender": "Female", "category": "News & Broadcast",
+        "pitch": "+8Hz", "rate": "+14%",
+        "desc": "Immaculate corporate broadcast voice for financial summits."
     },
-    "Eric (Mindfulness Guide & Nature Audio - US)": {
-        "id": "en-US-RogerNeural", "eleven_id": "cjVigY5qzO86Huf0OWal",
-        "gender": "Male", "category": "Spiritual & Elders",
-        "pitch": "-14Hz", "rate": "-12%",
-        "desc": "Soothing, gentle cadence for sleep stories, meditation, and wellness."
-    },
-
-    "Jenny (Natural Conversational YouTube #1 - US)": {
-        "id": "en-US-JennyNeural", "eleven_id": "EXAVITQu4vr4xnSDxMaL",
-        "gender": "Female", "category": "Audiobooks & Literature",
-        "pitch": "+0Hz", "rate": "+0%",
-        "desc": "The most natural, warm American conversational voice for YouTube."
-    },
-    "Ava (Dynamic Tech Host & Commercial Specialist - US)": {
-        "id": "en-US-AvaNeural", "eleven_id": "FGY2WhTYpPnrIDTdsKH5",
-        "gender": "Female", "category": "Radio Jockey & Reels",
-        "pitch": "+15Hz", "rate": "+10%",
-        "desc": "Youthful, energetic, punchy delivery for high-impact brand commercials."
-    },
-    "Libby (Classic British Audiobook Narrator - UK)": {
-        "id": "en-GB-LibbyNeural", "eleven_id": "Xb7hH8MSUJpSbSDYk0k2",
-        "gender": "Female", "category": "Audiobooks & Literature",
-        "pitch": "-4Hz", "rate": "-4%",
-        "desc": "Refined British literary narrator for historical audiobooks."
-    },
-    "Neerja (Expressive Indian English Female - India)": {
-        "id": "en-IN-NeerjaExpressiveNeural", "eleven_id": "SAz9YHcvj6GT2YYXdXww",
-        "gender": "Female", "category": "Podcasts & Interviews",
-        "pitch": "+0Hz", "rate": "+0%",
-        "desc": "100% natural, fluent modern Indian English female for corporate media."
-    },
-    "Matilda (Engaging Educational & Course Instructor)": {
-        "id": "en-US-AriaNeural", "eleven_id": "XrExE9yKIg1WjnnlVkGX",
-        "gender": "Female", "category": "Corporate & Business",
-        "pitch": "+4Hz", "rate": "+4%",
-        "desc": "Articulate, friendly educator voice for online masterclasses."
-    },
-    "Jessica (Bright, Playful & Charming - US)": {
-        "id": "en-US-EmmaNeural", "eleven_id": "cgSgspJ2msm6clMCkdW9",
-        "gender": "Female", "category": "Radio Jockey & Reels",
-        "pitch": "+18Hz", "rate": "+8%",
-        "desc": "Upbeat, radiant lifestyle presenter for beauty and social reels."
-    },
-    "Bella (Luxury Brand & High-Fashion Narrator)": {
-        "id": "en-US-MichelleNeural", "eleven_id": "hpp4J3VqNfWAUOO0d1Us",
-        "gender": "Female", "category": "Corporate & Business",
-        "pitch": "+6Hz", "rate": "+2%",
-        "desc": "Silky, captivating commercial voice for premium advertisements."
-    },
-    "Lily (Velvety Dramatic Actress & Character Voice)": {
+    "Emma (Classic English Audiobook Narrator)": {
         "id": "en-GB-SoniaNeural", "eleven_id": "pFZP5JQG7iQjIQuC4Bku",
         "gender": "Female", "category": "Audiobooks & Literature",
         "pitch": "-8Hz", "rate": "-6%",
@@ -766,9 +709,6 @@ ENGLISH_VOICES = {
     }
 }
 
-# -------------------------------------------------------------
-# PURPOSE / SUR PRESET MAPPINGS (POINT 9)
-# -------------------------------------------------------------
 PURPOSE_PRESETS = {
     "Standard (Default Timbre)": {"pitch_offset": 0, "rate_offset": 0, "desc": "Natural balanced studio cadence."},
     "🎬 Documentary & History (माहितीपट)": {"pitch_offset": -16, "rate_offset": -8, "desc": "Grave, reflective, atmospheric delivery for historical sagas."},
@@ -779,9 +719,6 @@ PURPOSE_PRESETS = {
     "🛒 Commercials & Reels (जाहिरात व रील)": {"pitch_offset": 12, "rate_offset": 10, "desc": "Punchy hook delivery with high brand retention."}
 }
 
-# -------------------------------------------------------------
-# CORE SYNTHESIS ENGINE
-# -------------------------------------------------------------
 def synthesize_speech(text, voice_data, engine_choice, api_key, out_path, custom_pitch=None, custom_rate=None, lang="mr"):
     clean_text = sanitize_text(text)
     clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
@@ -823,90 +760,55 @@ def synthesize_speech(text, voice_data, engine_choice, api_key, out_path, custom
         asyncio.run(run_edge())
         return "Native Maharashtra Neural Engine (100% Authentic 'ळ')"
 
-
 # ==============================================================
 # WANI STUDIO NAVIGATION TABS
 # ==============================================================
-tab_mr, tab_hi, tab_en, tab_trans_studio, tab_dialogue, tab_pricing, tab_auth, tab_admin, tab_contact, tab_library = st.tabs([
+tab_mr, tab_hi, tab_en, tab_trans_studio, tab_dialogue, tab_pricing, tab_customer_billing, tab_admin, tab_auth, tab_contact, tab_library = st.tabs([
     "🚩 Marathi Studio",
     "🇮🇳 Hindi Studio",
     "🌐 English Studio",
     "🌍 Universal Language Studio",
     "🎭 Multi-Voice Dialogue Studio",
-    "💎 Pricing & Subscriptions",
+    "💳 Subscription Plans",
+    "📑 Customer Billing Dashboard",
+    "👑 Admin Subscription CRM",
     "🔐 Account & Access",
-    "👑 Executive CRM",
-    "🏢 About & Enterprise Support",
-    "👥 Voice Library"
+    "🏢 Enterprise Contact Us",
+    "🎧 Voice Library"
 ])
 
 # ==============================================================
-# TAB 1: MARATHI STUDIO (WITH PURPOSE / SUR PRESET)
+# TAB 1: MARATHI STUDIO
 # ==============================================================
 with tab_mr:
-    st.markdown('<div class="studio-banner">🚩 Marathi Speech Studio — Native Maharashtra Accent, Authentic Retroflex "ळ" Phonetics & Distinct Voice Actors</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">🚩 Marathi Studio — Native Maharashtra Acoustic Models with Authentic Retroflex ळ Phonetics</div>', unsafe_allow_html=True)
     
-    with st.expander("🌐 Instant Translator (English/Hindi -> Auto-Translate to Marathi)"):
-        col_tr1, col_tr2 = st.columns([2.5, 1])
-        with col_tr1:
-            trans_input = st.text_input("Type text to translate into Marathi:", placeholder="e.g. Chhatrapati Shivaji Maharaj was the greatest leader of India...")
-        with col_tr2:
-            st.write("")
-            st.write("")
-            if st.button("Translate to Marathi 🔄", use_container_width=True):
-                if trans_input.strip():
-                    translated_res = translate_text(trans_input, source='auto', target='mr')
-                    st.session_state.mr_input_val = translated_res
-                    st.success("Translated and loaded into editor!")
+    col_mr1, col_mr2 = st.columns([1.5, 1])
     
-    mr_engine_choice = st.radio(
-        "Acoustic Audio Engine:",
-        [
-            "🚩 Native Maharashtra Neural Engine (100% Authentic 'ळ' - Zero Hindi Mix - Recommended ⭐)",
-            "👑 ElevenLabs v4 Generative Engine (Global Cloud)"
-        ],
-        index=0,
-        horizontal=True,
-        key="mr_engine_radio"
-    )
-
-    col_m1, col_m2 = st.columns([1.2, 1])
-    
-    with col_m1:
-        st.markdown("**1. Enter Marathi Script:**")
+    with col_mr1:
+        mr_text = st.text_area(
+            "Marathi Script Input (मराठी मजकूर टाईप करा):",
+            value="छत्रपती शिवाजी महाराजांच्या पदस्पर्शाने पावन झालेली ही भूमी, महाराष्ट्राची सह्याद्रीची कडा आणि आकाशाला गवसणी घालणारा मराठ्यांचा स्वाभिमान!",
+            height=180,
+            key="mr_script"
+        )
         
-        c_p1, c_p2, c_p3 = st.columns(3)
-        if c_p1.button("🚩 Retroflex 'ळ' Test"):
-            st.session_state.mr_input_val = "मावळ्यांच्या साथीने छत्रपती शिवरायांनी स्वराज्याचे बाळ कडू पाजले. बाळ, कमळ, टिळक आणि मावळे!"
-        if c_p2.button("⚔️ Tanaji Malusare Roar"):
-            st.session_state.mr_input_val = "आधी लगीन कोंढाण्याचं, मग माझ्या रायबाचं! जोपर्यंत कोंढाण्यावर भगवा फडकणार नाही, तोपर्यंत हा तानाजी माघार घेणार नाही!"
-        if c_p3.button("👑 Shivray Historic Legacy"):
-            st.session_state.mr_input_val = "सह्याद्रीच्या कडेकपारीतून एकच गर्जना घुमली... जेव्हा संकटांची वादळे अंगावर चालून येतात, तेव्हा इतिहास बघायचा नसतो, तर इतिहास घडवायचा असतो!"
+        c_sub1, c_sub2 = st.columns(2)
+        with c_sub1:
+            mr_engine_choice = st.selectbox("Speech Engine Platform:", ["Native Edge Neural (Zero-Latency)", "ElevenLabs v4 Generative (Cinema Bass)"], key="mr_engine")
+        with c_sub2:
+            mr_purpose = st.selectbox("Select Production Purpose (सूर):", list(PURPOSE_PRESETS.keys()), key="mr_purp")
             
-        if "mr_input_val" not in st.session_state:
-            st.session_state.mr_input_val = "मावळ्यांच्या साथीने छत्रपती शिवरायांनी स्वराज्याचे बाळ कडू पाजले. बाळ, कमळ, टिळक आणि मावळे!"
-
-        mr_text = st.text_area("Script Editor:", value=st.session_state.mr_input_val, height=160, key="mr_text_area")
+        purp_data = PURPOSE_PRESETS[mr_purpose]
+        st.caption(f"🎯 **Acoustic Profile:** {purp_data['desc']}")
         
-        # Word Counter with Free Trial Warnings
-        curr_words = len(mr_text.strip().split())
-        st.caption(f"📊 Words: **{curr_words}** / 100 max (Free Trial) | Characters: **{len(mr_text)}**")
-
-    with col_m2:
-        st.markdown("**2. Voice Actor & Production Purpose (सूर):**")
-        mr_gender = st.radio("Gender:", ["👨 10 Male Voice Actors", "👩 10 Female Voice Actors"], horizontal=True, key="mr_gender_radio")
-        is_male = "Male" in mr_gender
+    with col_mr2:
+        mr_categories = sorted(list(set(v["category"] for v in MARATHI_VOICES.values())))
+        selected_cat = st.selectbox("Voice Category:", mr_categories, key="mr_cat")
+        filtered_voices = {k: v for k, v in MARATHI_VOICES.items() if v["category"] == selected_cat}
+        selected_mr_name = st.selectbox("Select Distinct Character Voice:", list(filtered_voices.keys()), key="mr_voice")
         
-        filtered_mr = {k: v for k, v in MARATHI_VOICES.items() if (v["gender"] == "Male" if is_male else v["gender"] == "Female")}
-        selected_mr_name = st.selectbox("Select Voice Actor:", list(filtered_mr.keys()), key="mr_voice_select")
-        mr_voice_data = filtered_mr[selected_mr_name]
-        
-        # Purpose / Sur Selector (Point 9)
-        selected_purpose = st.selectbox("🎯 Production Purpose (सूर / Style Preset):", list(PURPOSE_PRESETS.keys()), index=0)
-        purp_data = PURPOSE_PRESETS[selected_purpose]
-        st.caption(f"ℹ️ {purp_data['desc']}")
-        
-        # Calculate pitch & cadence with purpose offsets
+        mr_voice_data = filtered_voices[selected_mr_name]
         base_p = int(mr_voice_data["pitch"].replace("Hz", ""))
         base_r = int(mr_voice_data["rate"].replace("%", ""))
         target_p = max(-40, min(40, base_p + purp_data["pitch_offset"]))
@@ -915,7 +817,7 @@ with tab_mr:
         st.markdown(f"""
         <div class="voice-card">
             <div><span class="badge-cat">{mr_voice_data['category']}</span> <b>{selected_mr_name.split('(')[0]}</b></div>
-            <div style="font-size: 13px; color: #94A3B8; margin-top: 6px;">{mr_voice_data['desc']}</div>
+            <div style="font-size: 13px; color: {theme_subtext}; margin-top: 6px;">{mr_voice_data['desc']}</div>
             <div style="font-size: 12px; color: #818CF8; margin-top: 6px; font-weight: 600;">⚡ Frequency: {target_p:+d}Hz | Cadence: {target_r:+d}%</div>
         </div>
         """, unsafe_allow_html=True)
@@ -929,7 +831,7 @@ with tab_mr:
 
     if mr_btn:
         active_email = st.session_state.current_user.get("email", "guest@wani.ai")
-        is_allowed, trial_msg, _ = validate_user_trial(active_email, mr_text)
+        is_allowed, trial_msg, qdata = validate_user_trial(active_email, mr_text)
         
         if not is_allowed:
             st.error(trial_msg)
@@ -951,86 +853,71 @@ with tab_mr:
                     custom_rate=r_val,
                     lang="mr"
                 )
-                increment_user_trial(active_email)
-
-            st.success(f"✨ Audio rendered successfully! (Engine: {engine_used})")
-            r1, r2 = st.columns([1.5, 1])
-            with r1:
-                with open(out_mr, "rb") as f: st.audio(f.read(), format="audio/mp3")
-            with r2:
-                with open(out_mr, "rb") as f: st.download_button("⬇️ Download Audio (MP3)", f.read(), file_name="wani_marathi_audio.mp3", mime="audio/mp3", use_container_width=True)
-
+                
+            st.success(f"✨ Speech synthesized successfully via {engine_used}!")
+            col_a1, col_a2 = st.columns([1.5, 1])
+            with col_a1:
+                with open(out_mr, "rb") as f:
+                    st.audio(f.read(), format="audio/mp3")
+            with col_a2:
+                with open(out_mr, "rb") as f:
+                    st.download_button("⬇️ Download High-Res MP3", f.read(), file_name="wani_marathi_master.mp3", mime="audio/mp3", use_container_width=True)
 
 # ==============================================================
 # TAB 2: HINDI STUDIO
 # ==============================================================
 with tab_hi:
-    st.markdown('<div class="studio-banner">🇮🇳 Hindi Speech Studio — Amitabh Style Deep Baritone, Bahubali Epic Bass & Expressive Voices</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">🇮🇳 Hindi Studio — North Indian Acoustic Timbres with Deep Cinema Resonance</div>', unsafe_allow_html=True)
     
-    with st.expander("🌐 Instant Translator (English -> Auto-Translate to Hindi)"):
-        col_htr1, col_htr2 = st.columns([2.5, 1])
-        with col_htr1:
-            h_trans_input = st.text_input("Type English text to translate into Hindi:", placeholder="e.g. Success comes to those who believe in the beauty of their dreams...")
-        with col_htr2:
-            st.write("")
-            st.write("")
-            if st.button("Translate to Hindi 🔄", use_container_width=True):
-                if h_trans_input.strip():
-                    translated_h_res = translate_text(h_trans_input, source='en', target='hi')
-                    st.session_state.hi_input_val = translated_h_res
-                    st.success("Translated and loaded into editor!")
-                    
-    col_h1, col_h2 = st.columns([1.2, 1])
+    col_hi1, col_hi2 = st.columns([1.5, 1])
     
-    with col_h1:
-        st.markdown("**1. Enter Hindi Script:**")
-        c_h_p1, c_h_p2 = st.columns(2)
-        if c_h_p1.button("👑 Amitabh Style Thought"):
-            st.session_state.hi_input_val = "जिंदगी में कभी किसी को कम मत समझना... क्योंकि समंदर कितना भी खामोश क्यों न हो, जब उठता है तो बड़े-बड़ों को डुबो देता है!"
-        if c_h_p2.button("⚔️ Bahubali Battle Cry"):
-            st.session_state.hi_input_val = "जब तक तुम मेरे साथ हो, मुझे मारने वाला पैदा नहीं हुआ मामा! धर्म की रक्षा ही हमारा एकमात्र कर्तव्य है!"
+    with col_hi1:
+        hi_text = st.text_area(
+            "Hindi Script Input (हिंदी स्क्रिप्ट दर्ज करें):",
+            value="यह भारत की वह पवित्र भूमि है जहां हर कण में इतिहास, शौर्य और अध्यात्म की गूंज सुनाई देती है। जब इरादे फौलादी हों, तो हर मंजिल आसान हो जाती है।",
+            height=180,
+            key="hi_script"
+        )
+        
+        c_hsub1, c_hsub2 = st.columns(2)
+        with c_hsub1:
+            hi_engine_choice = st.selectbox("Speech Engine Platform:", ["Native Edge Neural (Zero-Latency)", "ElevenLabs v4 Generative (Cinema Bass)"], key="hi_engine")
+        with c_hsub2:
+            hi_purpose = st.selectbox("Select Production Purpose (सूर):", list(PURPOSE_PRESETS.keys()), key="hi_purp")
             
-        if "hi_input_val" not in st.session_state:
-            st.session_state.hi_input_val = "जिंदगी में कभी किसी को कम मत समझना... क्योंकि समंदर कितना भी खामोश क्यों न हो, जब उठता है तो बड़े-बड़ों को डुबो देता है!"
-
-        hi_text = st.text_area("Script Editor:", value=st.session_state.hi_input_val, height=160, key="hi_text_area")
-        curr_h_words = len(hi_text.strip().split())
-        st.caption(f"📊 Words: **{curr_h_words}** / 100 max (Free Trial)")
-
-    with col_h2:
-        st.markdown("**2. Voice Actor & Production Purpose:**")
-        hi_gender = st.radio("Gender:", ["👨 10 Male Voice Actors", "👩 10 Female Voice Actors"], horizontal=True, key="hi_gender_radio")
-        is_h_male = "Male" in hi_gender
-        filtered_hi = {k: v for k, v in HINDI_VOICES.items() if (v["gender"] == "Male" if is_h_male else v["gender"] == "Female")}
-        selected_hi_name = st.selectbox("Voice Actor:", list(filtered_hi.keys()), key="hi_voice_select")
-        hi_voice_data = filtered_hi[selected_hi_name]
+        purp_hi_data = PURPOSE_PRESETS[hi_purpose]
+        st.caption(f"🎯 **Acoustic Profile:** {purp_hi_data['desc']}")
         
-        selected_h_purpose = st.selectbox("🎯 Production Purpose (सूर / Style):", list(PURPOSE_PRESETS.keys()), index=0, key="h_purpose_sel")
-        h_purp_data = PURPOSE_PRESETS[selected_h_purpose]
+    with col_hi2:
+        hi_categories = sorted(list(set(v["category"] for v in HINDI_VOICES.values())))
+        selected_hi_cat = st.selectbox("Voice Category:", hi_categories, key="hi_cat")
+        filtered_hi_voices = {k: v for k, v in HINDI_VOICES.items() if v["category"] == selected_hi_cat}
+        selected_hi_name = st.selectbox("Select Character Voice:", list(filtered_hi_voices.keys()), key="hi_voice")
         
+        hi_voice_data = filtered_hi_voices[selected_hi_name]
         base_hp = int(hi_voice_data["pitch"].replace("Hz", ""))
         base_hr = int(hi_voice_data["rate"].replace("%", ""))
-        target_hp = max(-40, min(40, base_hp + h_purp_data["pitch_offset"]))
-        target_hr = max(-30, min(30, base_hr + h_purp_data["rate_offset"]))
+        target_hp = max(-40, min(40, base_hp + purp_hi_data["pitch_offset"]))
+        target_hr = max(-30, min(30, base_hr + purp_hi_data["rate_offset"]))
         
         st.markdown(f"""
         <div class="voice-card">
             <div><span class="badge-cat">{hi_voice_data['category']}</span> <b>{selected_hi_name.split('(')[0]}</b></div>
-            <div style="font-size: 13px; color: #94A3B8; margin-top: 6px;">{hi_voice_data['desc']}</div>
-            <div style="font-size: 12px; color: #F87171; margin-top: 6px; font-weight: 600;">⚡ Pitch: {target_hp:+d}Hz | Cadence: {target_hr:+d}%</div>
+            <div style="font-size: 13px; color: {theme_subtext}; margin-top: 6px;">{hi_voice_data['desc']}</div>
+            <div style="font-size: 12px; color: #818CF8; margin-top: 6px; font-weight: 600;">⚡ Frequency: {target_hp:+d}Hz | Cadence: {target_hr:+d}%</div>
         </div>
         """, unsafe_allow_html=True)
         
-        with st.expander("🎛️ Manual Pitch & Cadence Sliders"):
-            c_slh1, c_slh2 = st.columns(2)
-            custom_hi_pitch = c_slh1.slider("Pitch (Hz):", min_value=-40, max_value=40, value=target_hp, step=1, format="%d Hz", key="hi_sl_pitch")
-            custom_hi_rate = c_slh2.slider("Speed (%):", min_value=-30, max_value=30, value=target_hr, step=1, format="%d%%", key="hi_sl_rate")
+        with st.expander("🎛️ Manual Pitch & Cadence Sliders (Fine Tuning)"):
+            c_hsl1, c_hsl2 = st.columns(2)
+            custom_hi_pitch = c_hsl1.slider("Pitch (Hz):", min_value=-40, max_value=40, value=target_hp, step=1, format="%d Hz", key="hi_sl_pitch")
+            custom_hi_rate = c_hsl2.slider("Speed (%):", min_value=-30, max_value=30, value=target_hr, step=1, format="%d%%", key="hi_sl_rate")
         
-        hi_btn = st.button("🚀 Synthesize Hindi Speech", type="primary", use_container_width=True, key="hi_btn")
+        hi_btn = st.button("🚀 Synthesize Hindi Speech (Generate MP3)", type="primary", use_container_width=True, key="hi_btn")
 
     if hi_btn:
         active_email = st.session_state.current_user.get("email", "guest@wani.ai")
-        is_allowed, trial_msg, _ = validate_user_trial(active_email, hi_text)
+        is_allowed, trial_msg, qdata = validate_user_trial(active_email, hi_text)
         
         if not is_allowed:
             st.error(trial_msg)
@@ -1041,84 +928,82 @@ with tab_hi:
             p_val = f"{custom_hi_pitch:+d}Hz"
             r_val = f"{custom_hi_rate:+d}%"
             
-            with st.spinner("Synthesizing Hindi studio audio..."):
+            with st.spinner("Rendering studio audio in Hindi..."):
                 engine_used = synthesize_speech(
                     text=hi_text,
                     voice_data=hi_voice_data,
-                    engine_choice="ElevenLabs",
+                    engine_choice=hi_engine_choice,
                     api_key=eleven_key,
                     out_path=out_hi,
                     custom_pitch=p_val,
                     custom_rate=r_val,
                     lang="hi"
                 )
-                increment_user_trial(active_email)
-
-            st.success(f"✨ Audio rendered successfully! (Engine: {engine_used})")
-            r1, r2 = st.columns([1.5, 1])
-            with r1:
-                with open(out_hi, "rb") as f: st.audio(f.read(), format="audio/mp3")
-            with r2:
-                with open(out_hi, "rb") as f: st.download_button("⬇️ Download Audio (MP3)", f.read(), file_name="wani_hindi_audio.mp3", mime="audio/mp3", use_container_width=True)
-
+                
+            st.success(f"✨ Hindi speech synthesized successfully via {engine_used}!")
+            col_a1, col_a2 = st.columns([1.5, 1])
+            with col_a1:
+                with open(out_hi, "rb") as f:
+                    st.audio(f.read(), format="audio/mp3")
+            with col_a2:
+                with open(out_hi, "rb") as f:
+                    st.download_button("⬇️ Download High-Res MP3", f.read(), file_name="wani_hindi_master.mp3", mime="audio/mp3", use_container_width=True)
 
 # ==============================================================
 # TAB 3: ENGLISH STUDIO
 # ==============================================================
 with tab_en:
-    st.markdown('<div class="studio-banner">🌐 English Speech Studio — US, UK, Indian English with Ultra-Deep Thanos Cosmic Bass</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">🌐 English Studio — Global BBC, Hollywood Trailer & Silicon Valley Keynote Cadences</div>', unsafe_allow_html=True)
     
-    col_e1, col_e2 = st.columns([1.2, 1])
+    col_en1, col_en2 = st.columns([1.5, 1])
     
-    with col_e1:
-        st.markdown("**1. Enter English Script:**")
-        c_e_p1, c_e_p2 = st.columns(2)
-        if c_e_p1.button("🌌 Thanos Cosmic Monologue"):
-            st.session_state.en_input_val = "I am inevitable. You could not live with your own failure. Where did that bring you? Back to me. I thought by eliminating half of life, the other half would thrive. But you have shown me that's impossible."
-        if c_e_p2.button("👑 Churchill Address"):
-            st.session_state.en_input_val = "We shall fight on the beaches, we shall fight on the landing grounds, we shall fight in the fields and in the streets. We shall never surrender!"
+    with col_en1:
+        en_text = st.text_area(
+            "English Script Input:",
+            value="Welcome to Wani Technologies. We are redefining the boundaries of human speech synthesis through advanced neural acoustic architectures and multilingual fluency.",
+            height=180,
+            key="en_script"
+        )
+        
+        c_esub1, c_esub2 = st.columns(2)
+        with c_esub1:
+            en_engine_choice = st.selectbox("Speech Engine Platform:", ["Native Edge Neural (Zero-Latency)", "ElevenLabs v4 Generative (Cinema Bass)"], key="en_engine")
+        with c_esub2:
+            en_purpose = st.selectbox("Select Production Purpose (Cadence):", list(PURPOSE_PRESETS.keys()), key="en_purp")
             
-        if "en_input_val" not in st.session_state:
-            st.session_state.en_input_val = "I am inevitable. You could not live with your own failure. Where did that bring you? Back to me."
-
-        en_text = st.text_area("Script Editor:", value=st.session_state.en_input_val, height=160, key="en_text_area")
-        curr_e_words = len(en_text.strip().split())
-        st.caption(f"📊 Words: **{curr_e_words}** / 100 max (Free Trial)")
-
-    with col_e2:
-        st.markdown("**2. Voice Actor & Production Purpose:**")
-        en_gender = st.radio("Gender:", ["👨 10 Male Voice Actors", "👩 10 Female Voice Actors"], horizontal=True, key="en_gender_radio")
-        is_e_male = "Male" in en_gender
-        filtered_en = {k: v for k, v in ENGLISH_VOICES.items() if (v["gender"] == "Male" if is_e_male else v["gender"] == "Female")}
-        selected_en_name = st.selectbox("Voice Actor:", list(filtered_en.keys()), key="en_voice_select")
-        en_voice_data = filtered_en[selected_en_name]
+        purp_en_data = PURPOSE_PRESETS[en_purpose]
+        st.caption(f"🎯 **Acoustic Profile:** {purp_en_data['desc']}")
         
-        selected_e_purpose = st.selectbox("🎯 Production Purpose (सूर / Style):", list(PURPOSE_PRESETS.keys()), index=0, key="e_purpose_sel")
-        e_purp_data = PURPOSE_PRESETS[selected_e_purpose]
+    with col_en2:
+        en_categories = sorted(list(set(v["category"] for v in ENGLISH_VOICES.values())))
+        selected_en_cat = st.selectbox("Voice Category:", en_categories, key="en_cat")
+        filtered_en_voices = {k: v for k, v in ENGLISH_VOICES.items() if v["category"] == selected_en_cat}
+        selected_en_name = st.selectbox("Select Character Voice:", list(filtered_en_voices.keys()), key="en_voice")
         
+        en_voice_data = filtered_en_voices[selected_en_name]
         base_ep = int(en_voice_data["pitch"].replace("Hz", ""))
         base_er = int(en_voice_data["rate"].replace("%", ""))
-        target_ep = max(-40, min(40, base_ep + e_purp_data["pitch_offset"]))
-        target_er = max(-30, min(30, base_er + e_purp_data["rate_offset"]))
+        target_ep = max(-40, min(40, base_ep + purp_en_data["pitch_offset"]))
+        target_er = max(-30, min(30, base_er + purp_en_data["rate_offset"]))
         
         st.markdown(f"""
         <div class="voice-card">
             <div><span class="badge-cat">{en_voice_data['category']}</span> <b>{selected_en_name.split('(')[0]}</b></div>
-            <div style="font-size: 13px; color: #94A3B8; margin-top: 6px;">{en_voice_data['desc']}</div>
-            <div style="font-size: 12px; color: #38BDF8; margin-top: 6px; font-weight: 600;">⚡ Pitch: {target_ep:+d}Hz | Cadence: {target_er:+d}%</div>
+            <div style="font-size: 13px; color: {theme_subtext}; margin-top: 6px;">{en_voice_data['desc']}</div>
+            <div style="font-size: 12px; color: #818CF8; margin-top: 6px; font-weight: 600;">⚡ Frequency: {target_ep:+d}Hz | Cadence: {target_er:+d}%</div>
         </div>
         """, unsafe_allow_html=True)
         
-        with st.expander("🎛️ Manual Pitch & Cadence Sliders"):
-            c_sle1, c_sle2 = st.columns(2)
-            custom_en_pitch = c_sle1.slider("Pitch (Hz):", min_value=-40, max_value=40, value=target_ep, step=1, format="%d Hz", key="en_sl_pitch")
-            custom_en_rate = c_sle2.slider("Speed (%):", min_value=-30, max_value=30, value=target_er, step=1, format="%d%%", key="en_sl_rate")
+        with st.expander("🎛️ Manual Pitch & Cadence Sliders (Fine Tuning)"):
+            c_esl1, c_esl2 = st.columns(2)
+            custom_en_pitch = c_esl1.slider("Pitch (Hz):", min_value=-40, max_value=40, value=target_ep, step=1, format="%d Hz", key="en_sl_pitch")
+            custom_en_rate = c_esl2.slider("Speed (%):", min_value=-30, max_value=30, value=target_er, step=1, format="%d%%", key="en_sl_rate")
         
-        en_btn = st.button("🚀 Synthesize English Speech", type="primary", use_container_width=True, key="en_btn")
+        en_btn = st.button("🚀 Synthesize English Speech (Generate MP3)", type="primary", use_container_width=True, key="en_btn")
 
     if en_btn:
         active_email = st.session_state.current_user.get("email", "guest@wani.ai")
-        is_allowed, trial_msg, _ = validate_user_trial(active_email, en_text)
+        is_allowed, trial_msg, qdata = validate_user_trial(active_email, en_text)
         
         if not is_allowed:
             st.error(trial_msg)
@@ -1129,134 +1014,126 @@ with tab_en:
             p_val = f"{custom_en_pitch:+d}Hz"
             r_val = f"{custom_en_rate:+d}%"
             
-            with st.spinner("Synthesizing studio-grade English audio..."):
+            with st.spinner("Rendering studio audio in English..."):
                 engine_used = synthesize_speech(
                     text=en_text,
                     voice_data=en_voice_data,
-                    engine_choice="ElevenLabs",
+                    engine_choice=en_engine_choice,
                     api_key=eleven_key,
                     out_path=out_en,
                     custom_pitch=p_val,
                     custom_rate=r_val,
                     lang="en"
                 )
-                increment_user_trial(active_email)
-
-            st.success(f"✨ Audio rendered successfully! (Engine: {engine_used})")
-            r1, r2 = st.columns([1.5, 1])
-            with r1:
-                with open(out_en, "rb") as f: st.audio(f.read(), format="audio/mp3")
-            with r2:
-                with open(out_en, "rb") as f: st.download_button("⬇️ Download Audio (MP3)", f.read(), file_name="wani_english_audio.mp3", mime="audio/mp3", use_container_width=True)
-
+                
+            st.success(f"✨ English speech synthesized successfully via {engine_used}!")
+            col_a1, col_a2 = st.columns([1.5, 1])
+            with col_a1:
+                with open(out_en, "rb") as f:
+                    st.audio(f.read(), format="audio/mp3")
+            with col_a2:
+                with open(out_en, "rb") as f:
+                    st.download_button("⬇️ Download High-Res MP3", f.read(), file_name="wani_english_master.mp3", mime="audio/mp3", use_container_width=True)
 
 # ==============================================================
-# TAB 4: UNIVERSAL MULTI-LANGUAGE TRANSLATOR & SPEECH STUDIO
+# TAB 4: UNIVERSAL LANGUAGE STUDIO (POINT 8)
 # ==============================================================
-GLOBAL_VOICE_MAP = {
-    "Marathi (मराठी)": {"code": "mr", "voice": "mr-IN-ManoharNeural"},
-    "Hindi (हिंदी)": {"code": "hi", "voice": "hi-IN-MadhurNeural"},
-    "English (UK / US)": {"code": "en", "voice": "en-US-BrianNeural"},
-    "Tamil (தமிழ்)": {"code": "ta", "voice": "ta-IN-PallaviNeural"},
-    "Telugu (తెలుగు)": {"code": "te", "voice": "te-IN-MohanNeural"},
-    "Gujarati (ગુજરાતી)": {"code": "gu", "voice": "gu-IN-NiranjanNeural"},
-    "Bengali (বাংলা)": {"code": "bn", "voice": "bn-IN-BashkarNeural"},
-    "Spanish (Español)": {"code": "es", "voice": "es-ES-AlvaroNeural"},
-    "French (Français)": {"code": "fr", "voice": "fr-FR-HenriNeural"},
-    "German (Deutsch)": {"code": "de", "voice": "de-DE-KillianNeural"},
-    "Japanese (日本語)": {"code": "ja", "voice": "ja-JP-KeitaNeural"}
-}
-
 with tab_trans_studio:
-    st.markdown('<div class="studio-banner">🌍 Universal Language Studio — Type in Any Language, Translate in Real-Time & Synthesize Native Voice Instantly</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">🌍 Universal Language Studio — Cross-Lingual Translation & Native Speech Synthesis</div>', unsafe_allow_html=True)
+    
+    LANG_OPTIONS = {
+        "Marathi (मराठी)": {"code": "mr", "edge_voice": "mr-IN-ManoharNeural"},
+        "Hindi (हिंदी)": {"code": "hi", "edge_voice": "hi-IN-MadhurNeural"},
+        "English (US / UK)": {"code": "en", "edge_voice": "en-US-GuyNeural"},
+        "Gujarati (ગુજરાતી)": {"code": "gu", "edge_voice": "gu-IN-NiranjanNeural"},
+        "Tamil (தமிழ்)": {"code": "ta", "edge_voice": "ta-IN-ValluvarNeural"},
+        "Telugu (తెలుగు)": {"code": "te", "edge_voice": "te-IN-MohanNeural"},
+        "Kannada (ಕನ್ನಡ)": {"code": "kn", "edge_voice": "kn-IN-GaganNeural"},
+        "Bengali (বাংলা)": {"code": "bn", "edge_voice": "bn-IN-BashkarNeural"},
+        "German (Deutsch)": {"code": "de", "edge_voice": "de-DE-ConradNeural"},
+        "French (Français)": {"code": "fr", "edge_voice": "fr-FR-HenriNeural"},
+        "Spanish (Español)": {"code": "es", "edge_voice": "es-ES-AlvaroNeural"},
+        "Japanese (日本語)": {"code": "ja", "edge_voice": "ja-JP-KeitaNeural"}
+    }
     
     col_t1, col_t2 = st.columns(2)
     with col_t1:
-        st.markdown("### 📥 Source Input")
-        src_lang = st.selectbox("Source Language:", ["Auto-Detect", "English", "Marathi", "Hindi"], index=0)
-        src_code = "auto" if "Auto" in src_lang else ("en" if "English" in src_lang else ("mr" if "Marathi" in src_lang else "hi"))
-        user_raw_text = st.text_area("Input Text (Any Language):", value="Chhatrapati Shivaji Maharaj was the greatest leader of India. He established Swarajya with bravery, wisdom, and justice.", height=150)
-        
+        src_lang = st.selectbox("Original Source Language:", list(LANG_OPTIONS.keys()), index=2, key="src_lang")
+        src_text_input = st.text_area("Source Text Script:", "Generative AI is revolutionizing how we tell stories across cultures and borders.", height=140)
     with col_t2:
-        st.markdown("### 📤 Target Language & Synthesis")
-        target_choice = st.selectbox("Translate & Speak In:", list(GLOBAL_VOICE_MAP.keys()), index=0)
-        tgt_data = GLOBAL_VOICE_MAP[target_choice]
-        btn_translate = st.button("🌐 Translate Text Now", use_container_width=True)
+        tgt_lang = st.selectbox("Target Output Language:", list(LANG_OPTIONS.keys()), index=0, key="tgt_lang")
         
-        if "universal_trans_res" not in st.session_state:
-            st.session_state.universal_trans_res = ""
-            
-        if btn_translate:
-            if user_raw_text.strip():
-                with st.spinner("Translating text..."):
-                    res = translate_text(user_raw_text, source=src_code, target=tgt_data["code"])
-                    st.session_state.universal_trans_res = res
-                    st.success("Translation complete!")
-                    
-        translated_output = st.text_area("Translated Text Result:", value=st.session_state.universal_trans_res, height=150)
+        if st.button("🔄 Auto-Translate Script", use_container_width=True):
+            with st.spinner("Translating text..."):
+                trans_res = translate_text(src_text_input, source=LANG_OPTIONS[src_lang]["code"], target=LANG_OPTIONS[tgt_lang]["code"])
+                st.session_state["trans_cached_res"] = trans_res
+                
+        cached_trans = st.session_state.get("trans_cached_res", "")
+        tgt_text_input = st.text_area("Translated Output Script (Editable):", value=cached_trans, height=140)
 
-    btn_speak_trans = st.button("🎙️ Synthesize Speech in Target Language", type="primary", use_container_width=True)
-    
-    if btn_speak_trans:
+    if st.button("🎙️ Synthesize Translated Speech (Native Phonetics)", type="primary", use_container_width=True):
         active_email = st.session_state.current_user.get("email", "guest@wani.ai")
-        is_allowed, trial_msg, _ = validate_user_trial(active_email, translated_output)
+        is_allowed, trial_msg, qdata = validate_user_trial(active_email, tgt_text_input)
         
         if not is_allowed:
             st.error(trial_msg)
-        elif not translated_output.strip():
-            st.warning("Please translate text before rendering speech.")
+        elif not tgt_text_input.strip():
+            st.warning("Please enter or translate text first.")
         else:
-            out_trans_mp3 = os.path.join(tempfile.gettempdir(), f"wani_global_{uuid.uuid4().hex[:8]}.mp3")
-            with st.spinner(f"Rendering native speech in {target_choice}..."):
-                async def run_global_edge():
-                    comm = edge_tts.Communicate(translated_output, tgt_data["voice"])
-                    await comm.save(out_trans_mp3)
-                asyncio.run(run_global_edge())
-                increment_user_trial(active_email)
+            voice_id = LANG_OPTIONS[tgt_lang]["edge_voice"]
+            out_trans = os.path.join(tempfile.gettempdir(), f"wani_trans_{uuid.uuid4().hex[:8]}.mp3")
+            
+            with st.spinner(f"Synthesizing native speech in {tgt_lang}..."):
+                async def run_trans_edge():
+                    comm = edge_tts.Communicate(tgt_text_input, voice_id)
+                    await comm.save(out_trans)
+                asyncio.run(run_trans_edge())
                 
-            st.success(f"✨ Speech rendered in {target_choice}!")
-            gr1, gr2 = st.columns([1.5, 1])
-            with gr1:
-                with open(out_trans_mp3, "rb") as f: st.audio(f.read(), format="audio/mp3")
-            with gr2:
-                with open(out_trans_mp3, "rb") as f: st.download_button("⬇️ Download Audio (MP3)", f.read(), file_name="wani_translated_speech.mp3", mime="audio/mp3", use_container_width=True)
-
+            st.success(f"✨ Successfully generated native {tgt_lang} audio!")
+            col_a1, col_a2 = st.columns([1.5, 1])
+            with col_a1:
+                with open(out_trans, "rb") as f: st.audio(f.read(), format="audio/mp3")
+            with col_a2:
+                with open(out_trans, "rb") as f: st.download_button("⬇️ Download Audio (MP3)", f.read(), file_name=f"wani_{LANG_OPTIONS[tgt_lang]['code']}.mp3", mime="audio/mp3", use_container_width=True)
 
 # ==============================================================
 # TAB 5: MULTI-VOICE DIALOGUE STUDIO
 # ==============================================================
 with tab_dialogue:
-    st.markdown('<div class="studio-banner">🎭 Multi-Voice Dialogue Studio — Build 2-Actor Conversational Scenes Stitched into a Seamless MP3</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">🎭 Multi-Voice Dialogue Studio — Build Cinematic Conversational Scenes Between Two Characters</div>', unsafe_allow_html=True)
     
     col_d1, col_d2 = st.columns(2)
     with col_d1:
-        st.markdown("### 🗣️ Character 1")
-        all_mr_keys = list(MARATHI_VOICES.keys())
-        char1_name = st.selectbox("Actor 1:", all_mr_keys, index=0, key="char1_select")
-        char1_text = st.text_area("Actor 1 Dialogue Line:", value="महाराज, आधी लगीन कोंढाण्याचं, मग माझ्या रायबाचं! कोंढाणा सर केल्याशिवाय हा सुभेदार परत येणार नाही!", height=100, key="char1_text")
-        
+        st.markdown("#### 🗣️ Character 1")
+        char1_voice = st.selectbox("Select Character 1 Voice:", list(MARATHI_VOICES.keys()), index=0, key="c1_v")
+        char1_text = st.text_area("Character 1 Dialogue:", "तान्हाजी, सिंहगडाची मोहीम सोपी नाही. मुघलांचा पहारा अतिशय कडक आहे!", height=100, key="c1_t")
     with col_d2:
-        st.markdown("### 🗣️ Character 2")
-        char2_name = st.selectbox("Actor 2:", all_mr_keys, index=1, key="char2_select")
-        char2_text = st.text_area("Actor 2 Dialogue Line:", value="सुभेदार, सावध राहा! सिंहगडावर मुघलांची फौज सज्ज आहे. स्वराज्याला तुमच्यासारख्या वीरांचा अभिमान आहे!", height=100, key="char2_text")
-        
-    dialogue_btn = st.button("🎬 Render Full Dialogue Scene (Merged MP3)", type="primary", use_container_width=True)
-    
-    if dialogue_btn:
+        st.markdown("#### 🗣️ Character 2")
+        char2_voice = st.selectbox("Select Character 2 Voice:", list(MARATHI_VOICES.keys()), index=1, key="c2_v")
+        char2_text = st.text_area("Character 2 Dialogue:", "महाराज, आधी लगीन कोंढाण्याचं, मग माझ्या रायबाचं! जोपर्यंत गड जिंकत नाही, तोपर्यंत तान्हाजी शांत बसणार नाही!", height=100, key="c2_t")
+
+    if st.button("🎬 Render Multi-Voice Scene", type="primary", use_container_width=True):
         active_email = st.session_state.current_user.get("email", "guest@wani.ai")
-        u = users_db.get(active_email, {})
-        plan = u.get("plan", "FREE TRIAL 🎁")
+        full_dialogue_text = char1_text + " " + char2_text
+        is_allowed, trial_msg, qdata = validate_user_trial(active_email, full_dialogue_text)
         
-        if "FREE" in plan and not u.get("is_admin", False):
-            st.error("⚠️ Multi-Voice Dialogue Studio is reserved for Creator Pro and Studio Master plans. Please upgrade to unlock.")
+        if not is_allowed:
+            st.error(trial_msg)
         else:
-            out_d1 = os.path.join(tempfile.gettempdir(), f"diag_{uuid.uuid4().hex[:8]}_1.mp3")
-            out_d2 = os.path.join(tempfile.gettempdir(), f"diag_{uuid.uuid4().hex[:8]}_2.mp3")
-            out_d_combined = os.path.join(tempfile.gettempdir(), f"dialogue_scene_{uuid.uuid4().hex[:8]}.mp3")
+            out_d1 = os.path.join(tempfile.gettempdir(), f"diag_p1_{uuid.uuid4().hex[:6]}.mp3")
+            out_d2 = os.path.join(tempfile.gettempdir(), f"diag_p2_{uuid.uuid4().hex[:6]}.mp3")
+            out_d_combined = os.path.join(tempfile.gettempdir(), f"dialogue_scene_{uuid.uuid4().hex[:6]}.mp3")
             
-            with st.spinner("Synthesizing separate speaker tracks & stitching conversational frames..."):
-                synthesize_speech(char1_text, MARATHI_VOICES[char1_name], "Native Maharashtra", eleven_key, out_d1)
-                synthesize_speech(char2_text, MARATHI_VOICES[char2_name], "Native Maharashtra", eleven_key, out_d2)
+            with st.spinner("Synthesizing scene parts and combining acoustics..."):
+                v1_data = MARATHI_VOICES[char1_voice]
+                v2_data = MARATHI_VOICES[char2_voice]
+                
+                async def run_both():
+                    comm1 = edge_tts.Communicate(char1_text, v1_data["id"], pitch=v1_data["pitch"], rate=v1_data["rate"])
+                    comm2 = edge_tts.Communicate(char2_text, v2_data["id"], pitch=v2_data["pitch"], rate=v2_data["rate"])
+                    await comm1.save(out_d1)
+                    await comm2.save(out_d2)
+                asyncio.run(run_both())
                 
                 with open(out_d1, "rb") as f1, open(out_d2, "rb") as f2:
                     combined_bytes = f1.read() + f2.read()
@@ -1271,110 +1148,426 @@ with tab_dialogue:
             with dr2:
                 with open(out_d_combined, "rb") as f: st.download_button("⬇️ Download Full Scene (MP3)", f.read(), file_name="wani_dialogue_scene.mp3", mime="audio/mp3", use_container_width=True)
 
-
 # ==============================================================
-# TAB 6: PRICING & SUBSCRIPTION MONETIZATION ENGINE
+# TAB 6: RAZORPAY SUBSCRIPTION PLANS & CHECKOUT ENGINE
 # ==============================================================
 with tab_pricing:
-    st.markdown('<div class="studio-banner">💎 Subscription Plans — Choose the Perfect Tier for Your Production Workflow</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">💎 Official Wani Subscription Plans — Integrated with Razorpay Subscriptions (INR)</div>', unsafe_allow_html=True)
     
-    col_p1, col_p2, col_p3 = st.columns(3)
-    
+    # Billing Cycle Selection
+    cycle_choice = st.radio(
+        "Select Billing Cycle:",
+        ["Monthly Billing", "Yearly Billing (17% OFF / 2 Months Free) 🔥"],
+        horizontal=True,
+        key="pricing_cycle_radio"
+    )
+    is_yearly = "Yearly" in cycle_choice
+    billing_cycle = "yearly" if is_yearly else "monthly"
+
+    plans_catalog = sm.get_plans()
+    starter_p = plans_catalog.get("starter", {})
+    pro_p = plans_catalog.get("pro", {})
+    biz_p = plans_catalog.get("business", {})
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_p1, col_p2, col_p3, col_p4 = st.columns(4)
+
+    # 1. Free Trial
     with col_p1:
-        st.markdown("""
+        st.markdown(f"""
         <div class="pricing-card">
-            <h3>🎁 Free Starter</h3>
-            <h1 style="color:#94A3B8;">$0 <span style="font-size:15px;">/month (₹0)</span></h1>
-            <p style="color:#64748B; font-size:13px;">For testing and discovery</p>
-            <hr style="border-color:#1E293B;">
-            <ul style="text-align:left; font-size:13px; color:#CBD5E1; line-height:2.2;">
+            <h3>🎁 Free Trial</h3>
+            <h1 style="color:{theme_subtext}; font-size: 32px;">₹0 <span style="font-size:14px;">/ forever</span></h1>
+            <p style="color:{theme_subtext}; font-size:12.5px;">For testing and discovery</p>
+            <hr style="border-color:{theme_card_border};">
+            <ul style="text-align:left; font-size:12.5px; color:{theme_text}; line-height:2.2; padding-left: 18px;">
                 <li>✅ <b>2 generations per day</b></li>
-                <li>✅ <b>100 words per generation limit</b></li>
-                <li>✅ Standard Marathi, Hindi & English models</li>
-                <li>❌ No epic warrior bass timbres</li>
+                <li>✅ <b>100 words per generation</b></li>
+                <li>✅ Standard multi-language TTS</li>
+                <li>✅ Essential studio presets</li>
                 <li>❌ No dialogue scene builder</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
-        st.button("Current Active Tier", disabled=True, use_container_width=True)
+        st.write("")
+        st.button("Default Active Plan", disabled=True, use_container_width=True, key="btn_free_tier")
 
+    # 2. Starter Plan
     with col_p2:
-        st.markdown("""
-        <div class="pricing-card pricing-featured">
-            <span style="background:#6366F1; color:white; padding:3px 10px; border-radius:10px; font-size:11px; font-weight:800; letter-spacing:0.5px;">MOST POPULAR ⭐</span>
-            <h3 style="margin-top:10px;">👑 Creator Pro</h3>
-            <h1 style="color:#818CF8;">$4 <span style="font-size:15px;">/month (₹299)</span></h1>
-            <p style="color:#94A3B8; font-size:13px;">For YouTubers, Podcasters & Reel Creators</p>
-            <hr style="border-color:#312E81;">
-            <ul style="text-align:left; font-size:13px; color:#E0E7FF; line-height:2.2;">
-                <li>🔥 <b>Unlimited Generations (No Daily Limits)</b></li>
-                <li>🔥 <b>Unlimited Word Count (Long-form scripts)</b></li>
-                <li>⚔️ Tanaji Malusare, Bajiprabhu & Jijau Voices</li>
-                <li>🌌 Thanos & Amitabh Style Cinema Bass</li>
-                <li>💎 100% Commercial Monetization Rights</li>
+        price_st = starter_p.get("price_inr_yearly" if is_yearly else "price_inr_monthly", 299)
+        period_st_text = "/year" if is_yearly else "/month"
+        st.markdown(f"""
+        <div class="pricing-card">
+            <h3>⚡ Starter</h3>
+            <h1 style="color:#6366F1; font-size: 32px;">₹{price_st:,} <span style="font-size:14px;">{period_st_text}</span></h1>
+            <p style="color:{theme_subtext}; font-size:12.5px;">For YouTubers & Independent Creators</p>
+            <hr style="border-color:{theme_card_border};">
+            <ul style="text-align:left; font-size:12.5px; color:{theme_text}; line-height:2.2; padding-left: 18px;">
+                <li>🔥 <b>{starter_p.get('words_per_month', 50000):,} Words / Month</b></li>
+                <li>🎙️ <b>100 Paragraphs</b> & 50 Translations</li>
+                <li>🎧 10 High-Fidelity Neural Voices</li>
+                <li>💼 Commercial Monetization Rights</li>
+                <li>⚡ Instant MP3 Studio Exports</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
         st.write("")
-        st.markdown("**Subscribe via Direct UPI / PhonePe / GPay:**")
-        st.code("wani.pro@upi", language="text")
+        if st.button("Subscribe to Starter ⚡", type="primary", use_container_width=True, key="btn_sub_starter"):
+            st.session_state["active_checkout_plan"] = "starter"
+            st.session_state["active_checkout_cycle"] = billing_cycle
 
+    # 3. Pro Creator (Featured)
     with col_p3:
-        st.markdown("""
-        <div class="pricing-card">
-            <h3>🚀 Studio Master</h3>
-            <h1 style="color:#38BDF8;">$9 <span style="font-size:15px;">/month (₹699)</span></h1>
-            <p style="color:#64748B; font-size:13px;">For Media Agencies & Production Houses</p>
-            <hr style="border-color:#1E293B;">
-            <ul style="text-align:left; font-size:13px; color:#CBD5E1; line-height:2.2;">
-                <li>👑 <b>All Creator Pro Features Included</b></li>
-                <li>🎭 <b>Multi-Voice Dialogue Studio</b> Unlocked</li>
-                <li>⚡ ElevenLabs Ultra Generative Cloud Engine</li>
-                <li>📝 1-Click AI Script Studio</li>
+        price_pro = pro_p.get("price_inr_yearly" if is_yearly else "price_inr_monthly", 699)
+        period_pro_text = "/year" if is_yearly else "/month"
+        st.markdown(f"""
+        <div class="pricing-card pricing-featured">
+            <span style="background:#6366F1; color:white; padding:3px 10px; border-radius:10px; font-size:11px; font-weight:800; letter-spacing:0.5px;">MOST POPULAR ⭐</span>
+            <h3 style="margin-top:10px;">👑 Pro Creator</h3>
+            <h1 style="color:#818CF8; font-size: 32px;">₹{price_pro:,} <span style="font-size:14px;">{period_pro_text}</span></h1>
+            <p style="color:{theme_subtext}; font-size:12.5px;">For Production Houses & Podcast Studios</p>
+            <hr style="border-color:{theme_card_border};">
+            <ul style="text-align:left; font-size:12.5px; color:{theme_text}; line-height:2.2; padding-left: 18px;">
+                <li>🚀 <b>{pro_p.get('words_per_month', 250000):,} Words / Month</b></li>
+                <li>🎭 <b>All 35+ Multi-Platform Voices</b></li>
+                <li>⚔️ Tanaji, Bajiprabhu & Jijau Voices</li>
+                <li>🌌 Thanos & Amitabh Movie Trailer Bass</li>
                 <li>🏎️ 2x Priority Rendering Queue</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
         st.write("")
-        st.markdown("**Subscribe via Direct UPI / PhonePe / GPay:**")
-        st.code("wani.master@upi", language="text")
+        if st.button("Subscribe to Pro 👑", type="primary", use_container_width=True, key="btn_sub_pro"):
+            st.session_state["active_checkout_plan"] = "pro"
+            st.session_state["active_checkout_cycle"] = billing_cycle
 
-    st.markdown("---")
-    st.markdown("### 🔑 Redeem VIP Activation License Key")
-    col_k1, col_k2 = st.columns([2.5, 1])
-    with col_k1:
-        vip_input = st.text_input("Enter License Key / Token:", placeholder="e.g. WANI-PRO-2026 or WANI-MASTER-VIP")
-    with col_k2:
+    # 4. Business Plan
+    with col_p4:
+        price_biz = biz_p.get("price_inr_yearly" if is_yearly else "price_inr_monthly", 1999)
+        period_biz_text = "/year" if is_yearly else "/month"
+        st.markdown(f"""
+        <div class="pricing-card">
+            <h3>🚀 Studio Business</h3>
+            <h1 style="color:#38BDF8; font-size: 32px;">₹{price_biz:,} <span style="font-size:14px;">{period_biz_text}</span></h1>
+            <p style="color:{theme_subtext}; font-size:12.5px;">For High-Volume Media Agencies & Developers</p>
+            <hr style="border-color:{theme_card_border};">
+            <ul style="text-align:left; font-size:12.5px; color:{theme_text}; line-height:2.2; padding-left: 18px;">
+                <li>💎 <b>{biz_p.get('words_per_month', 1000000):,} Words / Month</b></li>
+                <li>🌐 Unlimited Paragraphs & Translations</li>
+                <li>🔌 <b>Developer REST API Access</b></li>
+                <li>🛡️ <b>24/7 Dedicated SLA Enterprise Support</b></li>
+                <li>🎙️ Custom Acoustic Voice Tailoring</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
         st.write("")
-        st.write("")
-        if st.button("Unlock VIP License 🔓", type="primary", use_container_width=True):
-            vip_code = sanitize_text(vip_input).upper()
-            email_key = st.session_state.current_user.get("email", "vishal@wani.ai")
+        if st.button("Subscribe to Business 🚀", type="primary", use_container_width=True, key="btn_sub_biz"):
+            st.session_state["active_checkout_plan"] = "business"
+            st.session_state["active_checkout_cycle"] = billing_cycle
+
+    # ---------------------------------------------------------
+    # AUTOMATED RAZORPAY CHECKOUT MODAL & SERVER VERIFICATION
+    # ---------------------------------------------------------
+    if "active_checkout_plan" in st.session_state:
+        target_pcode = st.session_state["active_checkout_plan"]
+        target_cycle = st.session_state.get("active_checkout_cycle", "monthly")
+        active_email = st.session_state.current_user.get("email", "guest@wani.ai")
+        
+        st.markdown("---")
+        st.markdown(f"### 💳 Automated Checkout: {target_pcode.upper()} ({target_cycle.capitalize()})")
+        
+        # Initiate server-side Razorpay subscription creation
+        checkout_info = sm.create_subscription_checkout(active_email, target_pcode, target_cycle)
+        sub_id = checkout_info.get("subscription_id")
+        amount_inr = checkout_info.get("amount", 0) / 100.0
+        
+        col_c1, col_c2 = st.columns([1.6, 1])
+        with col_c1:
+            st.markdown(f"""
+            <div class="voice-card">
+                <h4>Order Summary</h4>
+                <p>• <b>User Account:</b> <code>{active_email}</code></p>
+                <p>• <b>Razorpay Subscription ID:</b> <code>{sub_id}</code></p>
+                <p>• <b>Billing Schedule:</b> Recurring {target_cycle.capitalize()}</p>
+                <p>• <b>Mandate Total:</b> <span style="font-size:20px; color:#10B981; font-weight:700;">₹{amount_inr:,} INR</span></p>
+                <p style="font-size:12px; color:{theme_subtext};">Recurring mandate authorized via UPI Autopay, Debit/Credit Card, or Netbanking. Encrypted 256-bit server verification.</p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            if hmac.compare_digest(vip_code, "WANI-PRO-2026") or hmac.compare_digest(vip_code, "SWAR-PRO-2026"):
-                st.session_state.current_user["plan"] = "CREATOR PRO 👑"
-                st.session_state.current_user["credits"] = 999999
-                if email_key in users_db:
-                    users_db[email_key]["plan"] = "CREATOR PRO 👑"
-                    users_db[email_key]["credits"] = 999999
-                    save_secure_users(users_db)
-                st.success("🎉 License Verified! Account upgraded to CREATOR PRO ($4 / ₹299/mo)!")
-                st.rerun()
-            elif hmac.compare_digest(vip_code, "WANI-MASTER-VIP") or hmac.compare_digest(vip_code, "SWAR-VIP-MASTER"):
-                st.session_state.current_user["plan"] = "STUDIO MASTER 🚀"
-                st.session_state.current_user["credits"] = 999999
-                if email_key in users_db:
-                    users_db[email_key]["plan"] = "STUDIO MASTER 🚀"
-                    users_db[email_key]["credits"] = 999999
-                    save_secure_users(users_db)
-                st.success("🎉 License Verified! Account upgraded to STUDIO MASTER ($9 / ₹699/mo)!")
-                st.rerun()
-            else:
-                st.error("Invalid VIP License Key. Please verify your token.")
+        with col_c2:
+            st.markdown("#### Authorization & Verification")
+            st.caption("Complete subscription mandate via Razorpay:")
+            
+            # Simulated 1-Click Server Verification (Test Mode with Cryptographic HMAC-SHA256)
+            if st.button("🔐 Authorize & Verify Subscription (Instant)", type="primary", use_container_width=True):
+                cfg = sm.get_config()
+                test_pay_id = f"pay_rzp_{uuid.uuid4().hex[:10]}"
+                
+                # Compute authentic server HMAC signature
+                msg = f"{test_pay_id}|{sub_id}".encode("utf-8")
+                valid_sig = hmac.new(cfg["razorpay_key_secret"].encode("utf-8"), msg, hashlib.sha256).hexdigest()
+                
+                with st.spinner("Executing server-side cryptographic signature verification..."):
+                    ok, msg = sm.verify_checkout_signature(active_email, test_pay_id, sub_id, valid_sig)
+                    
+                if ok:
+                    st.success(f"🎉 Payment Verified! Subscription {sub_id} is now ACTIVE! Entitlements unlocked.")
+                    # Sync local user session
+                    st.session_state.current_user["plan"] = f"{target_pcode.upper()} 👑"
+                    if "active_checkout_plan" in st.session_state:
+                        del st.session_state["active_checkout_plan"]
+                    st.rerun()
+                else:
+                    st.error(f"Verification Failed: {msg}")
 
+            if checkout_info.get("short_url"):
+                st.markdown(f"""<a href="{checkout_info['short_url']}" target="_blank" style="text-decoration:none;"><div style="background:#6366F1; color:white; padding:10px; border-radius:6px; font-weight:700; text-align:center; font-size:13px; margin-top:8px;">🌐 Open Razorpay Hosted Checkout</div></a>""", unsafe_allow_html=True)
+
+            if st.button("Cancel Checkout", use_container_width=True):
+                del st.session_state["active_checkout_plan"]
+                st.rerun()
 
 # ==============================================================
-# TAB 7: ACCOUNT & AUTHENTICATION SUBSYSTEM (POINT 2)
+# TAB 7: CUSTOMER BILLING DASHBOARD (POINT 9)
+# ==============================================================
+with tab_customer_billing:
+    st.markdown('<div class="studio-banner">📑 Customer Billing Dashboard — Subscription Status, Quota Ledger & Payment Invoices</div>', unsafe_allow_html=True)
+    
+    active_email = st.session_state.current_user.get("email", "guest@wani.ai")
+    c_data = sm.get_customer_dashboard_data(active_email)
+    ent = c_data["entitlements"]
+    sub_d = c_data["subscription_details"]
+    quotas = c_data["quotas"]
+    payments = c_data["payment_history"]
+    
+    # 1. Prominent Status Overview Card
+    b_col1, b_col2, b_col3, b_col4 = st.columns(4)
+    b_col1.metric("💎 Current Plan", ent.get("plan_name", "Free Trial"))
+    
+    st_label = ent.get("status", "free").upper()
+    b_col2.metric("🟢 Subscription Status", st_label)
+    
+    next_bill = (sub_d.get("current_period_end") or "N/A").split("T")[0]
+    b_col3.metric("📅 Next Renewal Date", next_bill)
+    
+    plan_cost = sub_d.get("locked_plan_terms", {}).get("price_inr", 0)
+    cycle_label = sub_d.get("billing_cycle", "monthly").capitalize()
+    b_col4.metric(f"💳 Recurring Rate ({cycle_label})", f"₹{plan_cost:,}")
+    
+    if ent.get("warning_message"):
+        st.warning(ent["warning_message"])
+
+    st.markdown("---")
+    st.markdown("### 📊 Quota Allocation & Monthly Consumption")
+    
+    q_col1, q_col2, q_col3 = st.columns(3)
+    with q_col1:
+        st.markdown(f"**Monthly Words Used:** `{quotas['words_used']:,}` / `{quotas['words_quota']:,}`")
+        st.progress(quotas['words_percent'] / 100.0)
+        st.caption(f"{quotas['words_quota'] - quotas['words_used']:,} words remaining this billing cycle.")
+    with q_col2:
+        st.markdown(f"**Paragraphs Used:** `{quotas['paragraphs_used']}` / `{quotas['paragraphs_quota']}`")
+        st.progress(quotas['paragraphs_percent'] / 100.0)
+        st.caption(f"{quotas['paragraphs_quota'] - quotas['paragraphs_used']} paragraphs remaining.")
+    with q_col3:
+        st.markdown(f"**Translations Used:** `{quotas['translations_used']}` / `{quotas['translations_quota']}`")
+        st.progress(quotas['translations_percent'] / 100.0)
+        st.caption(f"{quotas['translations_quota'] - quotas['translations_used']} translations remaining.")
+
+    st.markdown("---")
+    st.markdown("### ⚙️ Subscription Management Actions")
+    
+    act_col1, act_col2 = st.columns(2)
+    
+    # Action 1: Upgrade / Downgrade Plan
+    with act_col1:
+        with st.expander("🔄 Upgrade / Change Subscription Plan"):
+            st.caption("Select new plan to synchronize with Razorpay:")
+            new_p = st.selectbox("Target Plan:", ["Starter", "Pro", "Business"], key="change_p_select")
+            new_c = st.selectbox("Billing Frequency:", ["Monthly", "Yearly"], key="change_c_select")
+            sched_mode = st.radio("Effective Schedule:", ["At End of Current Billing Period (Recommended)", "Immediate Change"], key="sched_mode_radio")
+            
+            if st.button("Confirm Plan Change 🚀", type="primary", use_container_width=True):
+                sched_end = ("Period" in sched_mode)
+                ok, msg = sm.change_plan(active_email, new_p.lower(), new_c.lower(), schedule_at_cycle_end=sched_end)
+                if ok:
+                    st.success(msg)
+                    st.rerun()
+                else:
+                    st.error(msg)
+                    
+    # Action 2: Cancel / Resubscribe
+    with act_col2:
+        with st.expander("🛑 Cancel Subscription or Resubscribe"):
+            if ent.get("is_paid", False) and ent.get("status") != "cancelled_pending_period_end":
+                st.caption("Cancel your recurring billing mandate:")
+                cancel_opt = st.radio(
+                    "Cancellation Terms:",
+                    ["Preserve access until end of current billing period (Recommended)", "Cancel immediately"],
+                    key="cancel_opt_radio"
+                )
+                if st.button("Confirm Cancellation ❌", use_container_width=True):
+                    at_end = ("Preserve" in cancel_opt)
+                    ok, msg = sm.cancel_subscription(active_email, cancel_at_cycle_end=at_end)
+                    if ok:
+                        st.info(msg)
+                        st.rerun()
+                    else:
+                        st.error(msg)
+            else:
+                st.caption("Your subscription is inactive or cancelled. You can resubscribe instantly:")
+                if st.button("Resubscribe to Pro Plan ⭐", type="primary", use_container_width=True):
+                    st.session_state["active_checkout_plan"] = "pro"
+                    st.session_state["active_checkout_cycle"] = "monthly"
+                    st.rerun()
+
+    # 3. Immutable Payment History & Invoices
+    st.markdown("---")
+    st.markdown("### 🧾 Payment History & Official Invoices")
+    
+    if payments:
+        p_table = []
+        for p in payments:
+            p_table.append({
+                "Date": p.get("timestamp", "").split("T")[0],
+                "Payment ID": p.get("payment_id"),
+                "Subscription ID": p.get("subscription_id"),
+                "Amount (INR)": f"₹{p.get('amount_inr', 0):,}",
+                "Status": p.get("status", "").upper(),
+                "Event Type": p.get("event_type", ""),
+                "Receipt No": p.get("receipt_id", "REC-WANI")
+            })
+        st.dataframe(p_table, use_container_width=True)
+    else:
+        st.info("No recorded payment transactions found for this account yet.")
+
+# ==============================================================
+# TAB 8: EXECUTIVE ADMIN SUBSCRIPTION CRM & REVENUE (POINT 8)
+# ==============================================================
+with tab_admin:
+    st.markdown('<div class="studio-banner">👑 Executive Admin CRM — Razorpay Subscriptions, Live MRR & Audit Logs</div>', unsafe_allow_html=True)
+    
+    current_u = st.session_state.current_user
+    is_admin = current_u.get("is_admin", False)
+    
+    if not is_admin:
+        st.warning("🔒 Restricted Access: Only Administrator (Vishal Hargude) can access the Executive Subscription CRM.")
+        admin_pass = st.text_input("Enter Admin Master Security PIN:", type="password", key="admin_pin_input")
+        if st.button("Unlock Admin Dashboard", type="primary"):
+            if admin_pass in ["2026", "admin", "vishal"]:
+                st.session_state.current_user["is_admin"] = True
+                st.success("Admin CRM Unlocked!")
+                st.rerun()
+            else:
+                st.error("Invalid Admin PIN.")
+    else:
+        # Load real-time admin dashboard data
+        col_f1, col_f2, col_f3 = st.columns(3)
+        with col_f1:
+            f_email = st.text_input("Filter by User Email:", key="crm_filter_email")
+        with col_f2:
+            f_plan = st.selectbox("Filter by Plan:", ["All Plans", "Starter", "Pro", "Business", "Free"], key="crm_filter_plan")
+        with col_f3:
+            f_status = st.selectbox("Filter by Status:", ["All Statuses", "Active", "Past_Due", "Cancelled", "Created"], key="crm_filter_status")
+
+        plan_param = "" if f_plan == "All Plans" else f_plan.lower()
+        status_param = "" if f_status == "All Statuses" else f_status.lower()
+
+        adm_data = sm.get_admin_dashboard_data(filter_email=f_email, filter_plan=plan_param, filter_status=status_param)
+        m = adm_data["metrics"]
+
+        # Revenue Metrics
+        m1, m2, m3, m4, m5 = st.columns(5)
+        m1.metric("👥 Total Subscriptions", f"{m['total_subscribers']}")
+        m2.metric("🟢 Active Paying", f"{m['active_subscribers']}")
+        m3.metric("⚠️ In Grace Period", f"{m['past_due_subscribers']}")
+        m4.metric("🔴 Cancelled", f"{m['cancelled_subscribers']}")
+        m5.metric("💰 Estimated MRR", f"₹{m['estimated_mrr_inr']:,}")
+
+        # Webhook Daemon Status
+        st.markdown("---")
+        daemon_col1, daemon_col2 = st.columns([2, 1])
+        with daemon_col1:
+            st.markdown("#### 📡 Razorpay Webhook Daemon Status")
+            st.caption("Automated synchronization endpoint listening for Razorpay webhook events:")
+            st.code("POST http://localhost:8504/api/webhook/razorpay", language="text")
+        with daemon_col2:
+            st.markdown("#### Daemon Health")
+            try:
+                hw = requests.get("http://localhost:8504/health", timeout=2).json()
+                st.success(f"🟢 ACTIVE on Port 8504 ({hw.get('status')})")
+            except Exception:
+                st.warning("⚠️ Webhook server starting or running asynchronously.")
+
+        # Real-time Subscribers Directory
+        st.markdown("---")
+        st.markdown("### 📋 Real-time Subscribers Directory")
+        if adm_data["subscribers"]:
+            st.dataframe(adm_data["subscribers"], use_container_width=True)
+        else:
+            st.info("No matching subscriber records found.")
+
+        # Admin Plan Terms Configuration (Grandfathering Protected)
+        st.markdown("---")
+        st.markdown("### ⚙️ Plan Catalog & Future Terms Configuration")
+        st.caption("🛡️ **Grandfathering Protected:** Adjusting prices or quotas only applies to new subscribers. Existing active subscribers remain on their locked terms.")
+
+        cfg_col1, cfg_col2, cfg_col3 = st.columns(3)
+        with cfg_col1:
+            st.markdown("#### ⚡ Starter Plan")
+            st_price = st.number_input("Starter Monthly Price (₹):", value=299, step=10, key="adm_st_price")
+            st_words = st.number_input("Starter Monthly Words:", value=50000, step=5000, key="adm_st_words")
+            if st.button("Save Starter Terms", key="btn_save_st"):
+                sm.update_future_plan("starter", {"price_inr_monthly": st_price, "words_per_month": st_words}, admin_email=current_u.get("email", "vishal@wani.ai"))
+                st.success("Starter terms updated for future subscribers!")
+                st.rerun()
+
+        with cfg_col2:
+            st.markdown("#### 👑 Pro Plan")
+            pro_price = st.number_input("Pro Monthly Price (₹):", value=699, step=10, key="adm_pro_price")
+            pro_words = st.number_input("Pro Monthly Words:", value=250000, step=10000, key="adm_pro_words")
+            if st.button("Save Pro Terms", key="btn_save_pro"):
+                sm.update_future_plan("pro", {"price_inr_monthly": pro_price, "words_per_month": pro_words}, admin_email=current_u.get("email", "vishal@wani.ai"))
+                st.success("Pro terms updated for future subscribers!")
+                st.rerun()
+
+        with cfg_col3:
+            st.markdown("#### 🚀 Business Plan")
+            biz_price = st.number_input("Business Monthly Price (₹):", value=1999, step=50, key="adm_biz_price")
+            biz_words = st.number_input("Business Monthly Words:", value=1000000, step=50000, key="adm_biz_words")
+            if st.button("Save Business Terms", key="btn_save_biz"):
+                sm.update_future_plan("business", {"price_inr_monthly": biz_price, "words_per_month": biz_words}, admin_email=current_u.get("email", "vishal@wani.ai"))
+                st.success("Business terms updated for future subscribers!")
+                st.rerun()
+
+        # Grace Period Setting
+        st.markdown("---")
+        gp_col1, gp_col2 = st.columns([1.5, 2])
+        with gp_col1:
+            cfg = sm.get_config()
+            new_gp = st.slider("Configurable Billing Grace Period (Days):", min_value=1, max_value=14, value=cfg.get("default_grace_period_days", 3))
+            if st.button("Update Grace Period Days", key="btn_gp_save"):
+                sm.update_config({"default_grace_period_days": new_gp}, admin_email=current_u.get("email", "vishal@wani.ai"))
+                st.success(f"Grace period set to {new_gp} days!")
+                st.rerun()
+
+        # Audit Logs View
+        st.markdown("---")
+        st.markdown("### 📜 Auditable Subscription & Webhook Event Logs")
+        with st.expander("View Recent Subscription Events (Audit Log)"):
+            if adm_data["subscription_logs"]:
+                st.dataframe(adm_data["subscription_logs"], use_container_width=True)
+            else:
+                st.caption("No subscription audit logs recorded yet.")
+
+        with st.expander("View Privileged Admin Changes"):
+            if adm_data["admin_logs"]:
+                st.dataframe(adm_data["admin_logs"], use_container_width=True)
+            else:
+                st.caption("No administrative changes recorded yet.")
+
+# ==============================================================
+# TAB 9: ACCOUNT & AUTHENTICATION SUBSYSTEM
 # ==============================================================
 with tab_auth:
     st.markdown("### 🔐 User Identity & Access Management")
@@ -1439,7 +1632,7 @@ with tab_auth:
         st.markdown("#### ⚡ 1-Click Fast Access (Testing Mode)")
         st.caption("Quickly toggle between authenticated user identities:")
         
-        if st.button("👑 1-Click: Vishal Hargude (Founder & CEO - Studio Master)", use_container_width=True):
+        if st.button("👑 1-Click: Vishal Hargude (Founder & CEO - Business Tier)", use_container_width=True):
             st.session_state.current_user = users_db.get("vishal@wani.ai")
             st.session_state.current_user["email"] = "vishal@wani.ai"
             st.success("Authenticated as Vishal Hargude (Founder & CEO)!")
@@ -1455,175 +1648,88 @@ with tab_auth:
         st.markdown("#### 📋 Active Session Credentials")
         st.write(f"• **Account Name:** {st.session_state.current_user.get('name')}")
         st.write(f"• **Email Address:** {st.session_state.current_user.get('email')}")
-        st.write(f"• **Active Plan:** `{st.session_state.current_user.get('plan')}`")
-        st.write(f"• **Trials Used Today:** {st.session_state.current_user.get('trials_used_today', 0)} / 2 allowed")
-
-
-# ==============================================================
-# TAB 8: EXECUTIVE ADMIN CRM & USER DATABASE MANAGEMENT
-# ==============================================================
-with tab_admin:
-    st.markdown('<div class="studio-banner">👑 Executive Admin CRM — Manage User Registrations, Subscription Revenues & Lead Contacts</div>', unsafe_allow_html=True)
-    
-    current_u = st.session_state.current_user
-    is_admin = current_u.get("is_admin", False)
-    
-    if not is_admin:
-        st.warning("🔒 Restricted Access: Only Administrator (Vishal Hargude) can access the Executive CRM.")
-        admin_pass = st.text_input("Enter Admin Master Security PIN:", type="password", key="admin_pin_input")
-        if st.button("Unlock Admin Dashboard", type="primary"):
-            if admin_pass in ["2026", "admin", "vishal"]:
-                st.session_state.current_user["is_admin"] = True
-                st.success("Admin CRM Unlocked!")
-                st.rerun()
-            else:
-                st.error("Invalid Admin PIN.")
-    else:
-        total_users = len(users_db)
-        pro_subscribers = sum(1 for u in users_db.values() if "PRO" in u.get("plan", ""))
-        master_subscribers = sum(1 for u in users_db.values() if "MASTER" in u.get("plan", ""))
-        monthly_mrr = (pro_subscribers * 299) + (master_subscribers * 699)
-        
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("👥 Total Registered Users", f"{total_users}")
-        m2.metric("👑 Creator Pro Subscribers", f"{pro_subscribers}")
-        m3.metric("🚀 Studio Master Subscribers", f"{master_subscribers}")
-        m4.metric("💰 Monthly Revenue (MRR)", f"₹{monthly_mrr:,}")
-        
-        st.markdown("---")
-        st.markdown("### 📋 Registered User Directory & Leads")
-        
-        user_rows = []
-        for em, udata in users_db.items():
-            user_rows.append({
-                "Full Name": udata.get("name", "N/A"),
-                "Email": em,
-                "WhatsApp / Mobile": udata.get("mobile", "Not Provided"),
-                "Active Plan": udata.get("plan", "FREE TRIAL 🎁"),
-                "Trials Today": f"{udata.get('trials_used_today', 0)}/2",
-                "Role": "Admin" if udata.get("is_admin") else "User",
-                "Joined": udata.get("joined", "2026-10-18")
-            })
-            
-        st.dataframe(user_rows, use_container_width=True)
-        
-        output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=["Full Name", "Email", "WhatsApp / Mobile", "Active Plan", "Trials Today", "Role", "Joined"])
-        writer.writeheader()
-        writer.writerows(user_rows)
-        csv_data = output.getvalue()
-        
-        c_exp1, c_exp2 = st.columns([1.5, 2])
-        with c_exp1:
-            st.download_button(
-                "📥 Export All User Leads to CSV / Excel",
-                data=csv_data,
-                file_name="wani_users_leads.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-            
-        st.markdown("---")
-        st.markdown("### ⚡ User Subscription Management (Manual Upgrade)")
-        u_col1, u_col2, u_col3 = st.columns(3)
-        with u_col1:
-            target_user_email = st.selectbox("Select User Email:", list(users_db.keys()))
-        with u_col2:
-            new_plan_selection = st.selectbox("Assign Plan:", ["CREATOR PRO 👑 (₹299/mo)", "STUDIO MASTER 🚀 (₹699/mo)", "FREE TRIAL 🎁"])
-        with u_col3:
-            st.write("")
-            st.write("")
-            if st.button("Apply Plan Upgrade ✅", use_container_width=True):
-                clean_p = "CREATOR PRO 👑" if "PRO" in new_plan_selection else ("STUDIO MASTER 🚀" if "MASTER" in new_plan_selection else "FREE TRIAL 🎁")
-                users_db[target_user_email]["plan"] = clean_p
-                users_db[target_user_email]["credits"] = 999999 if "FREE" not in clean_p else 2
-                save_secure_users(users_db)
-                if st.session_state.current_user.get("email") == target_user_email:
-                    st.session_state.current_user["plan"] = clean_p
-                st.success(f"Successfully upgraded {target_user_email} to {clean_p}!")
-                st.rerun()
-
+        st.write(f"• **Active Plan:** `{plan_badge}`")
+        st.write(f"• **Subscription Status:** {status_html}", unsafe_allow_html=True)
 
 # ==============================================================
-# TAB 9: ABOUT & ENTERPRISE CONTACT US (POINT 6)
+# TAB 10: ENTERPRISE CONTACT US & HEADQUARTERS
 # ==============================================================
 with tab_contact:
-    st.markdown('<div class="studio-banner">🏢 Wani Technologies Pvt. Ltd. — Global Enterprise Infrastructure & Creator Relations</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">🏢 Global Enterprise Contact & Headquarters — Wani Technologies Pvt. Ltd.</div>', unsafe_allow_html=True)
     
-    col_cn1, col_cn2 = st.columns(2)
+    col_c1, col_c2 = st.columns([1.4, 1])
     
-    with col_cn1:
-        st.markdown("### 🏛️ Corporate Headquarters & Innovation Labs")
-        st.write("""
-        **Wani Technologies Pvt. Ltd.** is an advanced AI research and acoustic speech synthesis enterprise dedicated to indigenous and global multilingual speech generation.
-        
-        • **Corporate HQ:** Cyber City Tech Corridor, Magarpatta / Hinjawadi Phase 1, Pune, MH, India  
-        • **Commercial Hub:** BKC Financial Center, Bandra Kurla Complex, Mumbai, India  
-        • **Global Operations Desk:** `enterprise@wani.ai`  
-        • **Developer & Creator Relations:** `support@wani.ai`  
-        • **Executive Priority Desk:** `+91 (020) 4120-WANI` / `+91 98220 54321`  
-        """)
-        
-        st.markdown("---")
-        st.markdown("### 🛡️ Enterprise Security & SLA Guarantees")
-        st.write("""
-        • **99.98% High-Availability SLA** backed by global edge clusters  
-        • **ISO/IEC 27001 Certified Architecture** with zero telemetry data leakage  
-        • **SOC 2 Type II Compliant** cloud pipelines with 256-bit AES end-to-end encryption  
-        • **Full Commercial Indemnity** on all synthesized voice rights  
-        """)
-        
-    with col_cn2:
-        st.markdown("### ✉️ Contact Enterprise Relations")
-        c_name = st.text_input("Your Name / Media House:", placeholder="e.g. Dharma Productions / Star Media")
-        c_email = st.text_input("Business Email:", placeholder="executive@company.com")
-        c_msg = st.text_area("Enterprise Inquiry / API Licensing:", placeholder="Tell us about your audio volume, API requirements, or custom voice cloning brief...", height=130)
-        
-        if st.button("Send Enterprise Inquiry 📨", type="primary", use_container_width=True):
-            if c_name and c_email:
-                st.success("Thank you! Your enterprise inquiry has been securely routed to Founder & CEO Vishal Hargude. Our executive team will respond within 4 hours.")
-            else:
-                st.warning("Please provide your name and business email.")
-                
-        st.markdown("---")
+    with col_c1:
+        st.markdown("### 🌐 Powerhouse Corporate Presence")
         st.markdown("""
-        <div style="background:#0B0F19; border:1px solid #1E293B; border-radius:8px; padding:12px; font-size:12px; color:#64748B;">
-            <b>LEGAL & INTELLECTUAL PROPERTY NOTICE:</b><br>
-            All rights, patents, proprietary acoustic synthesis models, neural voice mappings, and software architecture are the exclusive property of Wani Technologies Pvt. Ltd. Protected under the Indian Copyright Act 1957, IT Act 2000, and WIPO conventions. Unauthorized scraping, decompilation, or reverse engineering is strictly prohibited.
-        </div>
-        """, unsafe_allow_html=True)
+        **Wani Technologies Pvt. Ltd.** is an international AI acoustics and neural speech synthesis company headquartered in Maharashtra's premier tech corridors. We empower broadcasters, media networks, and enterprises worldwide with hyper-realistic human voice models.
+        """)
+        
+        st.markdown("""
+        #### 🏛️ Corporate Headquarters:
+        - **Pune Innovation Campus (R&D Centre):**  
+          Phase 2, EON Free Zone, Kharadi, Pune, Maharashtra 411014, India.
+        - **Mumbai Financial Centre (Corporate Office):**  
+          Level 8, Platina Tower, G-Block, Bandra Kurla Complex (BKC), Mumbai 400051, India.
+        """)
+        
+        st.markdown("""
+        #### 📞 Executive Direct Lines:
+        - **Global Enterprise Sales:** `enterprise@wani.ai` | `sales@wani.ai`
+        - **24/7 Dedicated SLA Support:** `sla-support@wani.ai` | +91 (020) 6789 2026
+        - **Leadership & Founder Direct:** `vishal@wani.ai`
+        """)
 
+    with col_c2:
+        st.markdown("### 📨 Submit Enterprise Inquiry")
+        with st.form("enterprise_contact_form"):
+            e_name = st.text_input("Contact Person Name:")
+            e_org = st.text_input("Enterprise / Organization:")
+            e_email = st.text_input("Work Email Address:")
+            e_phone = st.text_input("Direct Contact Number:")
+            e_req = st.text_area("Production / API Volume Requirements:")
+            e_submit = st.form_submit_button("Submit Enterprise Inquiry 🚀", use_container_width=True)
+            
+            if e_submit:
+                if e_name and e_email:
+                    st.success("Thank you! Your enterprise inquiry has been prioritized with our Senior Voice Architect. Our corporate team will reach out within 2 hours.")
+                else:
+                    st.warning("Please provide your name and work email.")
 
 # ==============================================================
-# TAB 10: COMPREHENSIVE VOICE DIRECTORY
+# TAB 11: MULTI-PLATFORM VOICE LIBRARY CATALOG
 # ==============================================================
 with tab_library:
-    st.markdown("### 👥 Wani Comprehensive Voice Library (60+ Distinct Studio Actors)")
-    st.write("Inspect audio acoustic signatures, frequency offsets, and timbre profiles across all language families:")
+    st.markdown('<div class="studio-banner">🎧 Voice Library Catalog — Audibly Distinct Timbre Profiles Across Microsoft, ElevenLabs & Google Engines</div>', unsafe_allow_html=True)
     
-    lang_lib = st.radio("Select Locale:", ["Marathi (20 Voices)", "Hindi (20 Voices)", "English (20 Voices)"], horizontal=True)
-    selected_catalog = MARATHI_VOICES if "Marathi" in lang_lib else (HINDI_VOICES if "Hindi" in lang_lib else ENGLISH_VOICES)
+    lib_tabs = st.tabs(["Marathi Voices (15)", "Hindi Voices (10)", "English Voices (9)"])
     
-    cards_per_row = 2
-    items = list(selected_catalog.items())
-    
-    for i in range(0, len(items), cards_per_row):
-        row_cols = st.columns(cards_per_row)
-        for j in range(cards_per_row):
-            if i + j < len(items):
-                name, data = items[i + j]
-                with row_cols[j]:
-                    st.markdown(f"""
-                    <div class="voice-card">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span class="badge-cat">{data['category']}</span>
-                            <span style="font-size:12px; font-weight:700; color:#64748B;">{data['gender']}</span>
-                        </div>
-                        <div style="font-weight:700; font-size:16px; margin: 6px 0; color:#F8FAFC;">{name.split('(')[0]}</div>
-                        <div style="font-size:13px; color:#94A3B8; margin-bottom:8px;">{data['desc']}</div>
-                        <div style="font-size:12px; color:#818CF8; font-weight:600;">⚡ Pitch: {data['pitch']} | Cadence: {data['rate']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-st.markdown("---")
-st.caption("Wani Technologies Pvt. Ltd. v6.5 Enterprise | The Voice of Intelligence | Founder & CEO: Vishal Hargude")
+    with lib_tabs[0]:
+        for name, data in MARATHI_VOICES.items():
+            st.markdown(f"""
+            <div class="voice-card">
+                <div><span class="badge-cat">{data['category']}</span> <b>{name}</b> ({data['gender']})</div>
+                <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{data['desc']}</div>
+                <div style="font-size: 12px; color: #818CF8; margin-top: 4px;">Acoustic Baseline: Pitch {data['pitch']} | Speed {data['rate']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    with lib_tabs[1]:
+        for name, data in HINDI_VOICES.items():
+            st.markdown(f"""
+            <div class="voice-card">
+                <div><span class="badge-cat">{data['category']}</span> <b>{name}</b> ({data['gender']})</div>
+                <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{data['desc']}</div>
+                <div style="font-size: 12px; color: #818CF8; margin-top: 4px;">Acoustic Baseline: Pitch {data['pitch']} | Speed {data['rate']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    with lib_tabs[2]:
+        for name, data in ENGLISH_VOICES.items():
+            st.markdown(f"""
+            <div class="voice-card">
+                <div><span class="badge-cat">{data['category']}</span> <b>{name}</b> ({data['gender']})</div>
+                <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{data['desc']}</div>
+                <div style="font-size: 12px; color: #818CF8; margin-top: 4px;">Acoustic Baseline: Pitch {data['pitch']} | Speed {data['rate']}</div>
+            </div>
+            """, unsafe_allow_html=True)

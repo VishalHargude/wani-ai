@@ -1,0 +1,98 @@
+{
+  "free": {
+    "code": "free",
+    "name": "Free Trial",
+    "badge": "FREE TRIAL 🎁",
+    "price_inr_monthly": 0,
+    "price_inr_yearly": 0,
+    "words_per_month": 3000,
+    "daily_trial_limit": 2,
+    "max_words_per_trial": 100,
+    "paragraphs_per_month": 15,
+    "translations_per_month": 10,
+    "premium_audio_minutes": 0,
+    "has_premium_voices": false,
+    "has_api_access": false,
+    "razorpay_plan_id_monthly": null,
+    "razorpay_plan_id_yearly": null,
+    "features": [
+      "2 Daily Voice Trials (100 words max)",
+      "Standard Multi-language TTS",
+      "Essential Studio Presets",
+      "Community Support"
+    ]
+  },
+  "starter": {
+    "code": "starter",
+    "name": "Starter",
+    "badge": "STARTER ⚡",
+    "price_inr_monthly": 299,
+    "price_inr_yearly": 2999,
+    "words_per_month": 50000,
+    "daily_trial_limit": 999999,
+    "max_words_per_trial": 2500,
+    "paragraphs_per_month": 100,
+    "translations_per_month": 50,
+    "premium_audio_minutes": 60,
+    "has_premium_voices": true,
+    "has_api_access": false,
+    "razorpay_plan_id_monthly": "plan_starter_monthly",
+    "razorpay_plan_id_yearly": "plan_starter_yearly",
+    "features": [
+      "50,000 Words / Month",
+      "100 Paragraphs & 50 Translations",
+      "10 High-Fidelity Neural Voices",
+      "Commercial Licensing Included",
+      "Standard Audio Export (WAV / MP3)"
+    ]
+  },
+  "pro": {
+    "code": "pro",
+    "name": "Pro",
+    "badge": "PRO CREATOR 👑",
+    "price_inr_monthly": 699,
+    "price_inr_yearly": 6999,
+    "words_per_month": 250000,
+    "daily_trial_limit": 999999,
+    "max_words_per_trial": 10000,
+    "paragraphs_per_month": 500,
+    "translations_per_month": 250,
+    "premium_audio_minutes": 300,
+    "has_premium_voices": true,
+    "has_api_access": false,
+    "razorpay_plan_id_monthly": "plan_pro_monthly",
+    "razorpay_plan_id_yearly": "plan_pro_yearly",
+    "features": [
+      "250,000 Words / Month",
+      "500 Paragraphs & 250 Full Translations",
+      "All 35+ Multi-Platform Neural Voices",
+      "All Purpose / 'सूर' Presets (Drama, RJ, News)",
+      "Priority Synthesis Queue",
+      "Priority Email & Chat Support"
+    ]
+  },
+  "business": {
+    "code": "business",
+    "name": "Business",
+    "badge": "STUDIO BUSINESS 🚀",
+    "price_inr_monthly": 1999,
+    "price_inr_yearly": 19999,
+    "words_per_month": 1000000,
+    "daily_trial_limit": 999999,
+    "max_words_per_trial": 50000,
+    "paragraphs_per_month": 2500,
+    "translations_per_month": 1000,
+    "premium_audio_minutes": 1200,
+    "has_premium_voices": true,
+    "has_api_access": true,
+    "razorpay_plan_id_monthly": "plan_business_monthly",
+    "razorpay_plan_id_yearly": "plan_business_yearly",
+    "features": [
+      "1,000,000 Words / Month (High-Volume)",
+      "2,500 Paragraphs & 1,000 Translations",
+      "Dedicated Developer REST API Access",
+      "24/7 Dedicated SLA Enterprise Support",
+      "Custom Voice Calibration & Tone Tailoring"
+    ]
+  }
+}
