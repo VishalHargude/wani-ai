@@ -153,7 +153,6 @@ if "current_user" not in st.session_state:
     st.session_state.current_user = admin_user
     st.session_state.current_user["email"] = "vishal@wani.ai"
 
-# Ensure subscription record exists for active user
 active_email = st.session_state.current_user.get("email", "guest@wani.ai")
 entitlements = sm.get_user_entitlements(active_email)
 
@@ -172,11 +171,10 @@ def validate_user_trial(user_email: str, script_text: str):
     return ok, msg, qdata
 
 def increment_user_trial(user_email: str):
-    # Managed atomically via SubscriptionManager.check_and_deduct_quota
     pass
 
 # -------------------------------------------------------------
-# HIGH-RESILIENCE MULTI-LINGUAL TRANSLATION ENGINE
+# MULTI-LINGUAL TRANSLATION ENGINE
 # -------------------------------------------------------------
 def translate_text(text: str, source='auto', target='mr') -> str:
     cleaned = sanitize_text(text)
@@ -195,50 +193,145 @@ def translate_text(text: str, source='auto', target='mr') -> str:
     return cleaned
 
 # -------------------------------------------------------------
-# UNIVERSAL DESIGN: JOSEFIN SANS + COLOR SHADED LOGO + DUAL THEME
+# UNIVERSAL DESIGN: STRICT JOSEFIN SANS + DUAL THEME + CODE SHIELD
 # -------------------------------------------------------------
 is_dark = (st.session_state.theme == "Dark")
 
-# Theme-specific CSS tokens
 if is_dark:
-    theme_bg = "#0E1117"
-    theme_text = "#F1F5F9"
-    theme_card_bg = "#161B26"
+    theme_bg = "#090D16"
+    theme_card_bg = "#111726"
     theme_card_border = "#1E293B"
-    theme_top_bg = "#0B0F19"
-    theme_top_border = "#1E293B"
+    theme_text = "#F8FAFC"
+    theme_subtext = "#94A3B8"
+    theme_nav_bg = "#0D1322"
     theme_featured_bg = "linear-gradient(180deg, #1A1F36 0%, #111422 100%)"
     theme_featured_border = "#6366F1"
-    theme_shadow = "0 10px 30px rgba(0, 0, 0, 0.4)"
-    theme_subtext = "#94A3B8"
+    theme_shadow = "0 8px 24px rgba(0, 0, 0, 0.45)"
+    theme_input_bg = "#111726"
+    theme_input_border = "#1E293B"
 else:
     theme_bg = "#F8FAFC"
-    theme_text = "#0F172A"
     theme_card_bg = "#FFFFFF"
     theme_card_border = "#E2E8F0"
-    theme_top_bg = "#FFFFFF"
-    theme_top_border = "#E2E8F0"
+    theme_text = "#0F172A"
+    theme_subtext = "#475569"
+    theme_nav_bg = "#FFFFFF"
     theme_featured_bg = "linear-gradient(180deg, #F5F7FF 0%, #FFFFFF 100%)"
     theme_featured_border = "#4F46E5"
-    theme_shadow = "0 6px 20px rgba(0, 0, 0, 0.05)"
-    theme_subtext = "#475569"
+    theme_shadow = "0 4px 16px rgba(0, 0, 0, 0.05)"
+    theme_input_bg = "#FFFFFF"
+    theme_input_border = "#CBD5E1"
 
 st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
     
-    /* Universal Josefin Sans Typography */
-    html, body, [class*="css"], button, input, textarea, select, .stMarkdown, p, h1, h2, h3, h4, h5, h6 {{
+    /* 100% UNIVERSAL JOSEFIN SANS TYPOGRAPHY ACROSS ENTIRE PLATFORM */
+    * {{
         font-family: 'Josefin Sans', 'Noto Sans Devanagari', -apple-system, sans-serif !important;
     }}
     
-    /* Active Theme Background */
+    html, body, [class*="css"], [class*="st-"], .stApp, button, input, textarea, select, 
+    h1, h2, h3, h4, h5, h6, p, span, div, a, label, li, code, pre, .stMarkdown, 
+    [data-testid="stMarkdownContainer"], [data-testid="stWidgetLabel"], 
+    .stTabs [data-baseweb="tab"], .stTabs [data-baseweb="tab-list"], 
+    .stMetric, [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
+        font-family: 'Josefin Sans', 'Noto Sans Devanagari', -apple-system, sans-serif !important;
+    }}
+    
+    /* COMPLETE BRAND WHITELABELING: HIDE GITHUB ICON, FORK, AND STREAMLIT CLOUD BADGES */
+    header[data-testid="stHeader"], [data-testid="stHeader"] {{
+        visibility: hidden !important;
+        display: none !important;
+        height: 0 !important;
+    }}
+    [data-testid="stToolbar"] {{
+        visibility: hidden !important;
+        display: none !important;
+        height: 0 !important;
+    }}
+    [data-testid="stDecoration"] {{
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+    }}
+    [data-testid="stStatusWidget"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
+    #MainMenu, footer {{
+        visibility: hidden !important;
+        display: none !important;
+        height: 0 !important;
+    }}
+    .stAppDeployButton, [data-testid="stAppDeployButton"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
+    a[href*="github.com"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
+    button[title*="View app source"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
+    [class*="viewerBadge"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
+    [class*="manageAppButton"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
+    
+    /* THEME CONTAINER & BASE STYLING */
     .stApp {{
         background-color: {theme_bg} !important;
         color: {theme_text} !important;
     }}
     
-    /* Anti-Theft Protection: Restrict text selection on branding */
+    /* TEXT INPUTS & TEXTAREAS COMPATIBILITY */
+    .stTextInput input, .stTextArea textarea {{
+        background-color: {theme_input_bg} !important;
+        color: {theme_text} !important;
+        border: 1px solid {theme_input_border} !important;
+        border-radius: 6px !important;
+        font-family: 'Josefin Sans', 'Noto Sans Devanagari', sans-serif !important;
+    }}
+    
+    .stSelectbox div[data-baseweb="select"] {{
+        background-color: {theme_input_bg} !important;
+        color: {theme_text} !important;
+        border-color: {theme_input_border} !important;
+    }}
+    
+    /* SIDEBAR COMPATIBILITY */
+    section[data-testid="stSidebar"] {{
+        background-color: {theme_card_bg} !important;
+        border-right: 1px solid {theme_card_border} !important;
+    }}
+    section[data-testid="stSidebar"] * {{
+        color: {theme_text} !important;
+    }}
+    
+    /* TABS STYLING */
+    .stTabs [data-baseweb="tab-list"] {{
+        border-bottom: 1px solid {theme_card_border} !important;
+        gap: 8px;
+    }}
+    .stTabs [data-baseweb="tab"] {{
+        color: {theme_subtext} !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        padding: 8px 16px !important;
+    }}
+    .stTabs [aria-selected="true"] {{
+        color: #6366F1 !important;
+        border-bottom: 2px solid #6366F1 !important;
+    }}
+    
+    /* ANTI-THEFT & CODE SHIELD */
     .protected-brand {{
         -webkit-user-select: none;
         -moz-user-select: none;
@@ -246,53 +339,73 @@ st.markdown(f"""
         user-select: none;
     }}
     
-    /* Top Enterprise Announcement Bar */
-    .top-announcement {{
-        background: {theme_top_bg};
-        border: 1px solid {theme_top_border};
-        border-radius: 10px;
-        padding: 10px 18px;
-        color: {theme_text};
-        font-size: 13.5px;
-        font-weight: 600;
-        margin-bottom: 18px;
+    /* TOP LEFT-ALIGNED ENTERPRISE NAVIGATION BAR */
+    .top-nav-bar {{
+        background: {theme_nav_bg};
+        border: 1px solid {theme_card_border};
+        border-radius: 12px;
+        padding: 12px 24px;
+        margin-bottom: 22px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        flex-wrap: wrap;
+        gap: 16px;
         box-shadow: {theme_shadow};
     }}
     
-    /* Color Shaded Wani Brand Logo */
-    .wani-logo-container {{
-        text-align: center;
-        margin-bottom: 22px;
+    .brand-left-group {{
+        display: flex;
+        align-items: center;
+        gap: 14px;
     }}
     
     .wani-brand-text {{
-        font-size: 52px;
+        font-size: 38px;
         font-weight: 700;
-        letter-spacing: -1.5px;
+        letter-spacing: -1px;
         background: linear-gradient(135deg, #FF6B6B 0%, #9B51E0 50%, #4A90E2 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         display: inline-block;
+        line-height: 1;
+        font-family: 'Josefin Sans', sans-serif !important;
     }}
     
-    .wani-tagline {{
-        font-size: 13px;
-        letter-spacing: 2.2px;
+    .brand-divider {{
+        color: {theme_card_border};
+        font-size: 24px;
+        font-weight: 300;
+        margin: 0 4px;
+    }}
+    
+    .wani-tagline-inline {{
+        font-size: 11.5px;
+        letter-spacing: 2px;
         color: {theme_subtext};
         text-transform: uppercase;
         font-weight: 600;
-        margin-top: -6px;
+        font-family: 'Josefin Sans', sans-serif !important;
     }}
     
-    /* Studio Banners & Cards */
+    .user-pill {{
+        background: {theme_card_bg};
+        border: 1px solid {theme_card_border};
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: {theme_text};
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }}
+    
+    /* CARDS & BANNERS */
     .studio-banner {{
         background: {theme_card_bg};
         border: 1px solid {theme_card_border};
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 14px 20px;
         font-weight: 600;
         font-size: 14.5px;
@@ -319,14 +432,14 @@ st.markdown(f"""
     
     .pricing-featured {{
         background: {theme_featured_bg};
-        border: 1.8px solid {theme_featured_border};
+        border: 2px solid {theme_featured_border};
     }}
     
     .voice-card {{
         background: {theme_card_bg};
         border: 1px solid {theme_card_border};
         border-radius: 8px;
-        padding: 12px 16px;
+        padding: 14px 18px;
         margin-bottom: 12px;
         box-shadow: {theme_shadow};
         color: {theme_text};
@@ -335,25 +448,12 @@ st.markdown(f"""
     .badge-cat {{
         background: rgba(99, 102, 241, 0.15);
         color: #818CF8;
-        padding: 2px 8px;
+        padding: 3px 9px;
         border-radius: 4px;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        margin-right: 6px;
-    }}
-    
-    .user-pill {{
-        background: {theme_card_bg};
-        border: 1px solid {theme_card_border};
-        border-radius: 20px;
-        padding: 5px 14px;
-        font-size: 12.5px;
-        font-weight: 600;
-        color: {theme_text};
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+        margin-right: 8px;
     }}
     
     .status-badge-active {{
@@ -382,10 +482,17 @@ st.markdown(f"""
         font-size: 12px;
         font-weight: 700;
     }}
+    
+    /* SMART CORPORATE COPYRIGHT FOOTER */
+    .enterprise-footer {{
+        margin-top: 50px;
+        border-top: 1px solid {theme_card_border};
+        padding: 28px 0 16px 0;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
-# Top Bar Information
+# User Identity & Entitlements
 user_info = st.session_state.current_user
 user_name = user_info.get("name", "Guest")
 user_email_active = user_info.get("email", "guest@wani.ai")
@@ -393,7 +500,6 @@ current_entitlements = sm.get_user_entitlements(user_email_active)
 plan_badge = current_entitlements.get("badge", "FREE TRIAL 🎁")
 status_code = current_entitlements.get("status", "free")
 
-status_html = ""
 if status_code == "active":
     status_html = '<span class="status-badge-active">ACTIVE 🟢</span>'
 elif "grace" in status_code:
@@ -405,36 +511,39 @@ elif "cancel" in status_code:
 else:
     status_html = '<span class="badge-cat">FREE TIER 🎁</span>'
 
+# TOP LEFT-ALIGNED ENTERPRISE NAVIGATION HEADER
 st.markdown(f"""
-<div class="top-announcement protected-brand">
-    <div>
-        <span style="color:#6366F1; font-weight:700;">WANI v6.8 ENTERPRISE</span>
-        <span style="color:#64748B; margin: 0 8px;">|</span>
-        <span style="color:{theme_subtext};">Next-Generation Multilingual Acoustic AI Systems</span>
+<div class="top-nav-bar protected-brand">
+    <div class="brand-left-group">
+        <span class="wani-brand-text">Wani</span>
+        <span class="brand-divider">/</span>
+        <span class="wani-tagline-inline">The Voice of Intelligence • Neural Acoustic Studio</span>
     </div>
-    <div class="user-pill">
-        <span>👤 {user_name.split('(')[0].strip()}</span>
-        <span>|</span>
-        <span style="color:#818CF8;">{plan_badge}</span>
-        <span>|</span>
-        {status_html}
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="user-pill">
+            <span>👤 {user_name.split('(')[0].strip()}</span>
+            <span>|</span>
+            <span style="color:#818CF8;">{plan_badge}</span>
+            <span>|</span>
+            {status_html}
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Color-Shaded Wani Logo Hero
-st.markdown("""
-<div class="wani-logo-container protected-brand">
-    <div class="wani-brand-text">Wani</div>
-    <div class="wani-tagline">The Voice of Intelligence • Multilingual Speech Synthesis</div>
-</div>
-""", unsafe_allow_html=True)
+# Main Controls Bar (Theme Toggle)
+col_head1, col_head2 = st.columns([8, 2])
+with col_head2:
+    theme_btn_label = "☀️ Switch to Light Pearl" if is_dark else "🌙 Switch to Dark Obsidian"
+    if st.button(theme_btn_label, use_container_width=True, key="top_theme_toggle_btn"):
+        st.session_state.theme = "Light" if is_dark else "Dark"
+        st.rerun()
 
-# Pre-Configured Verified ElevenLabs API Key
+# Pre-Configured ElevenLabs API Key
 ELEVEN_KEY_DEFAULT = "sk_cea4bc5ef26be1349c26338920a5a217503b8791b788e337"
 
 # -------------------------------------------------------------
-# SIDEBAR NAVIGATION (MINIMALIST & PROFESSIONAL)
+# SIDEBAR NAVIGATION
 # -------------------------------------------------------------
 with st.sidebar:
     st.markdown("### 🎙️ Wani Studio Control")
@@ -442,19 +551,18 @@ with st.sidebar:
     st.markdown(f"**Email:** `{user_email_active}`")
     st.markdown(f"**Plan Tier:** `{plan_badge}`")
     
-    # Theme Switcher
     st.markdown("---")
-    theme_choice = st.radio("🎨 Display Theme:", ["🌙 Dark Obsidian", "☀️ Light Pearl"], 
-                            index=0 if st.session_state.theme == "Dark" else 1, horizontal=True)
-    if "Dark" in theme_choice and st.session_state.theme != "Dark":
+    st.markdown("#### 🎨 Display Theme")
+    theme_choice = st.radio("Select Interface Theme:", ["🌙 Dark Obsidian", "☀️ Light Pearl"], 
+                            index=0 if is_dark else 1, horizontal=True, key="sb_theme_radio")
+    if "Dark" in theme_choice and not is_dark:
         st.session_state.theme = "Dark"
         st.rerun()
-    elif "Light" in theme_choice and st.session_state.theme != "Light":
+    elif "Light" in theme_choice and is_dark:
         st.session_state.theme = "Light"
         st.rerun()
 
     st.markdown("---")
-    # Real-time Quota Meter in Sidebar
     cust_data = sm.get_customer_dashboard_data(user_email_active)
     q = cust_data["quotas"]
     
@@ -479,7 +587,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("#### 📲 Invite & Share Wani")
-    share_msg = "Experience Wani - the world's most advanced multilingual AI speech platform featuring epic warrior timbres and 20+ languages: https://objects-skilled-behalf-adam.trycloudflare.com"
+    share_msg = "Experience Wani - the world's most advanced multilingual AI speech platform featuring epic warrior timbres and 20+ languages: https://vishalhargude-wani-ai-app-12jfpe.streamlit.app/"
     st.markdown(f'''<a href="https://api.whatsapp.com/send?text={urllib.parse.quote(share_msg)}" target="_blank" style="text-decoration:none;"><div style="background:#25D366; color:white; padding:9px 12px; border-radius:6px; font-weight:700; text-align:center; margin-bottom:15px; font-size:13px;">📲 Share on WhatsApp</div></a>''', unsafe_allow_html=True)
 
     with st.expander("🛡️ Platform Security & API Key"):
@@ -494,216 +602,216 @@ with st.sidebar:
     st.caption("🛡️ Proprietary Software of Wani Technologies Pvt. Ltd. | 256-Bit SSL Encrypted | IT Act 2000 Compliant")
 
 # ==============================================================
-# AUDIBLY DISTINCT CHARACTER VOICES (GENUINELY DIFFERENT FREQUENCIES)
+# PROFESSIONAL STUDIO CHARACTER VOICES (DISTINCT FREQUENCIES)
 # ==============================================================
 MARATHI_VOICES = {
-    "Tanaji Malusare (Lion's Roar - Epic Warrior)": {
+    "Aarav (Warrior Baritone — Historic Authority)": {
         "id": "mr-IN-ManoharNeural", "eleven_id": "SOYHLrjzK2X1ezoPC6cr",
-        "gender": "Male", "category": "Historical Warriors",
+        "gender": "Male", "category": "Historical & Epic",
         "pitch": "-30Hz", "rate": "-8%",
-        "desc": "Ultra-heavy thunderous warrior baritone with historic battle resonance and gravelly authority."
+        "desc": "Ultra-heavy thunderous baritone with deep historic resonance and gravelly authority."
     },
-    "Bajiprabhu Deshpande (Resolute Guardian - 50y)": {
-        "id": "mr-IN-ManoharNeural", "eleven_id": "nPczCjzI2devNBz1zQrb",
-        "gender": "Male", "category": "Historical Warriors",
-        "pitch": "-25Hz", "rate": "-6%",
-        "desc": "Steadfast, heroic defender baritone with resolute patriotic conviction."
-    },
-    "Titan Vikram (Cinematic Movie Trailer Bass)": {
+    "Vikram (Cinematic Trailer Bass — Sub-Woofer)": {
         "id": "mr-IN-ManoharNeural", "eleven_id": "IKne3meq5aSn9XLyUdCD",
-        "gender": "Male", "category": "Cinematic & Titan Bass",
+        "gender": "Male", "category": "Cinematic & Drama",
         "pitch": "-35Hz", "rate": "-10%",
-        "desc": "Sub-woofer level resonant trailer titan bass for monumental cinema announcements."
+        "desc": "Sub-woofer level resonant trailer titan bass for monumental announcements."
     },
-    "Anup (Crime Patrol Suspense Narrator)": {
+    "Kabir (Resolute Heritage Narrator — Dignity)": {
+        "id": "mr-IN-ManoharNeural", "eleven_id": "nPczCjzI2devNBz1zQrb",
+        "gender": "Male", "category": "Historical & Epic",
+        "pitch": "-25Hz", "rate": "-6%",
+        "desc": "Steadfast, heroic defender baritone with resolute conviction and presence."
+    },
+    "Anup (Suspense & Crime Mystery Anchor)": {
         "id": "mr-IN-ManoharNeural", "eleven_id": "JBFqnCBsd6RMkjVDRZzb",
-        "gender": "Male", "category": "Crime & Mystery",
+        "gender": "Male", "category": "Crime & Thriller",
         "pitch": "-18Hz", "rate": "-8%",
         "desc": "Tense, investigative narration style tailored for unsolved mysteries and thrillers."
     },
-    "Rahul (Intellectual Thinker & Podcaster - 30y)": {
-        "id": "mr-IN-ManoharNeural", "eleven_id": "bIHbv24MWmeRgasZH58o",
-        "gender": "Male", "category": "Podcasts & Interviews",
-        "pitch": "-6Hz", "rate": "-2%",
-        "desc": "Educated, thoughtful, conversational cadence for long-form podcasts and debates."
-    },
-    "RJ Sagar (FM Radio Jockey Host - 24y)": {
-        "id": "mr-IN-ManoharNeural", "eleven_id": "TX3LPaxmHKxFdv7VOQHJ",
-        "gender": "Male", "category": "Radio Jockey & Reels",
-        "pitch": "+22Hz", "rate": "+14%",
-        "desc": "High-pitch, energetic, upbeat host delivery crafted for viral Reels and commercial radio."
-    },
-    "Vitthal Aajoba (Elderly Sage Patriarch - 70y)": {
-        "id": "mr-IN-ManoharNeural", "eleven_id": "pqHfZKP75CvOlQylNhV4",
-        "gender": "Male", "category": "Spiritual & Elders",
-        "pitch": "-28Hz", "rate": "-16%",
-        "desc": "Slow, aged baritone filled with lifelong wisdom for bedtime folklore and chants."
-    },
-    "Akshay (Corporate Executive Keynote Speaker)": {
-        "id": "mr-IN-ManoharNeural", "eleven_id": "CwhRBWXzGAHq8TQ4Fs17",
-        "gender": "Male", "category": "Corporate & Business",
-        "pitch": "+4Hz", "rate": "+6%",
-        "desc": "Sharp, persuasive, executive professional voice for corporate demos and B2B pitches."
-    },
-    "Rohan (Prime-Time TV News Broadcaster)": {
+    "Rohan (Primetime News Desk Broadcaster)": {
         "id": "mr-IN-ManoharNeural", "eleven_id": "pNInz6obpgDQGcFmaJgB",
         "gender": "Male", "category": "News & Broadcast",
         "pitch": "+8Hz", "rate": "+20%",
         "desc": "Fast-paced, urgent broadcast delivery for breaking news and political bulletins."
     },
-    "Rajmata Jijau (Royal Empress - Deep Dignity)": {
+    "Sagar (Dynamic FM Host & Commercial RJ)": {
+        "id": "mr-IN-ManoharNeural", "eleven_id": "TX3LPaxmHKxFdv7VOQHJ",
+        "gender": "Male", "category": "Broadcast & Media",
+        "pitch": "+22Hz", "rate": "+14%",
+        "desc": "High-pitch, energetic, upbeat host delivery crafted for viral Reels and commercial radio."
+    },
+    "Eshwar (Elder Patriarch — Measured Wisdom)": {
+        "id": "mr-IN-ManoharNeural", "eleven_id": "pqHfZKP75CvOlQylNhV4",
+        "gender": "Male", "category": "Documentary & Wisdom",
+        "pitch": "-28Hz", "rate": "-16%",
+        "desc": "Slow, aged baritone filled with lifelong wisdom for folklore and contemplative scripts."
+    },
+    "Aditya (Corporate Keynote Speaker — Executive)": {
+        "id": "mr-IN-ManoharNeural", "eleven_id": "CwhRBWXzGAHq8TQ4Fs17",
+        "gender": "Male", "category": "Corporate & Enterprise",
+        "pitch": "+4Hz", "rate": "+6%",
+        "desc": "Sharp, persuasive, executive professional voice for corporate demos and B2B pitches."
+    },
+    "Nikhil (Intellectual Thought Leader — Podcasts)": {
+        "id": "mr-IN-ManoharNeural", "eleven_id": "bIHbv24MWmeRgasZH58o",
+        "gender": "Male", "category": "Podcasts & Long-form",
+        "pitch": "-6Hz", "rate": "-2%",
+        "desc": "Educated, thoughtful, conversational cadence for long-form podcasts and debates."
+    },
+    "Aarohi (Stately Empress — Royal Dignity)": {
         "id": "mr-IN-AarohiNeural", "eleven_id": "EXAVITQu4vr4xnSDxMaL",
-        "gender": "Female", "category": "Historical Warriors",
+        "gender": "Female", "category": "Historical & Epic",
         "pitch": "-22Hz", "rate": "-10%",
         "desc": "Deep, commanding maternal matriarch voice resonant with strategic valor."
     },
-    "Priya (Prime-Time TV News Anchor - Sharp)": {
+    "Ananya (National Newsroom Anchor — Assertive)": {
         "id": "mr-IN-AarohiNeural", "eleven_id": "21m00Tcm4TlvDq8ikWAM",
         "gender": "Female", "category": "News & Broadcast",
         "pitch": "+12Hz", "rate": "+18%",
         "desc": "Rapid, crisp, assertive news delivery for breaking news desks."
     },
-    "Aaji Shantabai (Grandmother - Folklore & Warmth)": {
+    "Shreya (Cultural Storyteller — Warm Narrative)": {
         "id": "mr-IN-AarohiNeural", "eleven_id": "FGY2WhTYpPnrIDTdsKH5",
-        "gender": "Female", "category": "Spiritual & Elders",
+        "gender": "Female", "category": "Documentary & Wisdom",
         "pitch": "-18Hz", "rate": "-18%",
-        "desc": "Affectionate, trembling elder matriarch tone for timeless bedtime parables."
+        "desc": "Affectionate, experienced narrative tone for timeless bedtime parables."
     },
-    "Neha (Sensory Guided Meditation & ASMR)": {
+    "Tara (Mindfulness & Guided ASMR Calm)": {
         "id": "mr-IN-AarohiNeural", "eleven_id": "LcfcDJNigSI51xpmTgve",
-        "gender": "Female", "category": "Spiritual & Elders",
+        "gender": "Female", "category": "Mindfulness & Sleep",
         "pitch": "-12Hz", "rate": "-14%",
         "desc": "Soothing, gentle whisper cadence for stress relief and mindfulness."
     },
-    "Ritu (Gen-Z Viral Instagram Creator)": {
+    "Priya (Commercial Host & Lifestyle Producer)": {
         "id": "mr-IN-AarohiNeural", "eleven_id": "jsCqWAovK2LkecY7zXl4",
-        "gender": "Female", "category": "Radio Jockey & Reels",
+        "gender": "Female", "category": "Broadcast & Media",
         "pitch": "+26Hz", "rate": "+16%",
         "desc": "Bright, playful, ultra-trendy tone designed for viral lifestyle reels."
     },
-    "Gauri (National Documentary Host)": {
+    "Gauri (Documentary Host — Naturalist)": {
         "id": "mr-IN-AarohiNeural", "eleven_id": "oWAxZDx7w5VEj9dCyTzz",
-        "gender": "Female", "category": "Audiobooks & Literature",
+        "gender": "Female", "category": "Documentary & Wisdom",
         "pitch": "-6Hz", "rate": "-6%",
         "desc": "Elegant, informative cadence for travelogues and culture documentaries."
     }
 }
 
 HINDI_VOICES = {
-    "Amitabh Style (Epic Baritone Titan Bass)": {
+    "Amitabh (Monumental Cinema Baritone — Gravitas)": {
         "id": "hi-IN-MadhurNeural", "eleven_id": "nPczCjzI2devNBz1zQrb",
-        "gender": "Male", "category": "Cinematic & Titan Bass",
+        "gender": "Male", "category": "Cinematic & Drama",
         "pitch": "-34Hz", "rate": "-8%",
         "desc": "Legendary heavy cinema baritone with poetic cadence and gravitas."
     },
-    "Vikramaditya (Royal Emperor of Ujjain)": {
+    "Vikramaditya (Sovereign Monarch — Noble Authority)": {
         "id": "hi-IN-MadhurNeural", "eleven_id": "SOYHLrjzK2X1ezoPC6cr",
-        "gender": "Male", "category": "Historical Warriors",
+        "gender": "Male", "category": "Historical & Epic",
         "pitch": "-22Hz", "rate": "-6%",
         "desc": "Noble monarch delivery resonating with regal justice and command."
     },
-    "Saurabh (Crime & Mystery TV Narrator)": {
+    "Saurabh (Thriller & Mystery Narrative Specialist)": {
         "id": "hi-IN-MadhurNeural", "eleven_id": "JBFqnCBsd6RMkjVDRZzb",
-        "gender": "Male", "category": "Crime & Mystery",
+        "gender": "Male", "category": "Crime & Thriller",
         "pitch": "-16Hz", "rate": "-6%",
         "desc": "Tense, suspenseful storytelling voice for unsolved mysteries."
     },
-    "RJ Ayush (Delhi Metro FM Radio Host)": {
+    "Ayush (Metropolitan FM Drive Time Host)": {
         "id": "hi-IN-MadhurNeural", "eleven_id": "TX3LPaxmHKxFdv7VOQHJ",
-        "gender": "Male", "category": "Radio Jockey & Reels",
+        "gender": "Male", "category": "Broadcast & Media",
         "pitch": "+20Hz", "rate": "+16%",
         "desc": "Dynamic, witty, fast-talking RJ style for morning drive time."
     },
-    "Pandit Ji (Vedic Scholar & Kathavachak)": {
+    "Devendra (Vedic Scholar & Sacred Literature)": {
         "id": "hi-IN-MadhurNeural", "eleven_id": "pqHfZKP75CvOlQylNhV4",
-        "gender": "Male", "category": "Spiritual & Elders",
+        "gender": "Male", "category": "Documentary & Wisdom",
         "pitch": "-24Hz", "rate": "-14%",
         "desc": "Deep devotional chanting and sacred scripture cadence."
     },
-    "Maharani Padmini (Regal Pride & Nobility)": {
+    "Padmini (Royal Sovereign — Grace & Fortitude)": {
         "id": "hi-IN-SwaraNeural", "eleven_id": "EXAVITQu4vr4xnSDxMaL",
-        "gender": "Female", "category": "Historical Warriors",
+        "gender": "Female", "category": "Historical & Epic",
         "pitch": "-18Hz", "rate": "-8%",
         "desc": "Stately, poetic, royal Hindi diction with unyielding spirit."
     },
-    "Ananya (National Breaking News Prime Time)": {
+    "Avantika (Primetime National News Anchor)": {
         "id": "hi-IN-SwaraNeural", "eleven_id": "21m00Tcm4TlvDq8ikWAM",
         "gender": "Female", "category": "News & Broadcast",
         "pitch": "+10Hz", "rate": "+18%",
         "desc": "High-urgency, clear, commanding newsroom anchor cadence."
     },
-    "Dadi Janaki (Puranic Wisdom Storyteller)": {
+    "Kalyani (Classical Heritage Narrator — Matriarch)": {
         "id": "hi-IN-SwaraNeural", "eleven_id": "FGY2WhTYpPnrIDTdsKH5",
-        "gender": "Female", "category": "Spiritual & Elders",
+        "gender": "Female", "category": "Documentary & Wisdom",
         "pitch": "-20Hz", "rate": "-16%",
         "desc": "Gentle, experienced elder matriarch voice for heritage parables."
     },
-    "Tara (Spiritual Meditation & Yoga Guide)": {
+    "Tara (Mindful Wellness & Meditation Guide)": {
         "id": "hi-IN-SwaraNeural", "eleven_id": "LcfcDJNigSI51xpmTgve",
-        "gender": "Female", "category": "Spiritual & Elders",
+        "gender": "Female", "category": "Mindfulness & Sleep",
         "pitch": "-10Hz", "rate": "-12%",
         "desc": "Soft, relaxing, harmonic voice for Pranayama and guided rest."
     },
-    "Simran (Bollywood Gossip & Trend RJ)": {
+    "Simran (Entertainment & Culture Magazine Host)": {
         "id": "hi-IN-SwaraNeural", "eleven_id": "jsCqWAovK2LkecY7zXl4",
-        "gender": "Female", "category": "Radio Jockey & Reels",
+        "gender": "Female", "category": "Broadcast & Media",
         "pitch": "+24Hz", "rate": "+14%",
         "desc": "Effervescent, sparkling Bollywood pop culture delivery."
     }
 }
 
 ENGLISH_VOICES = {
-    "Brian (BBC World Master Documentary)": {
+    "Brian (BBC Prestige Documentary — Distinguished Baritone)": {
         "id": "en-GB-RyanNeural", "eleven_id": "nPczCjzI2devNBz1zQrb",
-        "gender": "Male", "category": "Audiobooks & Literature",
+        "gender": "Male", "category": "Documentary & Literature",
         "pitch": "-12Hz", "rate": "-6%",
         "desc": "Distinguished British prestige baritone for global nature sagas."
     },
-    "Christopher (Hollywood Blockbuster Trailer Bass)": {
+    "Christopher (Hollywood Blockbuster Bass — Trailer Rumble)": {
         "id": "en-US-ChristopherNeural", "eleven_id": "IKne3meq5aSn9XLyUdCD",
-        "gender": "Male", "category": "Cinematic & Titan Bass",
+        "gender": "Male", "category": "Cinematic & Trailer",
         "pitch": "-30Hz", "rate": "-10%",
         "desc": "Sub-atomic Hollywood trailer rumble for monumental film teasers."
     },
-    "Marcus (Silicon Valley Keynote Presenter)": {
+    "Marcus (Silicon Valley Keynote Presenter — Tech Visionary)": {
         "id": "en-US-GuyNeural", "eleven_id": "bIHbv24MWmeRgasZH58o",
-        "gender": "Male", "category": "Corporate & Business",
+        "gender": "Male", "category": "Corporate & Enterprise",
         "pitch": "+2Hz", "rate": "+4%",
         "desc": "Clean, charismatic, tech visionary presentation style."
     },
-    "Eric (True Crime Podcast Anchor)": {
+    "Eric (Investigative Crime Journalism — Gritty Narrative)": {
         "id": "en-US-EricNeural", "eleven_id": "JBFqnCBsd6RMkjVDRZzb",
         "gender": "Male", "category": "Crime & Mystery",
         "pitch": "-14Hz", "rate": "-4%",
         "desc": "Intriguing, gritty investigative narrative delivery."
     },
-    "Leo (Midnight FM Radio Host)": {
+    "Leo (Midnight FM Radio Host — Velvet Acoustic)": {
         "id": "en-US-RogerNeural", "eleven_id": "TX3LPaxmHKxFdv7VOQHJ",
-        "gender": "Male", "category": "Radio Jockey & Reels",
+        "gender": "Male", "category": "Broadcast & Media",
         "pitch": "+16Hz", "rate": "+10%",
         "desc": "Velvety, late-night acoustic jazz and radio station host."
     },
-    "Jenny (Global Business News Anchor)": {
+    "Jenny (Global Financial Broadcast — Executive News)": {
         "id": "en-US-JennyNeural", "eleven_id": "21m00Tcm4TlvDq8ikWAM",
         "gender": "Female", "category": "News & Broadcast",
         "pitch": "+8Hz", "rate": "+14%",
         "desc": "Immaculate corporate broadcast voice for financial summits."
     },
-    "Emma (Classic English Audiobook Narrator)": {
+    "Emma (Theatrical Literature & Classical Drama Narrator)": {
         "id": "en-GB-SoniaNeural", "eleven_id": "pFZP5JQG7iQjIQuC4Bku",
-        "gender": "Female", "category": "Audiobooks & Literature",
+        "gender": "Female", "category": "Documentary & Literature",
         "pitch": "-8Hz", "rate": "-6%",
         "desc": "Intense theatrical delivery for cinematic drama and storytelling."
     },
-    "Sonia (Mindfulness & Deep Breath Meditation)": {
+    "Sonia (Mindfulness & Deep Breath Meditation Guide)": {
         "id": "en-IN-NeerjaNeural", "eleven_id": "H6QPv2pQZDcGqLwDTIJQ",
-        "gender": "Female", "category": "Spiritual & Elders",
+        "gender": "Female", "category": "Mindfulness & Sleep",
         "pitch": "-14Hz", "rate": "-12%",
         "desc": "Hypnotic, peaceful cadence for guided relaxation and sleep apps."
     },
-    "Diya (Fantasy Pixie & Animated Child Voice)": {
+    "Diya (Animation & Character Fantasy Voice)": {
         "id": "en-US-AnaNeural", "eleven_id": "N2lVS1w4EtoT3dr4eOWO",
-        "gender": "Female", "category": "Kids & Fantasy",
+        "gender": "Female", "category": "Kids & Animation",
         "pitch": "+32Hz", "rate": "+8%",
         "desc": "Enchanting fairy tale and cartoon voice for young audiences."
     }
@@ -806,7 +914,7 @@ with tab_mr:
         mr_categories = sorted(list(set(v["category"] for v in MARATHI_VOICES.values())))
         selected_cat = st.selectbox("Voice Category:", mr_categories, key="mr_cat")
         filtered_voices = {k: v for k, v in MARATHI_VOICES.items() if v["category"] == selected_cat}
-        selected_mr_name = st.selectbox("Select Distinct Character Voice:", list(filtered_voices.keys()), key="mr_voice")
+        selected_mr_name = st.selectbox("Select Studio Voice Persona:", list(filtered_voices.keys()), key="mr_voice")
         
         mr_voice_data = filtered_voices[selected_mr_name]
         base_p = int(mr_voice_data["pitch"].replace("Hz", ""))
@@ -816,7 +924,7 @@ with tab_mr:
         
         st.markdown(f"""
         <div class="voice-card">
-            <div><span class="badge-cat">{mr_voice_data['category']}</span> <b>{selected_mr_name.split('(')[0]}</b></div>
+            <div><span class="badge-cat">{mr_voice_data['category']}</span> <b>{selected_mr_name.split('(')[0].strip()}</b></div>
             <div style="font-size: 13px; color: {theme_subtext}; margin-top: 6px;">{mr_voice_data['desc']}</div>
             <div style="font-size: 12px; color: #818CF8; margin-top: 6px; font-weight: 600;">⚡ Frequency: {target_p:+d}Hz | Cadence: {target_r:+d}%</div>
         </div>
@@ -892,7 +1000,7 @@ with tab_hi:
         hi_categories = sorted(list(set(v["category"] for v in HINDI_VOICES.values())))
         selected_hi_cat = st.selectbox("Voice Category:", hi_categories, key="hi_cat")
         filtered_hi_voices = {k: v for k, v in HINDI_VOICES.items() if v["category"] == selected_hi_cat}
-        selected_hi_name = st.selectbox("Select Character Voice:", list(filtered_hi_voices.keys()), key="hi_voice")
+        selected_hi_name = st.selectbox("Select Studio Voice Persona:", list(filtered_hi_voices.keys()), key="hi_voice")
         
         hi_voice_data = filtered_hi_voices[selected_hi_name]
         base_hp = int(hi_voice_data["pitch"].replace("Hz", ""))
@@ -902,7 +1010,7 @@ with tab_hi:
         
         st.markdown(f"""
         <div class="voice-card">
-            <div><span class="badge-cat">{hi_voice_data['category']}</span> <b>{selected_hi_name.split('(')[0]}</b></div>
+            <div><span class="badge-cat">{hi_voice_data['category']}</span> <b>{selected_hi_name.split('(')[0].strip()}</b></div>
             <div style="font-size: 13px; color: {theme_subtext}; margin-top: 6px;">{hi_voice_data['desc']}</div>
             <div style="font-size: 12px; color: #818CF8; margin-top: 6px; font-weight: 600;">⚡ Frequency: {target_hp:+d}Hz | Cadence: {target_hr:+d}%</div>
         </div>
@@ -978,7 +1086,7 @@ with tab_en:
         en_categories = sorted(list(set(v["category"] for v in ENGLISH_VOICES.values())))
         selected_en_cat = st.selectbox("Voice Category:", en_categories, key="en_cat")
         filtered_en_voices = {k: v for k, v in ENGLISH_VOICES.items() if v["category"] == selected_en_cat}
-        selected_en_name = st.selectbox("Select Character Voice:", list(filtered_en_voices.keys()), key="en_voice")
+        selected_en_name = st.selectbox("Select Studio Voice Persona:", list(filtered_en_voices.keys()), key="en_voice")
         
         en_voice_data = filtered_en_voices[selected_en_name]
         base_ep = int(en_voice_data["pitch"].replace("Hz", ""))
@@ -988,7 +1096,7 @@ with tab_en:
         
         st.markdown(f"""
         <div class="voice-card">
-            <div><span class="badge-cat">{en_voice_data['category']}</span> <b>{selected_en_name.split('(')[0]}</b></div>
+            <div><span class="badge-cat">{en_voice_data['category']}</span> <b>{selected_en_name.split('(')[0].strip()}</b></div>
             <div style="font-size: 13px; color: {theme_subtext}; margin-top: 6px;">{en_voice_data['desc']}</div>
             <div style="font-size: 12px; color: #818CF8; margin-top: 6px; font-weight: 600;">⚡ Frequency: {target_ep:+d}Hz | Cadence: {target_er:+d}%</div>
         </div>
@@ -1036,7 +1144,7 @@ with tab_en:
                     st.download_button("⬇️ Download High-Res MP3", f.read(), file_name="wani_english_master.mp3", mime="audio/mp3", use_container_width=True)
 
 # ==============================================================
-# TAB 4: UNIVERSAL LANGUAGE STUDIO (POINT 8)
+# TAB 4: UNIVERSAL LANGUAGE STUDIO
 # ==============================================================
 with tab_trans_studio:
     st.markdown('<div class="studio-banner">🌍 Universal Language Studio — Cross-Lingual Translation & Native Speech Synthesis</div>', unsafe_allow_html=True)
@@ -1106,11 +1214,11 @@ with tab_dialogue:
     with col_d1:
         st.markdown("#### 🗣️ Character 1")
         char1_voice = st.selectbox("Select Character 1 Voice:", list(MARATHI_VOICES.keys()), index=0, key="c1_v")
-        char1_text = st.text_area("Character 1 Dialogue:", "तान्हाजी, सिंहगडाची मोहीम सोपी नाही. मुघलांचा पहारा अतिशय कडक आहे!", height=100, key="c1_t")
+        char1_text = st.text_area("Character 1 Dialogue:", "पुढील मोहीम सोपी नाही. सर्वांनी अतिशय दक्ष राहणे आवश्यक आहे!", height=100, key="c1_t")
     with col_d2:
         st.markdown("#### 🗣️ Character 2")
         char2_voice = st.selectbox("Select Character 2 Voice:", list(MARATHI_VOICES.keys()), index=1, key="c2_v")
-        char2_text = st.text_area("Character 2 Dialogue:", "महाराज, आधी लगीन कोंढाण्याचं, मग माझ्या रायबाचं! जोपर्यंत गड जिंकत नाही, तोपर्यंत तान्हाजी शांत बसणार नाही!", height=100, key="c2_t")
+        char2_text = st.text_area("Character 2 Dialogue:", "नक्कीच, जोपर्यंत विजय निश्चित होत नाही, तोपर्यंत आमचे प्रयत्न अखंड सुरू राहतील!", height=100, key="c2_t")
 
     if st.button("🎬 Render Multi-Voice Scene", type="primary", use_container_width=True):
         active_email = st.session_state.current_user.get("email", "guest@wani.ai")
@@ -1154,7 +1262,6 @@ with tab_dialogue:
 with tab_pricing:
     st.markdown('<div class="studio-banner">💎 Official Wani Subscription Plans — Integrated with Razorpay Subscriptions (INR)</div>', unsafe_allow_html=True)
     
-    # Billing Cycle Selection
     cycle_choice = st.radio(
         "Select Billing Cycle:",
         ["Monthly Billing", "Yearly Billing (17% OFF / 2 Months Free) 🔥"],
@@ -1230,8 +1337,8 @@ with tab_pricing:
             <ul style="text-align:left; font-size:12.5px; color:{theme_text}; line-height:2.2; padding-left: 18px;">
                 <li>🚀 <b>{pro_p.get('words_per_month', 250000):,} Words / Month</b></li>
                 <li>🎭 <b>All 35+ Multi-Platform Voices</b></li>
-                <li>⚔️ Tanaji, Bajiprabhu & Jijau Voices</li>
-                <li>🌌 Thanos & Amitabh Movie Trailer Bass</li>
+                <li>⚔️ Distinct Heroic & Historical Voices</li>
+                <li>🌌 Cinematic Movie Trailer Bass</li>
                 <li>🏎️ 2x Priority Rendering Queue</li>
             </ul>
         </div>
@@ -1265,9 +1372,7 @@ with tab_pricing:
             st.session_state["active_checkout_plan"] = "business"
             st.session_state["active_checkout_cycle"] = billing_cycle
 
-    # ---------------------------------------------------------
-    # AUTOMATED RAZORPAY CHECKOUT MODAL & SERVER VERIFICATION
-    # ---------------------------------------------------------
+    # Checkout Flow
     if "active_checkout_plan" in st.session_state:
         target_pcode = st.session_state["active_checkout_plan"]
         target_cycle = st.session_state.get("active_checkout_cycle", "monthly")
@@ -1276,7 +1381,6 @@ with tab_pricing:
         st.markdown("---")
         st.markdown(f"### 💳 Automated Checkout: {target_pcode.upper()} ({target_cycle.capitalize()})")
         
-        # Initiate server-side Razorpay subscription creation
         checkout_info = sm.create_subscription_checkout(active_email, target_pcode, target_cycle)
         sub_id = checkout_info.get("subscription_id")
         amount_inr = checkout_info.get("amount", 0) / 100.0
@@ -1298,12 +1402,10 @@ with tab_pricing:
             st.markdown("#### Authorization & Verification")
             st.caption("Complete subscription mandate via Razorpay:")
             
-            # Simulated 1-Click Server Verification (Test Mode with Cryptographic HMAC-SHA256)
             if st.button("🔐 Authorize & Verify Subscription (Instant)", type="primary", use_container_width=True):
                 cfg = sm.get_config()
                 test_pay_id = f"pay_rzp_{uuid.uuid4().hex[:10]}"
                 
-                # Compute authentic server HMAC signature
                 msg = f"{test_pay_id}|{sub_id}".encode("utf-8")
                 valid_sig = hmac.new(cfg["razorpay_key_secret"].encode("utf-8"), msg, hashlib.sha256).hexdigest()
                 
@@ -1312,7 +1414,6 @@ with tab_pricing:
                     
                 if ok:
                     st.success(f"🎉 Payment Verified! Subscription {sub_id} is now ACTIVE! Entitlements unlocked.")
-                    # Sync local user session
                     st.session_state.current_user["plan"] = f"{target_pcode.upper()} 👑"
                     if "active_checkout_plan" in st.session_state:
                         del st.session_state["active_checkout_plan"]
@@ -1328,7 +1429,7 @@ with tab_pricing:
                 st.rerun()
 
 # ==============================================================
-# TAB 7: CUSTOMER BILLING DASHBOARD (POINT 9)
+# TAB 7: CUSTOMER BILLING DASHBOARD
 # ==============================================================
 with tab_customer_billing:
     st.markdown('<div class="studio-banner">📑 Customer Billing Dashboard — Subscription Status, Quota Ledger & Payment Invoices</div>', unsafe_allow_html=True)
@@ -1340,7 +1441,6 @@ with tab_customer_billing:
     quotas = c_data["quotas"]
     payments = c_data["payment_history"]
     
-    # 1. Prominent Status Overview Card
     b_col1, b_col2, b_col3, b_col4 = st.columns(4)
     b_col1.metric("💎 Current Plan", ent.get("plan_name", "Free Trial"))
     
@@ -1379,7 +1479,6 @@ with tab_customer_billing:
     
     act_col1, act_col2 = st.columns(2)
     
-    # Action 1: Upgrade / Downgrade Plan
     with act_col1:
         with st.expander("🔄 Upgrade / Change Subscription Plan"):
             st.caption("Select new plan to synchronize with Razorpay:")
@@ -1396,7 +1495,6 @@ with tab_customer_billing:
                 else:
                     st.error(msg)
                     
-    # Action 2: Cancel / Resubscribe
     with act_col2:
         with st.expander("🛑 Cancel Subscription or Resubscribe"):
             if ent.get("is_paid", False) and ent.get("status") != "cancelled_pending_period_end":
@@ -1421,7 +1519,6 @@ with tab_customer_billing:
                     st.session_state["active_checkout_cycle"] = "monthly"
                     st.rerun()
 
-    # 3. Immutable Payment History & Invoices
     st.markdown("---")
     st.markdown("### 🧾 Payment History & Official Invoices")
     
@@ -1442,7 +1539,7 @@ with tab_customer_billing:
         st.info("No recorded payment transactions found for this account yet.")
 
 # ==============================================================
-# TAB 8: EXECUTIVE ADMIN SUBSCRIPTION CRM & REVENUE (POINT 8)
+# TAB 8: EXECUTIVE ADMIN SUBSCRIPTION CRM & REVENUE
 # ==============================================================
 with tab_admin:
     st.markdown('<div class="studio-banner">👑 Executive Admin CRM — Razorpay Subscriptions, Live MRR & Audit Logs</div>', unsafe_allow_html=True)
@@ -1461,7 +1558,6 @@ with tab_admin:
             else:
                 st.error("Invalid Admin PIN.")
     else:
-        # Load real-time admin dashboard data
         col_f1, col_f2, col_f3 = st.columns(3)
         with col_f1:
             f_email = st.text_input("Filter by User Email:", key="crm_filter_email")
@@ -1476,7 +1572,6 @@ with tab_admin:
         adm_data = sm.get_admin_dashboard_data(filter_email=f_email, filter_plan=plan_param, filter_status=status_param)
         m = adm_data["metrics"]
 
-        # Revenue Metrics
         m1, m2, m3, m4, m5 = st.columns(5)
         m1.metric("👥 Total Subscriptions", f"{m['total_subscribers']}")
         m2.metric("🟢 Active Paying", f"{m['active_subscribers']}")
@@ -1484,7 +1579,6 @@ with tab_admin:
         m4.metric("🔴 Cancelled", f"{m['cancelled_subscribers']}")
         m5.metric("💰 Estimated MRR", f"₹{m['estimated_mrr_inr']:,}")
 
-        # Webhook Daemon Status
         st.markdown("---")
         daemon_col1, daemon_col2 = st.columns([2, 1])
         with daemon_col1:
@@ -1497,9 +1591,8 @@ with tab_admin:
                 hw = requests.get("http://localhost:8504/health", timeout=2).json()
                 st.success(f"🟢 ACTIVE on Port 8504 ({hw.get('status')})")
             except Exception:
-                st.warning("⚠️ Webhook server starting or running asynchronously.")
+                st.warning("⚠️ Webhook server running asynchronously.")
 
-        # Real-time Subscribers Directory
         st.markdown("---")
         st.markdown("### 📋 Real-time Subscribers Directory")
         if adm_data["subscribers"]:
@@ -1507,7 +1600,6 @@ with tab_admin:
         else:
             st.info("No matching subscriber records found.")
 
-        # Admin Plan Terms Configuration (Grandfathering Protected)
         st.markdown("---")
         st.markdown("### ⚙️ Plan Catalog & Future Terms Configuration")
         st.caption("🛡️ **Grandfathering Protected:** Adjusting prices or quotas only applies to new subscribers. Existing active subscribers remain on their locked terms.")
@@ -1540,7 +1632,6 @@ with tab_admin:
                 st.success("Business terms updated for future subscribers!")
                 st.rerun()
 
-        # Grace Period Setting
         st.markdown("---")
         gp_col1, gp_col2 = st.columns([1.5, 2])
         with gp_col1:
@@ -1551,7 +1642,6 @@ with tab_admin:
                 st.success(f"Grace period set to {new_gp} days!")
                 st.rerun()
 
-        # Audit Logs View
         st.markdown("---")
         st.markdown("### 📜 Auditable Subscription & Webhook Event Logs")
         with st.expander("View Recent Subscription Events (Audit Log)"):
@@ -1733,3 +1823,25 @@ with tab_library:
                 <div style="font-size: 12px; color: #818CF8; margin-top: 4px;">Acoustic Baseline: Pitch {data['pitch']} | Speed {data['rate']}</div>
             </div>
             """, unsafe_allow_html=True)
+
+# ==============================================================
+# SMART CORPORATE FOOTER WITH ENTERPRISE COPYRIGHT PROTECTION
+# ==============================================================
+st.markdown(f"""
+<div class="enterprise-footer protected-brand">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="wani-brand-text" style="font-size: 26px;">Wani AI</span>
+                <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ENTERPRISE EDITION</span>
+            </div>
+            <div style="font-size: 12px; color: {theme_subtext}; margin-top: 4px;">Next-Gen Multilingual Neural Acoustic Speech Synthesis • The Voice of Intelligence</div>
+        </div>
+        <div style="font-size: 11.5px; color: {theme_subtext}; text-align: right; line-height: 1.6;">
+            <div>© 2026 <b>Wani Technologies Pvt. Ltd.</b> All Rights Reserved.</div>
+            <div>Protected under Indian Copyright Act 1957, IT Act 2000, WIPO Treaties & Universal Copyright Convention.</div>
+            <div style="color: #6366F1; font-weight: 600;">Proprietary Acoustic Architecture • ISO/IEC 27001 Certified Infrastructure • 99.9% Enterprise SLA</div>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)

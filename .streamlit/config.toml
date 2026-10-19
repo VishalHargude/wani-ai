@@ -10,3 +10,10 @@ headless = true
 enableCORS = false
 enableXsrfProtection = true
 maxUploadSize = 50
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
