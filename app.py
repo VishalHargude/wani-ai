@@ -13,7 +13,18 @@ import hmac
 import io
 import csv
 import base64
+import streamlit.components.v1 as components
 from datetime import datetime, timedelta
+
+# Load Pre-rendered Audition Base64 Data
+PREVIEWS_B64_FILE = os.path.join(os.path.dirname(__file__), "previews_base64.json")
+PREVIEWS_BASE64_CACHE = {}
+if os.path.exists(PREVIEWS_B64_FILE):
+    try:
+        with open(PREVIEWS_B64_FILE, "r", encoding="utf-8") as _fb64:
+            PREVIEWS_BASE64_CACHE = json.load(_fb64)
+    except Exception:
+        PREVIEWS_BASE64_CACHE = {}
 
 import pypdf
 import speech_recognition as sr
@@ -1032,81 +1043,81 @@ with st.sidebar:
 # 20 DISTINCT STUDIO CHARACTER PERSONAS (10 MALE + 10 FEMALE WITH AVATARS)
 # ==============================================================
 STUDIO_PERSONAS = {
-    # 10 MALE PERSONAS
+    # 13 MALE PERSONAS (Acoustic Range: -22Hz to +4Hz • 100% Masculine)
     "Aarav — Historic Authority (Warrior Baritone)": {
         "gender": "Male", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-28Hz", "rate": "-6%",
+        "pitch": "-18Hz", "rate": "-6%",
         "desc": "Ultra-heavy thunderous baritone with deep historic resonance and gravelly authority.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "mr-IN-ManoharNeural"}
     },
     "Vikram — Hollywood Trailer (Sub-Woofer Bass)": {
         "gender": "Male", "category": "Cinematic & Drama",
         "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-35Hz", "rate": "-10%",
+        "pitch": "-22Hz", "rate": "-10%",
         "desc": "Sub-woofer level resonant trailer titan bass for monumental cinema announcements.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "mr-IN-ManoharNeural"}
     },
     "Marcus — Silicon Valley Keynote (Charismatic)": {
         "gender": "Male", "category": "Corporate & Enterprise",
         "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+2Hz", "rate": "+4%",
+        "pitch": "+0Hz", "rate": "+4%",
         "desc": "Clean, charismatic, tech visionary presentation cadence for corporate demos.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"}
     },
     "Kabir — Resolute Heritage (Patriotic Gravitas)": {
         "gender": "Male", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-22Hz", "rate": "-6%",
+        "pitch": "-14Hz", "rate": "-6%",
         "desc": "Steadfast, heroic defender baritone with resolute conviction and presence.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-RyanNeural", "default": "mr-IN-ManoharNeural"}
     },
     "Anup — Mystery & Thriller (Suspense Anchor)": {
         "gender": "Male", "category": "Crime & Thriller",
         "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-16Hz", "rate": "-8%",
+        "pitch": "-10Hz", "rate": "-8%",
         "desc": "Tense, investigative narration style tailored for unsolved mysteries and noir fiction.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-EricNeural", "default": "mr-IN-ManoharNeural"}
     },
     "Rohan — Primetime News (Urgent Desk Anchor)": {
         "gender": "Male", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+8Hz", "rate": "+18%",
+        "pitch": "+4Hz", "rate": "+14%",
         "desc": "Fast-paced, urgent broadcast delivery for breaking news and political bulletins.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-RogerNeural", "default": "mr-IN-ManoharNeural"}
     },
     "Brian — BBC Prestige (British Documentary)": {
         "gender": "Male", "category": "Documentary & Nature",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-12Hz", "rate": "-6%",
+        "pitch": "-8Hz", "rate": "-6%",
         "desc": "Distinguished British prestige baritone for global nature and history sagas.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-RyanNeural", "default": "en-GB-RyanNeural"}
     },
     "Sagar — Dynamic FM Host (Commercial RJ)": {
         "gender": "Male", "category": "Broadcast & Media",
         "avatar": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+22Hz", "rate": "+14%",
-        "desc": "High-pitch, energetic, upbeat host delivery crafted for viral Reels and commercial radio.",
+        "pitch": "+2Hz", "rate": "+10%",
+        "desc": "Warm, energetic, upbeat host delivery crafted for viral Reels and commercial radio.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-RogerNeural", "default": "mr-IN-ManoharNeural"}
     },
     "Christopher — Monumental Cinematic Storyteller": {
         "gender": "Male", "category": "Cinematic & Drama",
         "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-30Hz", "rate": "-8%",
+        "pitch": "-16Hz", "rate": "-8%",
         "desc": "Deep cinematic baritone for monumental trailers, audiobooks, and dramatic voiceovers.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "en-US-ChristopherNeural"}
     },
     "Eshwar — Elder Patriarch (Measured Wisdom)": {
         "gender": "Male", "category": "Documentary & Wisdom",
         "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-26Hz", "rate": "-14%",
+        "pitch": "-18Hz", "rate": "-12%",
         "desc": "Slow, aged baritone filled with lifelong wisdom for folklore and contemplative scripts.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "mr-IN-ManoharNeural"}
     },
     "Puck — Google AI Studio (Dynamic Baritone)": {
         "gender": "Male", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+4Hz", "rate": "+6%",
+        "pitch": "+2Hz", "rate": "+4%",
         "desc": "Google AI Studio Gemini 2.0 dynamic upbeat baritone with articulate cadence and conversational charisma.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"},
         "google_voice": "Puck"
@@ -1114,7 +1125,7 @@ STUDIO_PERSONAS = {
     "Charon — Google AI Studio (Deep Resonant Bass)": {
         "gender": "Male", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-24Hz", "rate": "-8%",
+        "pitch": "-16Hz", "rate": "-8%",
         "desc": "Google AI Studio Gemini 2.0 deep, authoritative, resonant bass for cinematic narrations and gravitas.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "en-US-ChristopherNeural"},
         "google_voice": "Charon"
@@ -1122,87 +1133,87 @@ STUDIO_PERSONAS = {
     "Fenrir — Google AI Studio (Commanding Titan)": {
         "gender": "Male", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-18Hz", "rate": "-4%",
+        "pitch": "-14Hz", "rate": "-4%",
         "desc": "Google AI Studio Gemini 2.0 commanding, bold, heroic baritone with immense acoustic projection.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-EricNeural", "default": "mr-IN-ManoharNeural"},
         "google_voice": "Fenrir"
     },
 
-    # FEMALE PERSONAS
+    # 12 FEMALE PERSONAS (Acoustic Range: +0Hz to +10Hz • 100% Feminine)
     "Aarohi — Stately Empress (Royal Dignity)": {
         "gender": "Female", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-20Hz", "rate": "-8%",
-        "desc": "Deep, commanding maternal matriarch voice resonant with strategic valor.",
+        "pitch": "+0Hz", "rate": "-4%",
+        "desc": "Noble, regal matriarch voice resonant with strategic valor and maternal warmth.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-SoniaNeural", "default": "mr-IN-AarohiNeural"}
     },
     "Jenny — Global Financial Anchor (Executive)": {
         "gender": "Female", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+6Hz", "rate": "+12%",
+        "pitch": "+4Hz", "rate": "+10%",
         "desc": "Immaculate corporate broadcast voice for financial summits and B2B reports.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"}
     },
     "Ananya — National News Anchor (Assertive Desk)": {
         "gender": "Female", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+10Hz", "rate": "+16%",
+        "pitch": "+6Hz", "rate": "+14%",
         "desc": "Rapid, crisp, assertive news delivery for breaking news and prime-time broadcasts.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "mr-IN-AarohiNeural"}
     },
     "Emma — Theatrical Literature (Classic Drama)": {
         "gender": "Female", "category": "Documentary & Nature",
         "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-8Hz", "rate": "-6%",
+        "pitch": "+0Hz", "rate": "-4%",
         "desc": "Intense theatrical delivery for cinematic drama, poetry, and classical audiobooks.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-SoniaNeural", "default": "en-GB-SoniaNeural"}
     },
     "Tara — Serene Guided ASMR & Mindfulness": {
         "gender": "Female", "category": "Mindfulness & Sleep",
         "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-12Hz", "rate": "-14%",
+        "pitch": "+2Hz", "rate": "-8%",
         "desc": "Soothing, gentle whisper cadence for stress relief, yoga, and guided rest.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"}
     },
     "Priya — Commercial Producer (Viral Lifestyle Host)": {
         "gender": "Female", "category": "Broadcast & Media",
         "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+24Hz", "rate": "+16%",
+        "pitch": "+8Hz", "rate": "+12%",
         "desc": "Bright, playful, ultra-trendy tone designed for viral lifestyle reels and podcasts.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "mr-IN-AarohiNeural"}
     },
     "Sonia — Sleep & Deep Relaxation Guide": {
         "gender": "Female", "category": "Mindfulness & Sleep",
         "avatar": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-14Hz", "rate": "-12%",
+        "pitch": "+0Hz", "rate": "-6%",
         "desc": "Warm, restorative, breathy cadence for bedtime routines and meditation.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "en-IN-NeerjaNeural"}
     },
     "Shreya — Cultural Storyteller (Heritage Warmth)": {
         "gender": "Female", "category": "Documentary & Wisdom",
         "avatar": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-16Hz", "rate": "-14%",
+        "pitch": "+2Hz", "rate": "-4%",
         "desc": "Affectionate, experienced narrative tone for timeless bedtime stories and parables.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-SoniaNeural", "default": "mr-IN-AarohiNeural"}
     },
     "Gauri — National Geographic Documentary Host": {
         "gender": "Female", "category": "Documentary & Nature",
         "avatar": "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-4Hz", "rate": "-4%",
+        "pitch": "+0Hz", "rate": "+0%",
         "desc": "Elegant, informative cadence for travelogues, documentaries, and nature programs.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "mr-IN-AarohiNeural"}
     },
     "Diya — Animation & Character Fantasy Voice": {
         "gender": "Female", "category": "Kids & Animation",
         "avatar": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+30Hz", "rate": "+10%",
+        "pitch": "+10Hz", "rate": "+8%",
         "desc": "Enchanting fairy tale and animated cartoon voice for children's stories.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AnaNeural", "default": "en-US-AnaNeural"}
     },
     "Aoede — Google AI Studio (Sophisticated Eloquence)": {
         "gender": "Female", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+4Hz", "rate": "+4%",
+        "pitch": "+2Hz", "rate": "+4%",
         "desc": "Google AI Studio Gemini 2.0 elegant, melodious, and sophisticated female voice for luxury narration.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"},
         "google_voice": "Aoede"
@@ -1210,7 +1221,7 @@ STUDIO_PERSONAS = {
     "Kore — Google AI Studio (Serene Mindfulness)": {
         "gender": "Female", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "-10Hz", "rate": "-10%",
+        "pitch": "+0Hz", "rate": "-6%",
         "desc": "Google AI Studio Gemini 2.0 gentle, soothing, meditative female narrator crafted for calm and storytelling.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"},
         "google_voice": "Kore"
@@ -1248,10 +1259,18 @@ PURPOSE_PRESETS = {
 # -------------------------------------------------------------
 # GOOGLE AI STUDIO & WANI UNIFIED SYNTHESIS ENGINES
 # -------------------------------------------------------------
-def synthesize_google_speech(text: str, lang_code: str = "mr", voice_name: str = "Puck", out_path: str = None) -> str:
+def synthesize_google_speech(
+    text: str,
+    lang_code: str = "mr",
+    voice_name: str = "Puck",
+    out_path: str = None,
+    gender: str = "Male",
+    pitch_str: str = "+0Hz",
+    rate_str: str = "+0%"
+) -> str:
     """
-    Synthesize audio using Google AI Studio (Gemini 2.0 Flash Audio) or Google Multilingual Neural TTS (gTTS).
-    Zero-key fallback ensures guaranteed 100% reliable real audio generation.
+    Synthesize audio using Google AI Studio (Gemini 2.0 Flash Audio) or Google Neural Core.
+    STRICT GENDER FIDELITY: Male personas always output masculine voices; Female always output feminine voices.
     """
     clean_text = sanitize_text(text)
     clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
@@ -1269,7 +1288,7 @@ def synthesize_google_speech(text: str, lang_code: str = "mr", voice_name: str =
                     "speechConfig": {
                         "voiceConfig": {
                             "prebuiltVoiceConfig": {
-                                "voiceName": voice_name if voice_name in ["Puck", "Charon", "Kore", "Fenrir", "Aoede"] else "Puck"
+                                "voiceName": voice_name if voice_name in ["Puck", "Charon", "Kore", "Fenrir", "Aoede"] else ("Puck" if gender == "Male" else "Aoede")
                             }
                         }
                     }
@@ -1305,18 +1324,25 @@ def synthesize_google_speech(text: str, lang_code: str = "mr", voice_name: str =
                             return f"Google AI Studio (Gemini 2.0 Flash • {voice_name})"
         except Exception:
             pass
-            
-    # 2. Built-in Google Multilingual Neural TTS Engine (gTTS) - Free, Zero-Key
-    from gtts import gTTS
-    supported_langs = {
-        "mr": "mr", "hi": "hi", "en": "en", "gu": "gu", "ta": "ta",
-        "te": "te", "kn": "kn", "bn": "bn", "es": "es", "fr": "fr",
-        "de": "de", "ja": "ja", "ar": "ar", "ru": "ru"
-    }
-    g_lang = supported_langs.get(lang_code, "en")
-    tts = gTTS(text=clean_text, lang=g_lang)
-    tts.save(out_path)
-    return f"Google AI Studio Neural Core ({voice_name} • {g_lang.upper()})"
+
+    # 2. Authentic Neural Architecture with STRICT GENDER FIDELITY
+    # Never use female voice for male! Guaranteed 100% masculine for male, feminine for female!
+    matched_lang = None
+    for lname, linfo in LANGUAGE_CATALOG.items():
+        if linfo["code"] == lang_code:
+            matched_lang = linfo
+            break
+    if not matched_lang:
+        matched_lang = LANGUAGE_CATALOG.get("◈ Marathi (मराठी)", list(LANGUAGE_CATALOG.values())[0])
+
+    voice_code = matched_lang["male"] if gender == "Male" else matched_lang["female"]
+
+    async def run_google_neural():
+        comm = edge_tts.Communicate(clean_text, voice_code, rate=rate_str, pitch=pitch_str)
+        await comm.save(out_path)
+
+    asyncio.run(run_google_neural())
+    return f"Google AI Studio Neural Core ({voice_name} • {gender})"
 
 # Core synthesis function (100% white-labeled)
 def synthesize_speech_core(
@@ -1327,10 +1353,41 @@ def synthesize_speech_core(
     rate_str: str = "+0%",
     engine: str = "Wani Neural Matrix Core",
     google_voice_name: str = "Puck",
-    lang_code: str = "mr"
+    lang_code: str = "mr",
+    gender: str = "Male"
 ):
+    # Strict Gender Acoustic Enforcement & Pitch Clamping
+    try:
+        p_num = int(re.sub(r'[^0-9\-+]', '', pitch_str)) if pitch_str else 0
+    except Exception:
+        p_num = 0
+        
+    if gender == "Female":
+        # Female pitch must never drop below -4Hz (prevents masculine sound)
+        if p_num < -4:
+            pitch_str = "+0Hz"
+        # Auto-correct any accidental male voice code
+        if any(m_id in voice_code for m_id in ["Manohar", "Madhur", "Christopher", "Guy", "Eric", "Roger", "Ryan", "Niranjan", "Valluvar", "Mohan", "Gagan", "Bashkar"]):
+            for lname, linfo in LANGUAGE_CATALOG.items():
+                if linfo["code"] == lang_code:
+                    voice_code = linfo["female"]
+                    break
+    elif gender == "Male":
+        # Male pitch must never exceed +6Hz (prevents feminine sound)
+        if p_num > 6:
+            pitch_str = "+2Hz"
+        # Auto-correct any accidental female voice code
+        if any(f_id in voice_code for f_id in ["Aarohi", "Swara", "Jenny", "Sonia", "Neerja", "Ana", "Dhwani", "Pallavi", "Shruti", "Sapna", "Tanishaa"]):
+            for lname, linfo in LANGUAGE_CATALOG.items():
+                if linfo["code"] == lang_code:
+                    voice_code = linfo["male"]
+                    break
+
     if "Google" in engine:
-        return synthesize_google_speech(text, lang_code=lang_code, voice_name=google_voice_name, out_path=out_path)
+        return synthesize_google_speech(
+            text, lang_code=lang_code, voice_name=google_voice_name,
+            out_path=out_path, gender=gender, pitch_str=pitch_str, rate_str=rate_str
+        )
         
     clean_text = sanitize_text(text)
     clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
@@ -1350,18 +1407,28 @@ def generate_audio_preview_cached(persona_name: str, lang_code: str = "en") -> s
         return ""
     
     clean_pname = persona_name.split('—')[0].strip()
+    clean_id = clean_pname.lower()
+    
+    # 1. Instant check in pre-rendered previews_cache
+    cache_dir = os.path.join(os.path.dirname(__file__), "previews_cache")
+    pre_rendered = os.path.join(cache_dir, f"{clean_id}_{lang_code}.mp3")
+    if os.path.exists(pre_rendered) and os.path.getsize(pre_rendered) > 1000:
+        return pre_rendered
+        
+    # 2. Strict gender enforcement for dynamic synthesis
+    gender = pdata.get("gender", "Male")
     voice_map = pdata.get("voice_map", {})
-    voice_code = voice_map.get(lang_code, voice_map.get("default", "en-US-ChristopherNeural"))
-    google_vname = pdata.get("google_voice", "Puck")
+    voice_code = voice_map.get(lang_code, voice_map.get("default", "en-US-ChristopherNeural" if gender == "Male" else "en-US-JennyNeural"))
+    google_vname = pdata.get("google_voice", "Puck" if gender == "Male" else "Aoede")
     is_google = "Google AI Studio" in pdata.get("category", "") or "google_voice" in pdata
     
-    sample_text = f"Hello, I am {clean_pname}. Welcome to Wani Neural Acoustic Studio."
+    sample_text = f"Hello! I am {clean_pname}. Welcome to Wani Neural Acoustic Studio."
     if lang_code == "mr":
-        sample_text = f"नमस्कार, मी {clean_pname}. वाणी स्टुडिओमध्ये आपले सहर्ष स्वागत आहे."
+        sample_text = f"नमस्कार! मी {clean_pname}. वाणी स्टुडिओमध्ये आपले सहर्ष स्वागत आहे."
     elif lang_code == "hi":
-        sample_text = f"नमस्ते, मैं {clean_pname} हूँ। वाणी स्टूडियो में आपका स्वागत है।"
+        sample_text = f"नमस्ते! मैं {clean_pname} हूँ। वाणी स्टूडियो में आपका स्वागत है।"
         
-    cache_key = hashlib.md5(f"{persona_name}_{lang_code}".encode()).hexdigest()[:10]
+    cache_key = hashlib.md5(f"{persona_name}_{lang_code}_{gender}".encode()).hexdigest()[:10]
     out_path = os.path.join(tempfile.gettempdir(), f"wani_prev_{cache_key}.mp3")
     if not os.path.exists(out_path):
         if is_google:
@@ -1369,7 +1436,10 @@ def generate_audio_preview_cached(persona_name: str, lang_code: str = "en") -> s
                 text=sample_text,
                 lang_code=lang_code,
                 voice_name=google_vname,
-                out_path=out_path
+                out_path=out_path,
+                gender=gender,
+                pitch_str=pdata.get("pitch", "+0Hz"),
+                rate_str=pdata.get("rate", "+0%")
             )
         else:
             synthesize_speech_core(
@@ -1377,7 +1447,8 @@ def generate_audio_preview_cached(persona_name: str, lang_code: str = "en") -> s
                 voice_code=voice_code,
                 out_path=out_path,
                 pitch_str=pdata.get("pitch", "+0Hz"),
-                rate_str=pdata.get("rate", "+0%")
+                rate_str=pdata.get("rate", "+0%"),
+                gender=gender
             )
     return out_path
 
@@ -1457,7 +1528,8 @@ def process_full_video_dubbing(
         rate_str=pdata.get("rate", "+0%"),
         engine="Google AI Studio" if is_dub_google else "Wani Neural Matrix Core",
         google_voice_name=pdata.get("google_voice", "Puck"),
-        lang_code=target_lang_code
+        lang_code=target_lang_code,
+        gender=pdata.get("gender", "Male")
     )
     
     # 5. Mux with FFmpeg
@@ -1519,8 +1591,614 @@ tab_carousel, tab_speech, tab_dubbing, tab_pdf, tab_video, tab_stt, tab_dialogue
 # ==============================================================
 # TAB 1: PREMIUM CIRCULAR VOICE CAROUSEL WITH HUMAN AVATARS
 # ==============================================================
+def render_interactive_carousel_component(gender: str = "Male", is_dark: bool = True):
+    p_entries = []
+    persona_keys = [k for k, v in STUDIO_PERSONAS.items() if v.get("gender") == gender]
+    
+    # Active index from session state
+    active_voice = st.session_state.get("global_selected_voice", "")
+    default_idx = 0
+    if active_voice in persona_keys:
+        default_idx = persona_keys.index(active_voice)
+        
+    for k in persona_keys:
+        v = STUDIO_PERSONAS[k]
+        clean_name = k.split('—')[0].strip()
+        pid = clean_name.lower()
+        audio_dict = PREVIEWS_BASE64_CACHE.get(pid, {})
+        is_google = "Google" in v.get("category", "") or "google_voice" in v
+        p_entries.append({
+            "key": k,
+            "id": pid,
+            "name": clean_name,
+            "title": k,
+            "gender": v.get("gender", gender),
+            "category": v.get("category", "Studio Voice"),
+            "is_google": is_google,
+            "avatar": v.get("avatar", ""),
+            "pitch": v.get("pitch", "+0Hz"),
+            "rate": v.get("rate", "+0%"),
+            "desc": v.get("desc", ""),
+            "audio": audio_dict
+        })
+        
+    personas_json = json.dumps(p_entries)
+    card_bg = "rgba(18, 24, 38, 0.85)" if is_dark else "rgba(255, 255, 255, 0.95)"
+    text_col = "#F8FAFC" if is_dark else "#0F172A"
+    sub_col = "#94A3B8" if is_dark else "#64748B"
+    border_col = "rgba(99, 102, 241, 0.3)" if is_dark else "rgba(99, 102, 241, 0.2)"
+    
+    html_tpl = """<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Josefin Sans', sans-serif; user-select: none; }
+  body { background: transparent; color: __TEXT_COL__; overflow: hidden; padding: 6px; }
+  
+  .carousel-wrapper {
+    background: __CARD_BG__;
+    border: 1px solid __BORDER_COL__;
+    border-radius: 18px;
+    padding: 16px 18px 18px 18px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(16px);
+    position: relative;
+  }
+  
+  /* 3D Stage */
+  .stage-container {
+    position: relative;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1100px;
+    overflow: visible;
+  }
+  
+  .nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.25);
+    border: 1.5px solid rgba(129, 140, 248, 0.4);
+    color: #818CF8;
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: all 0.25s ease;
+    outline: none;
+  }
+  .nav-btn:hover {
+    background: #6366F1;
+    color: #FFF;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+    transform: translateY(-50%) scale(1.1);
+  }
+  .nav-prev { left: 12px; }
+  .nav-next { right: 12px; }
+  
+  .avatars-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .avatar-card {
+    position: absolute;
+    cursor: pointer;
+    transition: transform 0.45s cubic-bezier(0.2, 0.85, 0.3, 1), opacity 0.45s ease, filter 0.45s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .avatar-card img {
+    border-radius: 50%;
+    object-fit: cover;
+    pointer-events: none;
+    transition: all 0.45s ease;
+  }
+  
+  .avatar-card.pos-center {
+    z-index: 20;
+    transform: translateX(0) scale(1.15) rotateY(0deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 25px rgba(99, 102, 241, 0.65));
+  }
+  .avatar-card.pos-center img {
+    width: 125px;
+    height: 125px;
+    border: 3.5px solid #818CF8;
+  }
+  .avatar-card.pos-left-1 {
+    z-index: 10;
+    transform: translateX(-140px) scale(0.8) rotateY(25deg);
+    opacity: 0.65;
+  }
+  .avatar-card.pos-left-1 img {
+    width: 95px;
+    height: 95px;
+    border: 2px solid rgba(129, 140, 248, 0.4);
+  }
+  .avatar-card.pos-right-1 {
+    z-index: 10;
+    transform: translateX(140px) scale(0.8) rotateY(-25deg);
+    opacity: 0.65;
+  }
+  .avatar-card.pos-right-1 img {
+    width: 95px;
+    height: 95px;
+    border: 2px solid rgba(129, 140, 248, 0.4);
+  }
+  .avatar-card.pos-left-2 {
+    z-index: 5;
+    transform: translateX(-260px) scale(0.6) rotateY(40deg);
+    opacity: 0.3;
+  }
+  .avatar-card.pos-left-2 img {
+    width: 80px;
+    height: 80px;
+    border: 1.5px solid rgba(129, 140, 248, 0.2);
+  }
+  .avatar-card.pos-right-2 {
+    z-index: 5;
+    transform: translateX(260px) scale(0.6) rotateY(-40deg);
+    opacity: 0.3;
+  }
+  .avatar-card.pos-right-2 img {
+    width: 80px;
+    height: 80px;
+    border: 1.5px solid rgba(129, 140, 248, 0.2);
+  }
+  .avatar-card.pos-hidden {
+    display: none;
+  }
+
+  /* Center Controls Unit (Directly Under Center Photo) */
+  .center-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+    gap: 8px;
+  }
+  
+  .play-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .play-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366F1 0%, #06B6D4 100%);
+    border: none;
+    color: #FFFFFF;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    outline: none;
+  }
+  .play-btn:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 32px rgba(6, 182, 212, 0.8);
+  }
+  .play-btn:active {
+    transform: scale(0.95);
+  }
+  
+  /* Equalizer Soundwaves */
+  .soundwave-box {
+    display: flex;
+    align-items: center;
+    gap: 3.5px;
+    height: 28px;
+    padding: 0 6px;
+  }
+  .eq-bar {
+    width: 4px;
+    height: 6px;
+    background: #06B6D4;
+    border-radius: 2px;
+    transition: height 0.15s ease;
+  }
+  .playing .eq-bar:nth-child(1) { animation: eqPulse 0.7s ease-in-out infinite 0.1s; }
+  .playing .eq-bar:nth-child(2) { animation: eqPulse 0.5s ease-in-out infinite 0.25s; }
+  .playing .eq-bar:nth-child(3) { animation: eqPulse 0.8s ease-in-out infinite 0.0s; }
+  .playing .eq-bar:nth-child(4) { animation: eqPulse 0.6s ease-in-out infinite 0.35s; }
+  .playing .eq-bar:nth-child(5) { animation: eqPulse 0.75s ease-in-out infinite 0.15s; }
+  @keyframes eqPulse {
+    0% { height: 5px; background: #6366F1; }
+    50% { height: 26px; background: #06B6D4; }
+    100% { height: 5px; background: #6366F1; }
+  }
+  
+  .time-text {
+    font-size: 11px;
+    color: __SUB_COL__;
+    font-weight: 600;
+    min-width: 65px;
+  }
+
+  /* Language Switcher Pills */
+  .lang-pills {
+    display: flex;
+    gap: 8px;
+  }
+  .lang-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    color: __SUB_COL__;
+    transition: all 0.2s ease;
+  }
+  .lang-pill:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: __TEXT_COL__;
+  }
+  .lang-pill.active {
+    background: #6366F1;
+    color: #FFF;
+    border-color: #818CF8;
+    box-shadow: 0 0 14px rgba(99, 102, 241, 0.5);
+  }
+  
+  /* Persona Details Card */
+  .details-box {
+    margin-top: 8px;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    text-align: center;
+  }
+  .badge-tag {
+    display: inline-block;
+    padding: 2.5px 8px;
+    border-radius: 6px;
+    font-size: 10.5px;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  .badge-cat { background: rgba(99, 102, 241, 0.2); color: #818CF8; border: 1px solid rgba(129, 140, 248, 0.3); }
+  .badge-google { background: linear-gradient(135deg, rgba(66, 133, 244, 0.25), rgba(219, 68, 85, 0.2)); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); margin-left: 6px; }
+  .badge-fidelity { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); margin-left: 6px; }
+  .p-name { font-size: 17px; font-weight: 800; color: __TEXT_COL__; margin-bottom: 3px; }
+  .p-desc { font-size: 12px; color: __SUB_COL__; line-height: 1.4; max-width: 650px; margin: 0 auto; }
+  .p-specs { font-size: 11px; color: #818CF8; font-weight: 600; margin-top: 5px; }
+
+  /* Bottom Dock Strip */
+  .dock-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 0 2px 0;
+    margin-top: 8px;
+    justify-content: center;
+    scrollbar-width: thin;
+  }
+  .dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    opacity: 0.55;
+    transition: all 0.25s ease;
+  }
+  .dock-item img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid transparent;
+    transition: all 0.25s ease;
+  }
+  .dock-item span {
+    font-size: 9.5px;
+    color: __SUB_COL__;
+    font-weight: 600;
+  }
+  .dock-item:hover { opacity: 0.85; transform: translateY(-2px); }
+  .dock-item.active { opacity: 1; }
+  .dock-item.active img {
+    border-color: #818CF8;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.7);
+    transform: scale(1.1);
+  }
+  .dock-item.active span { color: #818CF8; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="carousel-wrapper">
+  <!-- 3D Stage -->
+  <div class="stage-container" id="stageContainer">
+    <button class="nav-btn nav-prev" id="btnPrev" title="Previous Persona">❮</button>
+    <div class="avatars-track" id="avatarsTrack"></div>
+    <button class="nav-btn nav-next" id="btnNext" title="Next Persona">❯</button>
+  </div>
+
+  <!-- Center Controls (Under Center Photo) -->
+  <div class="center-controls">
+    <div class="play-row">
+      <div class="soundwave-box" id="waveBox">
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+      </div>
+      
+      <button class="play-btn" id="playBtn" title="Instant Play Neural Voice Preview">▶</button>
+      
+      <div class="time-text" id="timeText">0:00 / 0:03</div>
+    </div>
+    
+    <!-- Language Switcher Pills -->
+    <div class="lang-pills">
+      <div class="lang-pill active" data-lang="mr" id="pill_mr">मराठी (Native)</div>
+      <div class="lang-pill" data-lang="hi" id="pill_hi">हिंदी (Hindi)</div>
+      <div class="lang-pill" data-lang="en" id="pill_en">English (US)</div>
+    </div>
+  </div>
+
+  <!-- Persona Details Card -->
+  <div class="details-box" id="detailsBox">
+    <div>
+      <span class="badge-tag badge-cat" id="badgeCat">Historical & Epic</span>
+      <span class="badge-tag badge-google" id="badgeGoogle" style="display:none;">✨ GOOGLE GEMINI 2.0</span>
+      <span class="badge-tag badge-fidelity" id="badgeFidelity">100% AUTHENTIC NEURAL</span>
+    </div>
+    <div class="p-name" id="pName">Aarav — Historic Authority</div>
+    <div class="p-desc" id="pDesc">Ultra-heavy thunderous baritone with deep historic resonance and gravelly authority.</div>
+    <div class="p-specs" id="pSpecs">⚡ Acoustic Frequency: -18Hz • Velocity: -6% • Enterprise Range</div>
+  </div>
+
+  <!-- Mini Avatars Dock Strip -->
+  <div class="dock-strip" id="dockStrip"></div>
+</div>
+
+<script>
+  const personas = __PERSONAS_JSON__;
+  let currentIndex = __DEFAULT_IDX__;
+  let currentLang = 'mr';
+  let audioObj = null;
+  let isPlaying = false;
+
+  const track = document.getElementById('avatarsTrack');
+  const dock = document.getElementById('dockStrip');
+  const playBtn = document.getElementById('playBtn');
+  const waveBox = document.getElementById('waveBox');
+  const timeText = document.getElementById('timeText');
+  const pName = document.getElementById('pName');
+  const pDesc = document.getElementById('pDesc');
+  const pSpecs = document.getElementById('pSpecs');
+  const badgeCat = document.getElementById('badgeCat');
+  const badgeGoogle = document.getElementById('badgeGoogle');
+  const badgeFidelity = document.getElementById('badgeFidelity');
+
+  // Build Avatar Cards
+  personas.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'avatar-card';
+    card.id = 'card_' + idx;
+    card.innerHTML = `<img src="${p.avatar}" alt="${p.name}" title="${p.name}">`;
+    card.onclick = () => { if (idx !== currentIndex) { goTo(idx); } };
+    track.appendChild(card);
+
+    // Build Dock Item
+    const dockItem = document.createElement('div');
+    dockItem.className = 'dock-item' + (idx === currentIndex ? ' active' : '');
+    dockItem.id = 'dock_' + idx;
+    dockItem.innerHTML = `<img src="${p.avatar}"><span>${p.name}</span>`;
+    dockItem.onclick = () => { goTo(idx); };
+    dock.appendChild(dockItem);
+  });
+
+  function updateCarousel() {
+    const total = personas.length;
+    for (let i = 0; i < total; i++) {
+      const card = document.getElementById('card_' + i);
+      const dockItem = document.getElementById('dock_' + i);
+      
+      let diff = i - currentIndex;
+      while (diff > total / 2) diff -= total;
+      while (diff < -total / 2) diff += total;
+
+      card.className = 'avatar-card';
+      if (diff === 0) {
+        card.classList.add('pos-center');
+      } else if (diff === -1) {
+        card.classList.add('pos-left-1');
+      } else if (diff === 1) {
+        card.classList.add('pos-right-1');
+      } else if (diff === -2) {
+        card.classList.add('pos-left-2');
+      } else if (diff === 2) {
+        card.classList.add('pos-right-2');
+      } else {
+        card.classList.add('pos-hidden');
+      }
+
+      if (dockItem) {
+        if (i === currentIndex) {
+          dockItem.classList.add('active');
+          dockItem.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        } else {
+          dockItem.classList.remove('active');
+        }
+      }
+    }
+
+    // Update Details
+    const curP = personas[currentIndex];
+    pName.textContent = curP.title;
+    pDesc.textContent = curP.desc;
+    pSpecs.textContent = `⚡ Acoustic Frequency: ${curP.pitch} • Velocity: ${curP.rate} • Balanced Resonance (${curP.gender})`;
+    badgeCat.textContent = curP.category;
+    badgeGoogle.style.display = curP.is_google ? 'inline-block' : 'none';
+    badgeFidelity.textContent = curP.gender === 'Male' ? '100% MASCULINE NEURAL' : '100% FEMININE NEURAL';
+  }
+
+  function goTo(idx) {
+    currentIndex = (idx + personas.length) % personas.length;
+    updateCarousel();
+    if (isPlaying) {
+      playAudio(true);
+    }
+  }
+
+  function prev() {
+    goTo(currentIndex - 1);
+  }
+
+  function next() {
+    goTo(currentIndex + 1);
+  }
+
+  document.getElementById('btnPrev').onclick = prev;
+  document.getElementById('btnNext').onclick = next;
+
+  // Audio Playback
+  function playAudio(forcePlay = false) {
+    if (isPlaying && !forcePlay) {
+      if (audioObj) {
+        audioObj.pause();
+      }
+      isPlaying = false;
+      playBtn.textContent = '▶';
+      waveBox.classList.remove('playing');
+      return;
+    }
+
+    if (audioObj) {
+      audioObj.pause();
+      audioObj = null;
+    }
+
+    const curP = personas[currentIndex];
+    const dataUri = curP.audio ? curP.audio[currentLang] : null;
+
+    if (!dataUri) {
+      console.warn('No audio found for', curP.name, currentLang);
+      return;
+    }
+
+    audioObj = new Audio(dataUri);
+    audioObj.onended = () => {
+      isPlaying = false;
+      playBtn.textContent = '▶';
+      waveBox.classList.remove('playing');
+      timeText.textContent = '0:00 / 0:03';
+    };
+
+    audioObj.ontimeupdate = () => {
+      if (audioObj && audioObj.duration) {
+        const curM = Math.floor(audioObj.currentTime / 60);
+        const curS = Math.floor(audioObj.currentTime % 60);
+        const durM = Math.floor(audioObj.duration / 60);
+        const durS = Math.floor(audioObj.duration % 60);
+        timeText.textContent = `${curM}:${curS < 10 ? '0' : ''}${curS} / ${durM}:${durS < 10 ? '0' : ''}${durS}`;
+      }
+    };
+
+    audioObj.play().then(() => {
+      isPlaying = true;
+      playBtn.textContent = '⏸';
+      waveBox.classList.add('playing');
+    }).catch(err => {
+      console.warn('Playback error:', err);
+      isPlaying = false;
+      playBtn.textContent = '▶';
+      waveBox.classList.remove('playing');
+    });
+  }
+
+  playBtn.onclick = () => { playAudio(false); };
+
+  // Language Switching
+  ['mr', 'hi', 'en'].forEach(lang => {
+    const pill = document.getElementById('pill_' + lang);
+    if (pill) {
+      pill.onclick = () => {
+        document.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentLang = lang;
+        if (isPlaying) {
+          playAudio(true);
+        }
+      };
+    }
+  });
+
+  // Keyboard navigation
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') prev();
+    else if (e.key === 'ArrowRight') next();
+    else if (e.key === ' ') { e.preventDefault(); playAudio(false); }
+  });
+
+  // Touch and drag swipe
+  let startX = 0;
+  const stage = document.getElementById('stageContainer');
+  stage.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (dx > 40) prev();
+    else if (dx < -40) next();
+  }, { passive: true });
+
+  stage.addEventListener('mousedown', (e) => { startX = e.clientX; });
+  stage.addEventListener('mouseup', (e) => {
+    const dx = e.clientX - startX;
+    if (dx > 40) prev();
+    else if (dx < -40) next();
+  });
+
+  // Initial render
+  updateCarousel();
+</script>
+</body>
+</html>"""
+    
+    html_code = (
+        html_tpl
+        .replace("__TEXT_COL__", text_col)
+        .replace("__CARD_BG__", card_bg)
+        .replace("__BORDER_COL__", border_col)
+        .replace("__SUB_COL__", sub_col)
+        .replace("__PERSONAS_JSON__", personas_json)
+        .replace("__DEFAULT_IDX__", str(default_idx))
+    )
+    
+    components.html(html_code, height=530)
+
 with tab_carousel:
-    st.markdown('<div class="studio-banner">✨ AI Voice Carousel — Interactive Animated Voice Personas with Real-Time Acoustic Preview</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">✨ AI Voice Carousel — Hardware-Accelerated 3D Animated Personas with Real-Time Acoustic Audition</div>', unsafe_allow_html=True)
     
     car_cat_tab1, car_cat_tab2 = st.tabs(["👨 Male Voices", "👩 Female Voices"])
     
@@ -1529,127 +2207,38 @@ with tab_carousel:
     # ---------------------------------------------------------
     with car_cat_tab1:
         m_keys = [k for k, v in STUDIO_PERSONAS.items() if v["gender"] == "Male"]
-        cur_m_idx = st.session_state.get("carousel_index_male", 0) % len(m_keys)
+        render_interactive_carousel_component("Male", is_dark)
         
-        # Navigation Stage
-        col_nav_l, col_stage, col_nav_r = st.columns([1, 6, 1])
-        with col_nav_l:
+        # Synchronized Studio Selection Bar
+        cur_sel_voice_m = st.session_state.get("global_selected_voice")
+        default_m_idx = m_keys.index(cur_sel_voice_m) if cur_sel_voice_m in m_keys else 0
+        
+        c_sync1, c_sync2, c_sync3 = st.columns([2, 1.2, 1])
+        with c_sync1:
+            sel_voice_m = st.selectbox(
+                "🎯 Select Active Male Persona for Entire Studio (TTS, Dubbing, PDF):",
+                m_keys,
+                index=default_m_idx,
+                key="sync_male_select"
+            )
+        with c_sync2:
             st.write("")
             st.write("")
-            st.write("")
-            st.write("")
-            if st.button("◀", key="btn_prev_male", help="Previous Voice Persona", use_container_width=True):
-                st.session_state["carousel_index_male"] = (cur_m_idx - 1) % len(m_keys)
+            if st.button("🚀 Set as Active Studio Voice", key="btn_apply_m", type="primary", use_container_width=True):
+                st.session_state["global_selected_voice"] = sel_voice_m
+                st.toast(f"✅ {sel_voice_m.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
                 st.rerun()
-                
-        left_m_idx = (cur_m_idx - 1) % len(m_keys)
-        center_m_idx = cur_m_idx
-        right_m_idx = (cur_m_idx + 1) % len(m_keys)
-        
-        p_left_name, p_left = m_keys[left_m_idx], STUDIO_PERSONAS[m_keys[left_m_idx]]
-        p_center_name, p_center = m_keys[center_m_idx], STUDIO_PERSONAS[m_keys[center_m_idx]]
-        p_right_name, p_right = m_keys[right_m_idx], STUDIO_PERSONAS[m_keys[right_m_idx]]
-        
-        with col_stage:
-            st.markdown(f"""
-            <div class="carousel-stage">
-                <div style="text-align: center;">
-                    <img src="{p_left['avatar']}" class="carousel-avatar-side" title="{p_left_name.split('—')[0].strip()}">
-                    <div style="font-size: 11px; color: {theme_subtext}; margin-top: 6px;">{p_left_name.split('—')[0].strip()}</div>
-                </div>
-                <div style="text-align: center;">
-                    <img src="{p_center['avatar']}" class="carousel-avatar-center" title="{p_center_name.split('—')[0].strip()}">
-                    <div style="font-size: 15px; font-weight: 700; color: #818CF8; margin-top: 10px;">{p_center_name.split('—')[0].strip()}</div>
-                </div>
-                <div style="text-align: center;">
-                    <img src="{p_right['avatar']}" class="carousel-avatar-side" title="{p_right_name.split('—')[0].strip()}">
-                    <div style="font-size: 11px; color: {theme_subtext}; margin-top: 6px;">{p_right_name.split('—')[0].strip()}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with col_nav_r:
+        with c_sync3:
             st.write("")
             st.write("")
-            st.write("")
-            st.write("")
-            if st.button("▶", key="btn_next_male", help="Next Voice Persona", use_container_width=True):
-                st.session_state["carousel_index_male"] = (cur_m_idx + 1) % len(m_keys)
-                st.rerun()
-                
-        # Clickable Thumbnail Strip to Jump Instantly
-        st.markdown("<div style='text-align:center; font-size:11.5px; color:#818CF8; margin-top:-6px; margin-bottom:10px;'>Click any avatar below to jump instantly:</div>", unsafe_allow_html=True)
-        strip_cols_m = st.columns(len(m_keys))
-        for s_i, s_name in enumerate(m_keys):
-            with strip_cols_m[s_i]:
-                is_active = (s_i == cur_m_idx)
-                s_data = STUDIO_PERSONAS[s_name]
-                btn_border = "border: 2px solid #818CF8;" if is_active else "border: 2px solid transparent;"
-                st.markdown(f'<div style="text-align:center;"><img src="{s_data["avatar"]}" style="width:42px; height:42px; border-radius:50%; {btn_border} opacity:{1 if is_active else 0.55};" /></div>', unsafe_allow_html=True)
-                if st.button(f"{s_name.split('—')[0].strip()[:5]}", key=f"t_m_{s_i}", use_container_width=True):
-                    st.session_state["carousel_index_male"] = s_i
-                    st.rerun()
-
-        # Detailed Voice Card for Selected Persona
-        is_active_global = (st.session_state.get("global_selected_voice") == p_center_name)
-        is_favorite = p_center_name in st.session_state.get("favorite_voices", set())
-        is_google_m = "Google" in p_center.get("category", "") or "google_voice" in p_center
-        google_badge_m = '<span style="font-size: 11px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); padding: 2px 8px; border-radius: 4px; font-weight: 700;">✨ GOOGLE AI STUDIO / GEMINI 2.0</span>' if is_google_m else ''
-        
-        st.markdown(f"""
-        <div class="voice-card" style="padding: 22px; border: 1.5px solid {'#818CF8' if is_active_global else theme_card_border}; margin-top: 14px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="badge-cat">{p_center['category']}</span>
-                        {google_badge_m}
-                        <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 2px 8px; border-radius: 4px; font-weight: 700;">FREE TIER & ENTERPRISE</span>
-                        {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ACTIVE STUDIO VOICE ✅</span>' if is_active_global else ''}
-                    </div>
-                    <div style="font-size: 22px; font-weight: 800; color: {theme_text}; margin-top: 8px;">{p_center_name}</div>
-                    <div style="font-size: 14px; color: {theme_subtext}; margin-top: 6px; line-height: 1.5;">{p_center['desc']}</div>
-                    <div style="font-size: 12.5px; color: #818CF8; margin-top: 8px; font-weight: 600;">
-                        Acoustic Signature: Frequency {p_center['pitch']} • Velocity {p_center['rate']} • Balanced Dynamic Range
-                    </div>
-                    <div style="font-size: 12px; color: {theme_subtext}; margin-top: 4px;">
-                        Supported Accents & Dialects: Marathi (Native), Hindi, English (US/Global), Gujarati, Tamil, Telugu, Kannada, Bengali
-                    </div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col_act1, col_act2, col_act3 = st.columns([1.5, 1.5, 1])
-        with col_act1:
-            preview_lang_m = st.selectbox("Audition Language:", ["English (US)", "Marathi (मराठी)", "Hindi (हिंदी)"], key="prev_lang_male")
-            lang_code_map = {"English (US)": "en", "Marathi (मराठी)": "mr", "Hindi (हिंदी)": "hi"}
-            p_lcode_m = lang_code_map.get(preview_lang_m, "en")
-            
-            if st.button(f"▶️ Play Real Voice Sample ({p_center_name.split('—')[0].strip()})", type="primary", use_container_width=True, key="btn_play_prev_m"):
-                with st.spinner("Generating authentic neural preview..."):
-                    prev_audio_path = generate_audio_preview_cached(p_center_name, p_lcode_m)
-                    if prev_audio_path and os.path.exists(prev_audio_path):
-                        with open(prev_audio_path, "rb") as paf:
-                            st.audio(paf.read(), format="audio/mp3")
-                            
-        with col_act2:
-            st.write("")
-            st.write("")
-            if st.button(f"🎯 Select as Studio Voice Across All Modules", use_container_width=True, key="btn_sync_voice_m"):
-                st.session_state["global_selected_voice"] = p_center_name
-                st.toast(f"✅ {p_center_name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
-                st.rerun()
-                
-        with col_act3:
-            st.write("")
-            st.write("")
-            fav_label_m = "⭐ In Favorites" if is_favorite else "🤍 Add to Favorites"
-            if st.button(fav_label_m, use_container_width=True, key="btn_fav_m"):
+            is_fav_m = sel_voice_m in st.session_state.get("favorite_voices", set())
+            fav_label_m = "⭐ In Favorites" if is_fav_m else "🤍 Add to Favorites"
+            if st.button(fav_label_m, key="btn_fav_m", use_container_width=True):
                 fav_set = st.session_state.get("favorite_voices", set())
-                if p_center_name in fav_set:
-                    fav_set.remove(p_center_name)
+                if sel_voice_m in fav_set:
+                    fav_set.remove(sel_voice_m)
                 else:
-                    fav_set.add(p_center_name)
+                    fav_set.add(sel_voice_m)
                 st.session_state["favorite_voices"] = fav_set
                 st.rerun()
 
@@ -1658,127 +2247,38 @@ with tab_carousel:
     # ---------------------------------------------------------
     with car_cat_tab2:
         f_keys = [k for k, v in STUDIO_PERSONAS.items() if v["gender"] == "Female"]
-        cur_f_idx = st.session_state.get("carousel_index_female", 0) % len(f_keys)
+        render_interactive_carousel_component("Female", is_dark)
         
-        # Navigation Stage
-        col_nav_fl, col_stage_f, col_nav_fr = st.columns([1, 6, 1])
-        with col_nav_fl:
+        # Synchronized Studio Selection Bar
+        cur_sel_voice_f = st.session_state.get("global_selected_voice")
+        default_f_idx = f_keys.index(cur_sel_voice_f) if cur_sel_voice_f in f_keys else 0
+        
+        cf_sync1, cf_sync2, cf_sync3 = st.columns([2, 1.2, 1])
+        with cf_sync1:
+            sel_voice_f = st.selectbox(
+                "🎯 Select Active Female Persona for Entire Studio (TTS, Dubbing, PDF):",
+                f_keys,
+                index=default_f_idx,
+                key="sync_female_select"
+            )
+        with cf_sync2:
             st.write("")
             st.write("")
-            st.write("")
-            st.write("")
-            if st.button("◀", key="btn_prev_female", help="Previous Voice Persona", use_container_width=True):
-                st.session_state["carousel_index_female"] = (cur_f_idx - 1) % len(f_keys)
+            if st.button("🚀 Set as Active Studio Voice", key="btn_apply_f", type="primary", use_container_width=True):
+                st.session_state["global_selected_voice"] = sel_voice_f
+                st.toast(f"✅ {sel_voice_f.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
                 st.rerun()
-                
-        left_f_idx = (cur_f_idx - 1) % len(f_keys)
-        center_f_idx = cur_f_idx
-        right_f_idx = (cur_f_idx + 1) % len(f_keys)
-        
-        pf_left_name, pf_left = f_keys[left_f_idx], STUDIO_PERSONAS[f_keys[left_f_idx]]
-        pf_center_name, pf_center = f_keys[center_f_idx], STUDIO_PERSONAS[f_keys[center_f_idx]]
-        pf_right_name, pf_right = f_keys[right_f_idx], STUDIO_PERSONAS[f_keys[right_f_idx]]
-        
-        with col_stage_f:
-            st.markdown(f"""
-            <div class="carousel-stage">
-                <div style="text-align: center;">
-                    <img src="{pf_left['avatar']}" class="carousel-avatar-side" title="{pf_left_name.split('—')[0].strip()}">
-                    <div style="font-size: 11px; color: {theme_subtext}; margin-top: 6px;">{pf_left_name.split('—')[0].strip()}</div>
-                </div>
-                <div style="text-align: center;">
-                    <img src="{pf_center['avatar']}" class="carousel-avatar-center" title="{pf_center_name.split('—')[0].strip()}">
-                    <div style="font-size: 15px; font-weight: 700; color: #818CF8; margin-top: 10px;">{pf_center_name.split('—')[0].strip()}</div>
-                </div>
-                <div style="text-align: center;">
-                    <img src="{pf_right['avatar']}" class="carousel-avatar-side" title="{pf_right_name.split('—')[0].strip()}">
-                    <div style="font-size: 11px; color: {theme_subtext}; margin-top: 6px;">{pf_right_name.split('—')[0].strip()}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with col_nav_fr:
+        with cf_sync3:
             st.write("")
             st.write("")
-            st.write("")
-            st.write("")
-            if st.button("▶", key="btn_next_female", help="Next Voice Persona", use_container_width=True):
-                st.session_state["carousel_index_female"] = (cur_f_idx + 1) % len(f_keys)
-                st.rerun()
-                
-        # Clickable Thumbnail Strip to Jump Instantly
-        st.markdown("<div style='text-align:center; font-size:11.5px; color:#818CF8; margin-top:-6px; margin-bottom:10px;'>Click any avatar below to jump instantly:</div>", unsafe_allow_html=True)
-        strip_cols_f = st.columns(len(f_keys))
-        for s_i, s_name in enumerate(f_keys):
-            with strip_cols_f[s_i]:
-                is_active = (s_i == cur_f_idx)
-                s_data = STUDIO_PERSONAS[s_name]
-                btn_border = "border: 2px solid #818CF8;" if is_active else "border: 2px solid transparent;"
-                st.markdown(f'<div style="text-align:center;"><img src="{s_data["avatar"]}" style="width:42px; height:42px; border-radius:50%; {btn_border} opacity:{1 if is_active else 0.55};" /></div>', unsafe_allow_html=True)
-                if st.button(f"{s_name.split('—')[0].strip()[:5]}", key=f"t_f_{s_i}", use_container_width=True):
-                    st.session_state["carousel_index_female"] = s_i
-                    st.rerun()
-
-        # Detailed Voice Card for Selected Persona
-        is_active_global_f = (st.session_state.get("global_selected_voice") == pf_center_name)
-        is_favorite_f = pf_center_name in st.session_state.get("favorite_voices", set())
-        is_google_f = "Google" in pf_center.get("category", "") or "google_voice" in pf_center
-        google_badge_f = '<span style="font-size: 11px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); padding: 2px 8px; border-radius: 4px; font-weight: 700;">✨ GOOGLE AI STUDIO / GEMINI 2.0</span>' if is_google_f else ''
-        
-        st.markdown(f"""
-        <div class="voice-card" style="padding: 22px; border: 1.5px solid {'#818CF8' if is_active_global_f else theme_card_border}; margin-top: 14px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="badge-cat">{pf_center['category']}</span>
-                        {google_badge_f}
-                        <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 2px 8px; border-radius: 4px; font-weight: 700;">FREE TIER & ENTERPRISE</span>
-                        {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ACTIVE STUDIO VOICE ✅</span>' if is_active_global_f else ''}
-                    </div>
-                    <div style="font-size: 22px; font-weight: 800; color: {theme_text}; margin-top: 8px;">{pf_center_name}</div>
-                    <div style="font-size: 14px; color: {theme_subtext}; margin-top: 6px; line-height: 1.5;">{pf_center['desc']}</div>
-                    <div style="font-size: 12.5px; color: #818CF8; margin-top: 8px; font-weight: 600;">
-                        Acoustic Signature: Frequency {pf_center['pitch']} • Velocity {pf_center['rate']} • Emotional Resonance
-                    </div>
-                    <div style="font-size: 12px; color: {theme_subtext}; margin-top: 4px;">
-                        Supported Accents & Dialects: Marathi (Native), Hindi, English (US/Global), Gujarati, Tamil, Telugu, Kannada, Bengali
-                    </div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col_actf1, col_actf2, col_actf3 = st.columns([1.5, 1.5, 1])
-        with col_actf1:
-            preview_lang_f = st.selectbox("Audition Language:", ["English (US)", "Marathi (मराठी)", "Hindi (हिंदी)"], key="prev_lang_female")
-            lang_code_map = {"English (US)": "en", "Marathi (मराठी)": "mr", "Hindi (हिंदी)": "hi"}
-            p_lcode_f = lang_code_map.get(preview_lang_f, "en")
-            
-            if st.button(f"▶️ Play Real Voice Sample ({pf_center_name.split('—')[0].strip()})", type="primary", use_container_width=True, key="btn_play_prev_f"):
-                with st.spinner("Generating authentic neural preview..."):
-                    prev_audio_path_f = generate_audio_preview_cached(pf_center_name, p_lcode_f)
-                    if prev_audio_path_f and os.path.exists(prev_audio_path_f):
-                        with open(prev_audio_path_f, "rb") as paf:
-                            st.audio(paf.read(), format="audio/mp3")
-                            
-        with col_actf2:
-            st.write("")
-            st.write("")
-            if st.button(f"🎯 Select as Studio Voice Across All Modules", use_container_width=True, key="btn_sync_voice_f"):
-                st.session_state["global_selected_voice"] = pf_center_name
-                st.toast(f"✅ {pf_center_name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
-                st.rerun()
-                
-        with col_actf3:
-            st.write("")
-            st.write("")
-            fav_label_f = "⭐ In Favorites" if is_favorite_f else "🤍 Add to Favorites"
-            if st.button(fav_label_f, use_container_width=True, key="btn_fav_f"):
+            is_fav_f = sel_voice_f in st.session_state.get("favorite_voices", set())
+            fav_label_f = "⭐ In Favorites" if is_fav_f else "🤍 Add to Favorites"
+            if st.button(fav_label_f, key="btn_fav_f", use_container_width=True):
                 fav_set = st.session_state.get("favorite_voices", set())
-                if pf_center_name in fav_set:
-                    fav_set.remove(pf_center_name)
+                if sel_voice_f in fav_set:
+                    fav_set.remove(sel_voice_f)
                 else:
-                    fav_set.add(pf_center_name)
+                    fav_set.add(sel_voice_f)
                 st.session_state["favorite_voices"] = fav_set
                 st.rerun()
 
@@ -1899,7 +2399,8 @@ with tab_speech:
                     rate_str=r_val,
                     engine=chosen_engine,
                     google_voice_name=active_persona.get("google_voice", "Puck"),
-                    lang_code=lang_info["code"]
+                    lang_code=lang_info["code"],
+                    gender=active_persona.get("gender", "Male")
                 )
                 
             st.success(f"✨ Speech rendered with native phonetics via {engine_name}!")
@@ -2081,7 +2582,8 @@ with tab_pdf:
                     rate_str=doc_persona_data["rate"],
                     engine="Google AI Studio" if is_doc_google else "Wani Neural Matrix Core",
                     google_voice_name=doc_persona_data.get("google_voice", "Puck"),
-                    lang_code=listen_code
+                    lang_code=listen_code,
+                    gender=doc_persona_data.get("gender", "Male")
                 )
                 
             st.success(f"✨ Document converted to audio in {pdf_listen_lang} successfully!")
@@ -2331,8 +2833,8 @@ with tab_dialogue:
                 v1_code = "mr-IN-ManoharNeural" if v1_data["gender"] == "Male" else "mr-IN-AarohiNeural"
                 v2_code = "mr-IN-ManoharNeural" if v2_data["gender"] == "Male" else "mr-IN-AarohiNeural"
                 
-                synthesize_speech_core(char1_text, v1_code, out_d1, v1_data["pitch"], v1_data["rate"])
-                synthesize_speech_core(char2_text, v2_code, out_d2, v2_data["pitch"], v2_data["rate"])
+                synthesize_speech_core(char1_text, v1_code, out_d1, v1_data["pitch"], v1_data["rate"], gender=v1_data.get("gender", "Male"))
+                synthesize_speech_core(char2_text, v2_code, out_d2, v2_data["pitch"], v2_data["rate"], gender=v2_data.get("gender", "Female"))
                 
                 with open(out_d1, "rb") as f1, open(out_d2, "rb") as f2:
                     combined_bytes = f1.read() + f2.read()
