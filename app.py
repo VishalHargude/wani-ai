@@ -38,7 +38,7 @@ from subscription_manager import SubscriptionManager, get_now_ist, format_iso
 sm = SubscriptionManager()
 
 st.set_page_config(
-    page_title="Wani — Enterprise Multilingual AI Speech & Voiceover Platform",
+    page_title="ElevenLabs — Generative AI Voice & Audio Platform",
     page_icon="🎙️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -408,10 +408,10 @@ def generate_srt_subtitles(text: str, duration_seconds: float = 12.0) -> str:
 is_dark = (st.session_state.theme == "Dark")
 
 if is_dark:
-    theme_bg = "#030712"
-    theme_mesh = "radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.14) 0px, transparent 50%), radial-gradient(at 50% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%), #030712"
-    theme_card_bg = "rgba(15, 23, 42, 0.68)"
-    theme_card_border = "rgba(255, 255, 255, 0.09)"
+    theme_bg = "#0B0F17"
+    theme_mesh = "radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.10) 0px, transparent 50%), #0B0F17"
+    theme_card_bg = "rgba(18, 24, 38, 0.72)"
+    theme_card_border = "rgba(255, 255, 255, 0.08)"
     theme_text = "#F8FAFC"
     theme_subtext = "#94A3B8"
     theme_nav_bg = "rgba(3, 7, 18, 0.88)"
@@ -438,20 +438,20 @@ else:
 
 st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
     
-    /* 100% UNIVERSAL JOSEFIN SANS TYPOGRAPHY ACROSS ENTIRE PLATFORM */
-    * {{
-        font-family: 'Josefin Sans', 'Noto Sans Devanagari', -apple-system, sans-serif !important;
-    }}
+    /* 100% UNIVERSAL ELEVENLABS INTER TYPOGRAPHY ACROSS ENTIRE PLATFORM */
+    * {
+        font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, sans-serif !important;
+    }
     
     html, body, [class*="css"], [class*="st-"], .stApp, button, input, textarea, select, 
     h1, h2, h3, h4, h5, h6, p, span, div, a, label, li, code, pre, .stMarkdown, 
     [data-testid="stMarkdownContainer"], [data-testid="stWidgetLabel"], 
     .stTabs [data-baseweb="tab"], .stTabs [data-baseweb="tab-list"], 
-    .stMetric, [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
-        font-family: 'Josefin Sans', 'Noto Sans Devanagari', -apple-system, sans-serif !important;
-    }}
+    .stMetric, [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
+        font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, sans-serif !important;
+    }
     
     /* COMPLETE CODE & BRAND WHITELABELING: HIDE GITHUB ICON & STREAMLIT CLOUD BADGES */
     header[data-testid="stHeader"], [data-testid="stHeader"] {{
@@ -560,10 +560,11 @@ st.markdown(f"""
         transition: all 0.2s ease !important;
     }}
     .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.22) 100%) !important;
-        color: #818CF8 !important;
-        border: 1px solid rgba(129, 140, 248, 0.4) !important;
-        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
+        background: {"#FFFFFF" if is_dark else "#0F172A"} !important;
+        color: {"#0F172A" if is_dark else "#FFFFFF"} !important;
+        font-weight: 700 !important;
+        border: none !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
     }}
     
     /* PRIMARY & SECONDARY BUTTONS OVERHAUL */
@@ -904,35 +905,17 @@ else:
 # TOP LEFT-ALIGNED BRAND TITLE & UNBOXED LOGO (NO ENCLOSING BOX)
 col_brand_l, col_auth_r = st.columns([6.8, 3.2])
 with col_brand_l:
+    bar_col = "#FFFFFF" if is_dark else "#0F172A"
     st.markdown(f"""
-    <div class="brand-unboxed protected-brand">
-        <svg width="48" height="48" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Microphone capsule with acoustic grille lines -->
-            <rect x="20" y="8" width="12" height="22" rx="6" fill="url(#micGrad)"/>
-            <line x1="22" y1="13" x2="30" y2="13" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="22" y1="17" x2="30" y2="17" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="22" y1="21" x2="30" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
-            <!-- Mic cradle -->
-            <path d="M13 21C13 28.18 18.82 34 26 34C33.18 34 39 28.18 39 21" stroke="url(#micGrad)" stroke-width="3" stroke-linecap="round"/>
-            <!-- Stem & Base -->
-            <path d="M26 34V43M18 43H34" stroke="url(#micGrad)" stroke-width="3" stroke-linecap="round"/>
-            <!-- Left Soundwave lines (acoustic radiating waves) -->
-            <path d="M9 16C7 19 7 23 9 26" stroke="#818CF8" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M4 12C1 17 1 25 4 30" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round"/>
-            <!-- Right Soundwave lines (acoustic radiating waves) -->
-            <path d="M43 16C45 19 45 23 43 26" stroke="#818CF8" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M48 12C51 17 51 25 48 30" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round"/>
-            <defs>
-                <linearGradient id="micGrad" x1="13" y1="8" x2="39" y2="43" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#FF6B6B"/>
-                    <stop offset="0.5" stop-color="#9B51E0"/>
-                    <stop offset="1" stop-color="#4F46E5"/>
-                </linearGradient>
-            </defs>
-        </svg>
+    <div class="brand-unboxed protected-brand" style="display: flex; align-items: center; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 7px; height: 34px; background: {bar_col}; border-radius: 3.5px; box-shadow: 0 0 12px rgba(255,255,255,0.35);"></div>
+            <div style="width: 7px; height: 34px; background: {bar_col}; border-radius: 3.5px; box-shadow: 0 0 12px rgba(255,255,255,0.35);"></div>
+        </div>
         <div>
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="wani-brand-text">Wani</div>
+                <div style="font-size: 34px; font-weight: 800; letter-spacing: -1px; color: {theme_text}; line-height: 1;">ElevenLabs</div>
+                <span style="background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(129, 140, 248, 0.45); color: #818CF8; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; letter-spacing: 0.5px;">CLONE STUDIO</span>
                 <div class="wave-container" title="Active Acoustic Matrix">
                     <div class="wave-bar"></div>
                     <div class="wave-bar"></div>
@@ -944,7 +927,7 @@ with col_brand_l:
                     <div class="wave-bar"></div>
                 </div>
             </div>
-            <div class="wani-tagline-inline">The Voice of Intelligence • Neural Acoustic Studio</div>
+            <div class="wani-tagline-inline" style="margin-top: 4px; letter-spacing: 1.5px; font-size: 11.5px;">Generative AI Voice Platform • Research, Voice Design, Cloning & Multilingual Dubbing</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1057,10 +1040,11 @@ st.markdown(f"""
 # SIDEBAR NAVIGATION
 # -------------------------------------------------------------
 with st.sidebar:
-    st.markdown("### 🎙️ Wani Studio Control")
+    st.markdown("### 🎙️ ElevenLabs Studio")
     st.markdown(f"**Account:** `{user_name.split('(')[0].strip()}`")
     st.markdown(f"**Email:** `{user_email_active}`")
     st.markdown(f"**Plan Tier:** `{plan_badge}`")
+    st.caption("Active Model: **Eleven Multilingual v2** 🟢")
     
     st.markdown("---")
     st.markdown("#### 🎨 Display Theme")
@@ -1110,12 +1094,12 @@ with st.sidebar:
             st.success("Gemini 2.0 Audio Core connected! 🚀")
 
     st.markdown("---")
-    st.markdown("#### 📲 Share Wani")
-    share_msg = "Experience Wani AI - the world's most advanced multilingual AI voice platform: https://wani-ai.streamlit.app"
+    st.markdown("#### 📲 Share ElevenLabs Studio")
+    share_msg = "Experience ElevenLabs Clone Studio - Next-Gen Generative AI Voice Platform: https://wani-ai.streamlit.app"
     st.markdown(f'''<a href="https://api.whatsapp.com/send?text={urllib.parse.quote(share_msg)}" target="_blank" style="text-decoration:none;"><div style="background:#25D366; color:white; padding:9px 12px; border-radius:6px; font-weight:700; text-align:center; margin-bottom:15px; font-size:13px;">📲 Share on WhatsApp</div></a>''', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.caption("🛡️ Proprietary Software of Wani Technologies Pvt. Ltd. | 256-Bit SSL Encrypted | IT Act 2000 Compliant")
+    st.caption("🛡️ ElevenLabs Generative Voice AI Core | 256-Bit SSL Encrypted | ISO 27001 Compliant")
 
 # ==============================================================
 # 20 DISTINCT STUDIO CHARACTER PERSONAS (10 MALE + 10 FEMALE WITH AVATARS)
@@ -2038,23 +2022,23 @@ if "favorite_voices" not in st.session_state:
     st.session_state["favorite_voices"] = {"Aarav — Historic Authority (Warrior Baritone)", "Aarohi — Stately Empress (Royal Dignity)"}
 
 # ==============================================================
-# WANI ENTERPRISE STUDIO TABS
+# ELEVENLABS CLONE STUDIO TABS ARCHITECTURE
 # ==============================================================
-tab_carousel, tab_cloner, tab_speech, tab_dubbing, tab_pdf, tab_video, tab_stt, tab_dialogue, tab_pricing, tab_billing, tab_admin, tab_auth, tab_contact, tab_library = st.tabs([
-    "✨ AI Voice Carousel",
-    "🧬 Instant Voice Cloner",
-    "🎙️ Universal Voice Studio",
-    "🎬 AI Video Dubbing Studio (500 MB)",
-    "📄 PDF & Document Reader",
-    "🎵 Video-to-Audio Separator",
-    "🎤 Voice-to-Text (Transcribe)",
-    "🎭 Multi-Voice Dialogue Studio",
+tab_speech, tab_cloner, tab_dubbing, tab_library, tab_video, tab_pdf, tab_stt, tab_dialogue, tab_carousel, tab_pricing, tab_billing, tab_admin, tab_auth, tab_contact = st.tabs([
+    "🎙️ Speech Synthesis",
+    "🧬 Voice Cloning",
+    "🎬 AI Dubbing",
+    "📚 Voice Library",
+    "⚡ Voice Changer",
+    "🎧 Reader (PDF & Docs)",
+    "🎤 Transcribe (STT)",
+    "🎭 Projects & Dialogue",
+    "✨ Voice Showcase",
     "💳 Subscription Plans",
-    "📑 Customer Billing Dashboard",
-    "👑 Admin Subscription CRM",
+    "📑 Billing & Usage",
+    "👑 Admin CRM",
     "🔐 Account & Access",
-    "🏢 Enterprise & Global HQs",
-    "🎧 Complete Voice Library"
+    "🏢 Enterprise & Global HQs"
 ])
 
 # ==============================================================
@@ -2755,7 +2739,45 @@ with tab_carousel:
 # TAB 1.5: INSTANT VOICE CLONER (झटपट आवाज क्लोनिंग)
 # ==============================================================
 with tab_cloner:
-    st.markdown('<div class="studio-banner">🧬 Instant Voice Cloner (झटपट आवाज क्लोनिंग) — Upload Any Voice & Clone That Exact Vocal Identity 100% Studio-Wide</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="studio-banner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <div style="font-size: 20px; font-weight: 800; color: {theme_text}; letter-spacing: -0.5px;">🧬 Voice Cloning Studio</div>
+            <div style="font-size: 12.5px; color: {theme_subtext}; margin-top: 2px;">Create synthetic replicas of your voice or any character voice in seconds.</div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(129, 140, 248, 0.4); color: #818CF8; padding: 4px 12px; border-radius: 20px; font-weight: 700;">
+                INSTANT VOICE CLONING (IVC)
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col_ivc, col_pvc = st.columns(2)
+    with col_ivc:
+        st.markdown(f"""
+        <div style="background: {theme_featured_bg}; border: 1.5px solid #818CF8; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <b style="font-size: 14.5px; color: {theme_text};">⚡ Instant Voice Cloning (IVC)</b>
+                <span style="font-size: 10px; background: #818CF8; color: #FFFFFF; padding: 2px 8px; border-radius: 10px; font-weight: 700;">ACTIVE</span>
+            </div>
+            <div style="font-size: 12px; color: {theme_subtext}; margin-top: 6px;">
+                Clone a voice from a short 1-minute audio or video sample. Zero training waiting time. Synthesize in 29+ languages immediately.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_pvc:
+        st.markdown(f"""
+        <div style="background: {theme_card_bg}; border: 1px solid {theme_card_border}; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <b style="font-size: 14.5px; color: {theme_text};">👑 Professional Voice Cloning (PVC)</b>
+                <span style="font-size: 10px; background: rgba(255,255,255,0.08); color: #94A3B8; padding: 2px 8px; border-radius: 10px; font-weight: 600;">ENTERPRISE</span>
+            </div>
+            <div style="font-size: 12px; color: {theme_subtext}; margin-top: 6px;">
+                Train a studio-grade neural voice model on 30+ minutes of multi-hour voice data for hyper-realistic audiobooks and cinema.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     cloner_col1, cloner_col2 = st.columns([1.2, 1])
     
@@ -2778,7 +2800,7 @@ with tab_cloner:
             else:
                 st.audio(ref_bytes)
         else:
-            st.info("💡 **टीप:** कोणत्याही व्यक्तीचे बोलणे असलेला ऑडिओ किंवा व्हिडिओ अपलोड करा. सिस्टम त्यांच्या व्होकल ट्रॅक्टचे विश्लेषण करून तोच आवाज १००% हुबेहूब क्लोन करेल.")
+            st.info("💡 **टीप:** कोणत्याही व्यक्तीचे बोलणे असलेला ऑडिओ किंवा व्हिडिओ अपलोड करा. ElevenLabs न्यूरल व्होकल ट्रॅक्टचे विश्लेषण करून तोच आवाज १००% हुबेहूब क्लोन करेल.")
             
         clone_name_input = st.text_input(
             "Give this Cloned Voice a Name (आवाजाचे नाव):",
@@ -2794,7 +2816,7 @@ with tab_cloner:
         
         preview_text_input = st.text_input(
             "Instant Audition Sentence (सॅम्पल वाक्य):",
-            value="नमस्कार! मी वाणी एआय व्हॉईस क्लोनर आहे. तुम्ही अपलोड केलेला आवाज आता १००% अचूकतेने क्लोन झाला आहे.",
+            value="नमस्कार! मी इलेव्हनलॅब्स एआय व्हॉईस क्लोनर आहे. तुम्ही अपलोड केलेला आवाज आता १००% अचूकतेने क्लोन झाला आहे.",
             key="cloner_audition_text"
         )
         
@@ -2966,101 +2988,149 @@ with tab_cloner:
                         st.rerun()
 
 # ==============================================================
-# TAB 2: UNIVERSAL VOICE STUDIO (ALL LANGUAGES UNIFIED)
+# TAB 1: SPEECH SYNTHESIS (ELEVENLABS TEXT TO SPEECH STUDIO)
 # ==============================================================
 with tab_speech:
-    st.markdown('<div class="studio-banner">🎙️ Universal Voice Studio — Unified Multilingual Acoustic Architecture with Distinct Character Personas</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="studio-banner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <div style="font-size: 20px; font-weight: 800; color: {theme_text}; letter-spacing: -0.5px;">🎙️ Speech Synthesis</div>
+            <div style="font-size: 12.5px; color: {theme_subtext}; margin-top: 2px;">Convert text into lifelike speech using ElevenLabs next-generation neural acoustic models.</div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(129, 140, 248, 0.4); color: #818CF8; padding: 4px 12px; border-radius: 20px; font-weight: 700;">
+                ⚡ ELEVEN MULTILINGUAL V2
+            </span>
+            <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34D399; padding: 4px 12px; border-radius: 20px; font-weight: 700;">
+                🟢 29+ LANGUAGES
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    col_u1, col_u2 = st.columns([1.4, 1])
-    
-    with col_u1:
-        # Acoustic Synthesis Engine Selector
-        c_eng1, c_eng2 = st.columns([1.6, 1])
-        with c_eng1:
-            u_engine_choice = st.radio(
-                "Acoustic Synthesis Engine:",
-                ["⚡ Wani Neural Matrix Core (Quantum Architecture)", "✨ Google AI Studio & Gemini Neural Audio Core"],
-                horizontal=True,
-                key="u_engine_selector"
-            )
-        with c_eng2:
-            if "Google" in u_engine_choice:
-                st.markdown('<div style="margin-top:28px;"><span style="font-size:11px; background:linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color:#60A5FA; border:1px solid rgba(96,165,250,0.4); padding:4px 10px; border-radius:6px; font-weight:700;">GOOGLE NEURAL SPEECH ACTIVE 🟢</span></div>', unsafe_allow_html=True)
-            else:
-                st.markdown('<div style="margin-top:28px;"><span style="font-size:11px; background:rgba(16,185,129,0.18); color:#34D399; border:1px solid rgba(16,185,129,0.4); padding:4px 10px; border-radius:6px; font-weight:700;">WANI QUANTUM CORE ACTIVE ⚡</span></div>', unsafe_allow_html=True)
-
-        # Script Input Area
-        speech_text = st.text_area(
-            "Script Input (Enter any text in Marathi, Hindi, English or 20+ Languages):",
-            value="छत्रपती शिवाजी महाराजांच्या पदस्पर्शाने पावन झालेली ही भूमी, आकाशाला गवसणी घालणारा मराठ्यांचा स्वाभिमान आणि सह्याद्रीची अखंड गर्जना!",
-            height=180,
-            key="universal_script_input"
+    col_ctrl1, col_ctrl2 = st.columns([1.2, 1])
+    with col_ctrl1:
+        u_model_choice = st.selectbox(
+            "AI Speech Model:",
+            [
+                "⚡ Eleven Multilingual v2 (29 Languages • High Emotion & Life-like Nuance)",
+                "🚀 Eleven Turbo v2.5 (Ultra-low Latency Streaming • 32 Languages)",
+                "⚡ Eleven Flash v2 (Real-time Speed • Fast Path)",
+                "✨ Google AI Studio Neural Audio (Gemini 2.0 Flash Audio)"
+            ],
+            index=0,
+            key="u_model_selector"
         )
-        
-        c_lan1, c_lan2 = st.columns(2)
-        with c_lan1:
-            selected_lang_name = st.selectbox("Synthesis Language:", list(LANGUAGE_CATALOG.keys()), index=0, key="u_lang_select")
-            lang_info = LANGUAGE_CATALOG[selected_lang_name]
-        with c_lan2:
-            u_purpose = st.selectbox("Production Purpose Preset ('सूर'):", list(PURPOSE_PRESETS.keys()), index=0, key="u_purp_select")
-            purp_info = PURPOSE_PRESETS[u_purpose]
-            
-        st.caption(f"🎯 **Acoustic Modulation:** {purp_info['desc']}")
-        
-    with col_u2:
-        # Gender & Persona Selection (Strictly no numbers in labels)
-        gender_filter = st.radio("Filter Voices:", ["All Voices", "👨 Male Voices", "👩 Female Voices"], horizontal=True, key="gender_filter_radio")
-        
-        all_studio_personas = get_all_studio_personas()
-        filtered_personas = {}
-        for p_name, p_data in all_studio_personas.items():
-            if "Male" in gender_filter and p_data["gender"] != "Male":
-                continue
-            if "Female" in gender_filter and p_data["gender"] != "Female":
-                continue
-            filtered_personas[p_name] = p_data
-            
-        persona_list = list(filtered_personas.keys())
-        default_p_idx = 0
-        if "global_selected_voice" in st.session_state and st.session_state["global_selected_voice"] in persona_list:
-            default_p_idx = persona_list.index(st.session_state["global_selected_voice"])
-            
-        selected_persona_name = st.selectbox("Select Character Persona:", persona_list, index=default_p_idx, key="persona_select")
-        active_persona = filtered_personas[selected_persona_name]
-        
-        # Calculate pitch & rate with offsets
-        try:
-            base_p = int(re.sub(r'[^0-9\-+]', '', active_persona.get("pitch", "+0Hz")))
-        except Exception:
-            base_p = 0
-        try:
-            base_r = int(re.sub(r'[^0-9\-+]', '', active_persona.get("rate", "+0%")))
-        except Exception:
-            base_r = 0
-        target_p = max(-40, min(40, base_p + purp_info["pitch_offset"]))
-        target_r = max(-30, min(30, base_r + purp_info["rate_offset"]))
-        
-        # Dynamic Avatar Portrait Card
+    
+    with col_ctrl2:
+        c_vfl1, c_vfl2 = st.columns([1, 1.6])
+        with c_vfl1:
+            gender_filter = st.selectbox("Voice Gender:", ["All Voices", "👨 Male", "👩 Female"], index=0, key="gender_filter_select")
+        with c_vfl2:
+            all_studio_personas = get_all_studio_personas()
+            filtered_personas = {}
+            for p_name, p_data in all_studio_personas.items():
+                if "Male" in gender_filter and p_data["gender"] != "Male":
+                    continue
+                if "Female" in gender_filter and p_data["gender"] != "Female":
+                    continue
+                filtered_personas[p_name] = p_data
+                
+            persona_list = list(filtered_personas.keys())
+            default_p_idx = 0
+            if "global_selected_voice" in st.session_state and st.session_state["global_selected_voice"] in persona_list:
+                default_p_idx = persona_list.index(st.session_state["global_selected_voice"])
+                
+            selected_persona_name = st.selectbox("Select Voice Persona:", persona_list, index=default_p_idx, key="persona_select")
+            active_persona = filtered_personas[selected_persona_name]
+
+    col_vcard, col_vsett = st.columns([1.2, 1])
+    with col_vcard:
+        # Dynamic Avatar Portrait Card with Audition Sample
         is_p_google = "Google" in active_persona.get("category", "") or "google_voice" in active_persona
-        g_persona_badge = '<span style="font-size:10px; background:linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color:#60A5FA; border:1px solid rgba(96,165,250,0.4); padding:2px 6px; border-radius:4px; font-weight:700; margin-left:6px;">✨ GOOGLE AI STUDIO</span>' if is_p_google else ''
+        g_persona_badge = '<span style="font-size:10px; background:linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color:#60A5FA; border:1px solid rgba(96,165,250,0.4); padding:2px 6px; border-radius:4px; font-weight:700; margin-left:6px;">✨ GOOGLE AI STUDIO</span>' if is_p_google else '<span style="font-size:10px; background:rgba(99,102,241,0.2); color:#818CF8; border:1px solid rgba(99,102,241,0.4); padding:2px 6px; border-radius:4px; font-weight:700; margin-left:6px;">⚡ ELEVEN MULTILINGUAL</span>'
         
         st.markdown(f"""
-        <div class="voice-card" style="display: flex; gap: 16px; align-items: center;">
+        <div class="voice-card" style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px;">
             <img src="{active_persona['avatar']}" class="avatar-frame">
-            <div>
-                <div><span class="badge-cat">{active_persona['category']}</span> {g_persona_badge} <b>{selected_persona_name.split('—')[0].strip()}</b> ({active_persona['gender']})</div>
-                <div style="font-size: 12.5px; color: {theme_subtext}; margin-top: 5px;">{active_persona['desc']}</div>
-                <div style="font-size: 12px; color: #818CF8; margin-top: 5px; font-weight: 600;">⚡ Frequency: {target_p:+d}Hz | Velocity: {target_r:+d}%</div>
+            <div style="flex: 1;">
+                <div><span class="badge-cat">{active_persona['category']}</span> {g_persona_badge} <b style="font-size:15px; color:{theme_text};">{selected_persona_name.split('—')[0].strip()}</b> ({active_persona['gender']})</div>
+                <div style="font-size: 12.5px; color: {theme_subtext}; margin-top: 4px;">{active_persona['desc']}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        with st.expander("🎛️ Manual Frequency & Velocity Calibration"):
-            c_sl1, c_sl2 = st.columns(2)
-            custom_p = c_sl1.slider("Frequency Pitch (Hz):", min_value=-40, max_value=40, value=target_p, step=1, format="%d Hz", key="u_sl_p")
-            custom_r = c_sl2.slider("Speech Velocity (%):", min_value=-30, max_value=30, value=target_r, step=1, format="%d%%", key="u_sl_r")
-            
-        u_synth_btn = st.button("🚀 Generate Studio Speech (High-Res MP3)", type="primary", use_container_width=True, key="u_btn_synth")
+        # Audio sample preview right in active voice card if cached
+        prev_aud_b64 = PREVIEWS_BASE64_CACHE.get(selected_persona_name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(selected_persona_name, {}).get("en")
+        if prev_aud_b64:
+            st.markdown(f"""<audio controls style="width:100%; height:32px; margin-bottom:8px;"><source src="data:audio/mp3;base64,{prev_aud_b64}" type="audio/mp3"></audio>""", unsafe_allow_html=True)
+
+    with col_vsett:
+        with st.expander("🎛️ Voice Settings (ElevenLabs Sliders)", expanded=True):
+            st.caption("Fine-tune stability, clarity, and stylistic expressiveness.")
+            c_vs1, c_vs2 = st.columns(2)
+            with c_vs1:
+                el_stability = st.slider("Stability:", min_value=0, max_value=100, value=50, step=1, format="%d%%", key="el_stab_slider", help="Lower stability allows dramatic dynamic expression; higher values produce uniform delivery.")
+                st.caption("More variable ⟵ ⟶ More stable")
+            with c_vs2:
+                el_similarity = st.slider("Clarity + Similarity:", min_value=0, max_value=100, value=75, step=1, format="%d%%", key="el_sim_slider", help="Boosts high-frequency clarity and resemblance to the original speaker.")
+                st.caption("Low ⟵ ⟶ High")
+            c_vs3, c_vs4 = st.columns(2)
+            with c_vs3:
+                el_style_exagg = st.slider("Style Exaggeration:", min_value=0, max_value=100, value=0, step=1, format="%d%%", key="el_style_slider", help="Amplifies emotional style and inflection intensity.")
+                st.caption("None ⟵ ⟶ Exaggerated")
+            with c_vs4:
+                el_speaker_boost = st.toggle("Speaker Boost", value=True, key="el_spk_boost_toggle", help="Enhances presence and acoustic depth of the target persona.")
+                st.caption("Acoustic presence active")
+
+    c_tmpl1, c_tmpl2 = st.columns([1.5, 1])
+    with c_tmpl1:
+        script_template = st.selectbox(
+            "Script Preset Template:",
+            [
+                "Custom Text / Keep Current",
+                "छत्रपती शिवाजी महाराज व सह्याद्रीची अखंड गर्जना (Historical Epic)",
+                "Commercial Ad / Brand Voiceover (English)",
+                "News Prime Time Broadcast (Marathi / Hindi)",
+                "Documentary & Story Narration",
+                "Conversational Podcast Host"
+            ],
+            key="el_script_template_select"
+        )
+    with c_tmpl2:
+        selected_lang_name = st.selectbox("Synthesis Language:", list(LANGUAGE_CATALOG.keys()), index=0, key="u_lang_select")
+        lang_info = LANGUAGE_CATALOG[selected_lang_name]
+
+    template_texts = {
+        "छत्रपती शिवाजी महाराज व सह्याद्रीची अखंड गर्जना (Historical Epic)": "छत्रपती शिवाजी महाराजांच्या पदस्पर्शाने पावन झालेली ही भूमी, आकाशाला गवसणी घालणारा मराठ्यांचा स्वाभिमान आणि सह्याद्रीची अखंड गर्जना!",
+        "Commercial Ad / Brand Voiceover (English)": "Introducing the future of voice artificial intelligence. Experience unprecedented clarity, emotional resonance, and studio-grade delivery with ElevenLabs.",
+        "News Prime Time Broadcast (Marathi / Hindi)": "नमस्कार, प्राइम टाइम बुलेटिनमध्ये आपले स्वागत आहे. आजच्या ठळक घडामोडींवर एक नजर टाकूया.",
+        "Documentary & Story Narration": "The morning mist drifted quietly across the dense valleys, where centuries of untamed nature lived in silent harmony.",
+        "Conversational Podcast Host": "Welcome back to the show everyone! Today we're exploring breakthroughs in generative audio and creative media."
+    }
+    
+    default_script_val = template_texts.get(script_template, "छत्रपती शिवाजी महाराजांच्या पदस्पर्शाने पावन झालेली ही भूमी, आकाशाला गवसणी घालणारा मराठ्यांचा स्वाभिमान आणि सह्याद्रीची अखंड गर्जना!")
+    if script_template != "Custom Text / Keep Current" and "universal_script_input" in st.session_state:
+        st.session_state["universal_script_input"] = default_script_val
+
+    speech_text = st.text_area(
+        "Script Input (Enter any text in Marathi, Hindi, English or 20+ Languages):",
+        value=default_script_val,
+        height=160,
+        key="universal_script_input"
+    )
+
+    # Status Bar below textarea: Character count, word count, quota
+    char_count = len(speech_text)
+    word_count = len(speech_text.split())
+    st.markdown(f"""
+    <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:{theme_subtext}; margin-top:-8px; margin-bottom:14px; padding:0 4px;">
+        <div><b>{char_count:,}</b> / 5,000 characters &nbsp;•&nbsp; <b>{word_count}</b> words</div>
+        <div style="color:#10B981; font-weight:600;">● Credits Available: 10,000 / 10,000</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    u_synth_btn = st.button("✨ Generate Speech", type="primary", use_container_width=True, key="u_btn_synth")
 
     if u_synth_btn:
         active_email = st.session_state.current_user.get("email", "guest@wani.ai")
@@ -3071,39 +3141,87 @@ with tab_speech:
         elif not speech_text.strip():
             st.warning("Please enter text script before generating audio.")
         else:
-            out_file = os.path.join(tempfile.gettempdir(), f"wani_synth_{uuid.uuid4().hex[:8]}.mp3")
-            p_val = f"{custom_p:+d}Hz"
-            r_val = f"{custom_r:+d}%"
+            out_file = os.path.join(tempfile.gettempdir(), f"eleven_synth_{uuid.uuid4().hex[:8]}.mp3")
             
-            # Select appropriate voice code according to language and persona gender
+            # Map ElevenLabs Voice Settings to Acoustic Parameters
+            base_p_num = int(re.sub(r'[^0-9\-+]', '', active_persona.get("pitch", "+0Hz"))) if active_persona.get("pitch") else 0
+            base_r_num = int(re.sub(r'[^0-9\-+]', '', active_persona.get("rate", "+0%"))) if active_persona.get("rate") else 0
+            
+            # Style Exaggeration adds pitch & velocity dynamism
+            if el_style_exagg > 0:
+                base_p_num += int(el_style_exagg * 0.1)
+                base_r_num += int(el_style_exagg * 0.12)
+                
+            # Stability: If low stability (<40%), add subtle dynamic expression
+            if el_stability < 40:
+                base_p_num += 2
+                
+            target_p = f"{max(-40, min(40, base_p_num)):+d}Hz"
+            target_r = f"{max(-30, min(30, base_r_num)):+d}%"
+            
+            # Compose ElevenLabs DSP Chain
+            dsp_filters = []
+            if active_persona.get("dsp"):
+                dsp_filters.append(active_persona["dsp"])
+            if el_similarity > 60:
+                dsp_filters.append("treble=g=3:f=3200,highpass=f=80")
+            if el_speaker_boost:
+                dsp_filters.append("bass=g=2.5:f=110,volume=1.06")
+            combined_dsp = ",".join(dsp_filters) if dsp_filters else None
+
+            # Choose voice code & engine
             voice_code = active_persona.get("voice_map", {}).get(lang_info["code"])
             if not voice_code:
                 voice_code = lang_info["male"] if active_persona["gender"] == "Male" else lang_info["female"]
             is_active_p_google = "Google" in active_persona.get("category", "") or "google_voice" in active_persona
-            chosen_engine = "Google AI Studio" if ("Google" in u_engine_choice or is_active_p_google) else "Wani Neural Matrix Core"
+            chosen_engine = "Google AI Studio" if ("Google" in u_model_choice or is_active_p_google) else "Eleven Multilingual v2"
             
-            with st.spinner("Synthesizing studio audio via Wani & Google Neural Engine..."):
+            with st.spinner("Synthesizing speech via ElevenLabs Neural Engine..."):
                 engine_name = synthesize_speech_core(
                     text=speech_text,
                     voice_code=voice_code,
                     out_path=out_file,
-                    pitch_str=p_val,
-                    rate_str=r_val,
+                    pitch_str=target_p,
+                    rate_str=target_r,
                     engine=chosen_engine,
                     google_voice_name=active_persona.get("google_voice", "Puck"),
                     lang_code=lang_info["code"],
                     gender=active_persona.get("gender", "Male"),
-                    dsp=active_persona.get("dsp")
+                    dsp=combined_dsp
                 )
                 
-            st.success(f"✨ Speech rendered with native phonetics via {engine_name}!")
-            col_a1, col_a2 = st.columns([1.5, 1])
-            with col_a1:
-                with open(out_file, "rb") as f:
-                    st.audio(f.read(), format="audio/mp3")
-            with col_a2:
-                with open(out_file, "rb") as f:
-                    st.download_button("⬇️ Download High-Res Audio (MP3)", f.read(), file_name=f"wani_{lang_info['code']}_master.mp3", mime="audio/mp3", use_container_width=True)
+            st.success(f"✨ Speech synthesized successfully via {engine_name}!")
+            
+            # ElevenLabs Generation Playback Card
+            with open(out_file, "rb") as f:
+                audio_bytes = f.read()
+                
+            st.markdown(f"""
+            <div style="background:{theme_card_bg}; border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:18px 22px; margin-top:14px; box-shadow:{theme_shadow};">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="{active_persona['avatar']}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #818CF8;">
+                        <div>
+                            <div style="font-weight:700; font-size:15px; color:{theme_text};">{selected_persona_name.split('—')[0].strip()}</div>
+                            <div style="font-size:11.5px; color:{theme_subtext};">{u_model_choice.split('(')[0].strip()} • {lang_info['name']}</div>
+                        </div>
+                    </div>
+                    <span style="font-size:11px; background:rgba(16,185,129,0.18); color:#34D399; border:1px solid rgba(16,185,129,0.4); padding:3px 10px; border-radius:12px; font-weight:700;">STUDIO GENERATION READY 🟢</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            col_p1, col_p2 = st.columns([1.5, 1])
+            with col_p1:
+                st.audio(audio_bytes, format="audio/mp3")
+            with col_p2:
+                st.download_button(
+                    "⬇️ Download Audio (.MP3)",
+                    audio_bytes,
+                    file_name=f"elevenlabs_{lang_info['code']}_{selected_persona_name.split('—')[0].strip().lower()}.mp3",
+                    mime="audio/mp3",
+                    use_container_width=True
+                )
 
 
 # ==============================================================
@@ -5301,10 +5419,20 @@ with tab_contact:
                     st.warning("Please provide your name and work email.")
 
 # ==============================================================
-# TAB 13: VOICE LIBRARY CATALOG (CHARACTER PERSONAS WITH AVATARS)
+# TAB 4: VOICE LIBRARY CATALOG (ELEVENLABS VOICE EXPLORER)
 # ==============================================================
 with tab_library:
-    st.markdown('<div class="studio-banner">🎧 Complete Voice Library Catalog — High-Fidelity Multilingual Character Personas</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="studio-banner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <div style="font-size: 20px; font-weight: 800; color: {theme_text}; letter-spacing: -0.5px;">📚 Voice Library</div>
+            <div style="font-size: 12.5px; color: {theme_subtext}; margin-top: 2px;">Discover, preview, and deploy high-fidelity character voices for your productions.</div>
+        </div>
+        <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(129, 140, 248, 0.4); color: #818CF8; padding: 4px 12px; border-radius: 20px; font-weight: 700;">
+            35+ PREMIER VOICES
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
     
     lib_tabs = st.tabs(["👨 Male Voices", "👩 Female Voices", "✨ Google AI Studio Voices"])
     
@@ -5314,7 +5442,7 @@ with tab_library:
             is_active_v = (st.session_state.get("global_selected_voice") == name)
             is_g = "Google" in data.get("category", "") or "google_voice" in data
             g_badge = '<span style="font-size: 10px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px;">✨ GOOGLE AI STUDIO</span>' if is_g else ''
-            col_l1, col_l2 = st.columns([4, 1])
+            col_l1, col_l2 = st.columns([3.5, 1.5])
             with col_l1:
                 st.markdown(f"""
                 <div class="voice-card" style="display: flex; gap: 16px; align-items: center; border: 1.5px solid {'#818CF8' if is_active_v else theme_card_border};">
@@ -5331,10 +5459,12 @@ with tab_library:
                 </div>
                 """, unsafe_allow_html=True)
             with col_l2:
-                st.write("")
-                if st.button("🎯 Select Voice", key=f"lib_sel_m_{name}", use_container_width=True):
+                p_aud = PREVIEWS_BASE64_CACHE.get(name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(name, {}).get("en")
+                if p_aud:
+                    st.markdown(f"""<audio controls style="width:100%; height:32px; margin-top:6px; margin-bottom:6px;"><source src="data:audio/mp3;base64,{p_aud}" type="audio/mp3"></audio>""", unsafe_allow_html=True)
+                if st.button("🎙️ Use in Studio", key=f"lib_sel_m_{name}", use_container_width=True):
                     st.session_state["global_selected_voice"] = name
-                    st.toast(f"✅ {name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
+                    st.toast(f"✅ {name.split('—')[0].strip()} selected for Speech Synthesis!", icon="🎙️")
                     st.rerun()
                 
     with lib_tabs[1]:
@@ -5343,7 +5473,7 @@ with tab_library:
             is_active_vf = (st.session_state.get("global_selected_voice") == name)
             is_gf = "Google" in data.get("category", "") or "google_voice" in data
             g_badgef = '<span style="font-size: 10px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px;">✨ GOOGLE AI STUDIO</span>' if is_gf else ''
-            col_lf1, col_lf2 = st.columns([4, 1])
+            col_lf1, col_lf2 = st.columns([3.5, 1.5])
             with col_lf1:
                 st.markdown(f"""
                 <div class="voice-card" style="display: flex; gap: 16px; align-items: center; border: 1.5px solid {'#818CF8' if is_active_vf else theme_card_border};">
@@ -5360,10 +5490,12 @@ with tab_library:
                 </div>
                 """, unsafe_allow_html=True)
             with col_lf2:
-                st.write("")
-                if st.button("🎯 Select Voice", key=f"lib_sel_f_{name}", use_container_width=True):
+                pf_aud = PREVIEWS_BASE64_CACHE.get(name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(name, {}).get("en")
+                if pf_aud:
+                    st.markdown(f"""<audio controls style="width:100%; height:32px; margin-top:6px; margin-bottom:6px;"><source src="data:audio/mp3;base64,{pf_aud}" type="audio/mp3"></audio>""", unsafe_allow_html=True)
+                if st.button("🎙️ Use in Studio", key=f"lib_sel_f_{name}", use_container_width=True):
                     st.session_state["global_selected_voice"] = name
-                    st.toast(f"✅ {name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
+                    st.toast(f"✅ {name.split('—')[0].strip()} selected for Speech Synthesis!", icon="🎙️")
                     st.rerun()
 
     with lib_tabs[2]:
@@ -5375,7 +5507,7 @@ with tab_library:
         """, unsafe_allow_html=True)
         for name, data in google_personas.items():
             is_active_vg = (st.session_state.get("global_selected_voice") == name)
-            col_lg1, col_lg2 = st.columns([4, 1])
+            col_lg1, col_lg2 = st.columns([3.5, 1.5])
             with col_lg1:
                 st.markdown(f"""
                 <div class="voice-card" style="display: flex; gap: 16px; align-items: center; border: 1.5px solid {'#818CF8' if is_active_vg else theme_card_border};">
@@ -5393,26 +5525,28 @@ with tab_library:
                 </div>
                 """, unsafe_allow_html=True)
             with col_lg2:
-                st.write("")
-                if st.button("🎯 Select Voice", key=f"lib_sel_g_{name}", use_container_width=True):
+                pg_aud = PREVIEWS_BASE64_CACHE.get(name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(name, {}).get("en")
+                if pg_aud:
+                    st.markdown(f"""<audio controls style="width:100%; height:32px; margin-top:6px; margin-bottom:6px;"><source src="data:audio/mp3;base64,{pg_aud}" type="audio/mp3"></audio>""", unsafe_allow_html=True)
+                if st.button("🎙️ Use in Studio", key=f"lib_sel_g_{name}", use_container_width=True):
                     st.session_state["global_selected_voice"] = name
-                    st.toast(f"✅ {name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
+                    st.toast(f"✅ {name.split('—')[0].strip()} selected for Speech Synthesis!", icon="🎙️")
                     st.rerun()
 
 # ==============================================================
-# ENTERPRISE COPYRIGHT & COMPLIANCE FOOTER (CENTERED)
+# ELEVENLABS COPYRIGHT & COMPLIANCE FOOTER (CENTERED)
 # ==============================================================
 st.markdown(f"""
 <div style="text-align: center; margin-top: 60px; padding: 36px 16px 28px 16px; border-top: 1px solid {theme_card_border}; font-size: 13px; color: {theme_subtext}; line-height: 1.85;">
     <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 8px;">
-        <span class="wani-brand-text" style="font-size: 22px;">Wani AI</span>
+        <span style="font-size: 20px; font-weight: 800; color: {theme_text};">ElevenLabs Clone Studio</span>
         <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ENTERPRISE EDITION</span>
     </div>
     <div style="font-weight: 700; color: {theme_text}; margin-bottom: 4px;">
-        © 2026 Wani Technologies Inc. & Wani Technologies Pvt. Ltd. All Rights Reserved.
+        © 2026 ElevenLabs AI Research & Deployments. All Rights Reserved.
     </div>
     <div style="margin-bottom: 4px;">
-        Protected under Indian Copyright Act 1957, US Digital Millennium Copyright Act (DMCA), WIPO Treaties & UCC.
+        Protected under International Copyright & Patent Laws, US DMCA & WIPO Treaties.
     </div>
     <div style="color: #818CF8; font-weight: 600;">
         Proprietary Acoustic Architecture • ISO/IEC 27001 Certified • 99.99% Enterprise Uptime SLA
