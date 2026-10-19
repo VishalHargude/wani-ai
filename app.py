@@ -1121,7 +1121,7 @@ with st.sidebar:
 # 20 DISTINCT STUDIO CHARACTER PERSONAS (10 MALE + 10 FEMALE WITH AVATARS)
 # ==============================================================
 STUDIO_PERSONAS = {
-    # 13 MALE PERSONAS (Acoustic Range: -22Hz to +4Hz • 100% Masculine • 100% Distinct Neural Models & DSP Chains)
+    # 17 MALE PERSONAS (100% Masculine • 100% Distinct Photos & Distinct Neural Models)
     "Aarav — Historic Authority (Warrior Baritone)": {
         "gender": "Male", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=faces",
@@ -1172,7 +1172,7 @@ STUDIO_PERSONAS = {
     },
     "Brian — BBC Prestige (British Documentary)": {
         "gender": "Male", "category": "Documentary & Nature",
-        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-8Hz", "rate": "-6%",
         "desc": "Distinguished British prestige baritone for global nature and history sagas.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-ThomasNeural", "default": "en-GB-ThomasNeural"},
@@ -1188,7 +1188,7 @@ STUDIO_PERSONAS = {
     },
     "Christopher — Monumental Cinematic Storyteller": {
         "gender": "Male", "category": "Cinematic & Drama",
-        "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-16Hz", "rate": "-8%",
         "desc": "Deep cinematic baritone for monumental trailers, audiobooks, and dramatic voiceovers.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "en-US-ChristopherNeural"},
@@ -1196,7 +1196,7 @@ STUDIO_PERSONAS = {
     },
     "Eshwar — Elder Patriarch (Measured Wisdom)": {
         "gender": "Male", "category": "Documentary & Wisdom",
-        "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-18Hz", "rate": "-12%",
         "desc": "Slow, aged baritone filled with lifelong wisdom for folklore and contemplative scripts.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-BrianNeural", "default": "en-US-BrianNeural"},
@@ -1222,7 +1222,7 @@ STUDIO_PERSONAS = {
     },
     "Fenrir — Google AI Studio (Commanding Titan)": {
         "gender": "Male", "category": "Google AI Studio",
-        "avatar": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-14Hz", "rate": "-4%",
         "desc": "Google AI Studio Gemini 2.0 commanding, bold, heroic baritone with immense acoustic projection.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-AU-WilliamMultilingualNeural", "default": "en-AU-WilliamMultilingualNeural"},
@@ -1231,7 +1231,7 @@ STUDIO_PERSONAS = {
     },
     "Tanaji — Maratha Commander (Battlefield War Cry)": {
         "gender": "Male", "category": "Historical & Epic",
-        "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-16Hz", "rate": "-4%",
         "desc": "Thunderous, roaring Maratha commander baritone with fierce patriotic passion and unyielding grit.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "mr-IN-ManoharNeural"},
@@ -1239,7 +1239,7 @@ STUDIO_PERSONAS = {
     },
     "Aditya — Investigative Crime & Thriller (Dark Suspense)": {
         "gender": "Male", "category": "Suspense & Crime Thriller",
-        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-12Hz", "rate": "-6%",
         "desc": "Gravelly, whispery suspense narrator for crime documentaries, mystery podcasts, and thrillers.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-RyanNeural", "default": "en-GB-RyanNeural"},
@@ -1247,7 +1247,7 @@ STUDIO_PERSONAS = {
     },
     "Omkar — Sacred Vedic Scholar & Temple Chants": {
         "gender": "Male", "category": "Spiritual & Sacred",
-        "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1544717305-2782549b5136?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-14Hz", "rate": "-8%",
         "desc": "Deep reverberant Vedic diction for mantras, stotras, temple ceremonies, and spiritual discourses.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-IN-PrabhatNeural", "default": "en-IN-PrabhatNeural"},
@@ -1255,14 +1255,14 @@ STUDIO_PERSONAS = {
     },
     "Rishi — Business Leader & TEDx Speaker (Inspirational)": {
         "gender": "Male", "category": "Leadership & Keynote",
-        "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-6Hz", "rate": "+4%",
         "desc": "Charismatic, authoritative corporate visionary voice for keynotes, leadership talks, and investor summits.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"},
         "dsp": "treble=g=3:f=3500,volume=1.1"
     },
 
-    # 18 DISTINCT FEMALE PERSONAS (100% Feminine Neural Models & Crystal-Clear Studio Chains)
+    # 18 DISTINCT FEMALE PERSONAS (100% Feminine • 100% Distinct Photos & Distinct Neural Models)
     "Aarohi — Stately Empress (Royal Dignity)": {
         "gender": "Female", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
@@ -1354,7 +1354,7 @@ STUDIO_PERSONAS = {
     },
     "Kore — Google AI Studio (Serene Mindfulness)": {
         "gender": "Female", "category": "Google AI Studio",
-        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1512485800893-b09746423100?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-6%",
         "desc": "Google AI Studio Gemini 2.0 gentle, soothing, meditative female narrator crafted for calm and storytelling.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-MichelleNeural", "default": "en-US-MichelleNeural"},
@@ -1363,7 +1363,7 @@ STUDIO_PERSONAS = {
     },
     "Meera — Spiritual & Devotional (Bhakti Sangeet & Sant Vani)": {
         "gender": "Female", "category": "Spiritual & Devotion",
-        "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-4%",
         "desc": "Divine, soul-stirring devotional voice for abhangs, aarti, spiritual discourses, and Sant Vani.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"},
@@ -1371,7 +1371,7 @@ STUDIO_PERSONAS = {
     },
     "Tanvi — Corporate Tech Narrator (Modern Pune/Mumbai IT)": {
         "gender": "Female", "category": "Corporate & Tech",
-        "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1573497019236-17f8177b81e8?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+4Hz", "rate": "+8%",
         "desc": "Sharp, articulate, ultra-modern tech presenter cadence for software demos and venture pitches.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"},
@@ -1379,7 +1379,7 @@ STUDIO_PERSONAS = {
     },
     "Radhika — Traditional Storyteller (Aaji / Kaki Warmth)": {
         "gender": "Female", "category": "Heritage & Wisdom",
-        "avatar": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1548142813-c348350df52b?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-2Hz", "rate": "-6%",
         "desc": "Deeply affectionate, comforting maternal warmth for folktales, parables, and classic literature.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaExpressiveNeural", "default": "mr-IN-AarohiNeural"},
@@ -1387,7 +1387,7 @@ STUDIO_PERSONAS = {
     },
     "Sayali — Hyper-Energetic RJ & Youth Influencer": {
         "gender": "Female", "category": "Radio & Youth Entertainment",
-        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1524502397800-2eeaad7c3fe5?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+6Hz", "rate": "+12%",
         "desc": "Bubbly, vibrant, high-tempo youth delivery packed with spontaneity and charisma.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AvaNeural", "default": "en-US-AvaNeural"},
@@ -1395,7 +1395,7 @@ STUDIO_PERSONAS = {
     },
     "Kavita — Poetry & Emotional Ghazal Reciter": {
         "gender": "Female", "category": "Poetry & Emotion",
-        "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "-6%",
         "desc": "Deeply expressive, melodic cadence crafted for emotional poetry, romantic verses, and ghazals.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"},
@@ -1403,7 +1403,7 @@ STUDIO_PERSONAS = {
     },
     "Zephyr — Google AI Studio (Dynamic Modern Storyteller)": {
         "gender": "Female", "category": "Google AI Studio",
-        "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=faces",
+        "avatar": "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "+4%",
         "desc": "Google AI Studio Gemini 2.0 next-gen lively female protagonist with expressive, nuanced storytelling.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-AvaMultilingualNeural", "default": "en-US-AvaMultilingualNeural"},
@@ -3372,57 +3372,18 @@ with tab_stt:
                 st.info("Text copied to Voice Studio! Switch to Tab 1 to generate speech.")
 
 # ==============================================================
-# LIVE MULTILINGUAL VIDEO DUBBING SHOWCASE COMPONENT
+# LIVE MULTILINGUAL VIDEO DUBBING PLAYER COMPONENT
 # ==============================================================
-MARATHI_SHOWCASE_B64_CACHE = ""
-
-def get_marathi_showcase_data_uri() -> str:
-    global MARATHI_SHOWCASE_B64_CACHE
-    if MARATHI_SHOWCASE_B64_CACHE:
-        return MARATHI_SHOWCASE_B64_CACHE
-    mr_path = os.path.join(os.path.dirname(__file__), "marathi_showcase_dub.mp3")
-    if not os.path.exists(mr_path):
-        try:
-            mr_script = 'थांबा, म्हणजे खरंच तुम्ही लोकांनी घराच्या पाठीमागे संपूर्ण स्टेडियम तयार केलं? अहो हो, १०० टक्के खरं आहे! आम्ही तीन वर्षं सलग मेहनत करून ही अप्रतिम अ‍ॅरेना बनवली आहे!'
-            async def run_mr():
-                comm = edge_tts.Communicate(mr_script, 'mr-IN-ManoharNeural', pitch='+0Hz', rate='+10%')
-                await comm.save(mr_path)
-            asyncio.run(run_mr())
-        except Exception:
-            pass
-    if os.path.exists(mr_path):
-        try:
-            with open(mr_path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
-                MARATHI_SHOWCASE_B64_CACHE = f"data:audio/mp3;base64,{b64}"
-                return MARATHI_SHOWCASE_B64_CACHE
-        except Exception:
-            return ""
-    return ""
-
 def render_live_multilingual_dubbing_showcase(
     video_src: str = None,
     audio_tracks: dict = None,
     default_lang: str = "hi",
-    card_title: str = "WaniCreative",
+    card_title: str = "WaniStudio",
     badge_text: str = "LIVE DUBBING",
     height: int = 590
 ):
-    mr_audio_uri = get_marathi_showcase_data_uri()
-    
-    if not video_src:
-        video_src = "https://eleven-public-cdn.elevenlabs.io/payloadcms/video-derived/6a184b41ff464f65c08e32c1/h264_720.mp4"
-        
-    if not audio_tracks:
-        audio_tracks = {
-            "en": {"label": "English", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/ny5ykdiwmb.mp3"},
-            "pt": {"label": "Portuguese", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/ovfai5i88jd.mp3"},
-            "de": {"label": "German", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/jicvfwkdre9.mp3"},
-            "it": {"label": "Italian", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/nvbceiamt1.mp3"},
-            "hi": {"label": "Hindi", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/ckn43hcxbxu.mp3"},
-            "es": {"label": "Spanish", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/v9grnli26c.mp3"},
-            "mr": {"label": "Marathi", "src": mr_audio_uri}
-        }
+    if not video_src or not audio_tracks:
+        return
         
     if default_lang not in audio_tracks:
         default_lang = list(audio_tracks.keys())[0] if audio_tracks else "hi"
@@ -3977,8 +3938,7 @@ def render_live_multilingual_dubbing_showcase(
                          .replace("__LANG_PILLS_HTML__", pills_html)\
                          .replace("__DEFAULT_LANG__", default_lang)\
                          .replace("__CARD_TITLE__", card_title)\
-                         .replace("__BADGE_TEXT__", badge_text)\
-                         .replace("__MARATHI_AUDIO_URI__", mr_audio_uri)
+                         .replace("__BADGE_TEXT__", badge_text)
     components.html(final_html, height=height)
 
 # Helper: Instant Video Preview and Acoustic Extractor (<1s for live video playback)
@@ -4249,47 +4209,55 @@ def process_multilingual_live_dubbing_pack(
 with tab_dubbing:
     st.markdown('<div class="studio-banner">🎬 AI Video Dubbing Studio — Automated Multilingual Video Dubbing with Audio Remuxing (Up to 500 MB)</div>', unsafe_allow_html=True)
     
-    # 1. RENDER ELEVENLABS-STYLE LIVE MULTILINGUAL DUBBING SHOWCASE OR USER'S UPLOADED LIVE PACK
+    # 1. RENDER LIVE DUBBING PLAYER ONLY FOR USER'S UPLOADED VIDEO (NO THIRD-PARTY DEMO VIDEOS)
     custom_pack = st.session_state.get("custom_live_dubbing_pack")
     
-    if custom_pack:
-        col_pk1, col_pk2 = st.columns([1.3, 1])
-        with col_pk1:
-            dub_player_mode = st.radio(
-                "🎬 Choose Live Interactive Player View:",
-                [
-                    f"🧬 My Uploaded Video — {custom_pack.get('video_filename', 'My Video')} (Live Dubbing Switcher)",
-                    "🌟 Official Showcase Demo (Dude Perfect Live Multilingual Dub)"
-                ],
-                horizontal=True,
-                key="dub_player_view_choice"
-            )
-        with col_pk2:
-            st.caption(f"⚡ Live Multi-track Player Active with **{len(custom_pack.get('audio_tracks', {}))} Languages**! Click any language pill directly in the video to switch speech instantly on the fly.")
-            
-        if "My Uploaded Video" in dub_player_mode:
-            is_raw = custom_pack.get("is_raw", False)
-            default_live_l = "orig" if is_raw and "orig" in custom_pack["audio_tracks"] else ("hi" if "hi" in custom_pack["audio_tracks"] else list(custom_pack["audio_tracks"].keys())[0])
-            render_live_multilingual_dubbing_showcase(
-                video_src=custom_pack["preview_video_uri"],
-                audio_tracks=custom_pack["audio_tracks"],
-                default_lang=default_live_l,
-                card_title=f"WaniStudio — {custom_pack.get('video_filename', 'My Video')}",
-                badge_text="⚡ LIVE VIDEO LOADED • ORIGINAL AUDIO" if is_raw else "100% CLONED LIVE DUBBING"
-            )
-            if is_raw:
-                st.markdown("""
-                <div style="background: rgba(99, 102, 241, 0.12); border: 1.5px solid rgba(99, 102, 241, 0.45); border-radius: 12px; padding: 12px 16px; margin-top: 10px; margin-bottom: 12px;">
-                    <div style="font-size: 13px; font-weight: 700; color: #818CF8;">🎬 व्हिडिओ त्वरित सुरू झाला आहे! (Video is playing live)</div>
-                    <div style="font-size: 12px; color: #CBD5E1; margin-top: 3px;">
-                        व्हिडिओचा मूळ आवाज (Original audio) सुरू आहे. चालू व्हिडिओमध्येच थेट भाषा बदलण्यासाठी खाली दिलेल्या <b>'🚀 Generate 100% Cloned LIVE Multilingual Player'</b> बटणावर क्लिक करा!
-                    </div>
+    if custom_pack and custom_pack.get("preview_video_uri"):
+        is_raw = custom_pack.get("is_raw", False)
+        default_live_l = "orig" if is_raw and "orig" in custom_pack["audio_tracks"] else ("hi" if "hi" in custom_pack["audio_tracks"] else list(custom_pack["audio_tracks"].keys())[0])
+        
+        col_hdr_p1, col_hdr_p2 = st.columns([2.5, 1])
+        with col_hdr_p1:
+            st.markdown(f"#### 🧬 Live Multilingual Dubbing Player — `{custom_pack.get('video_filename', 'My Video')}`")
+        with col_hdr_p2:
+            if st.button("🗑️ Remove Video & Upload New", key="btn_clear_live_pack", help="Clear current video to upload a different one"):
+                st.session_state["custom_live_dubbing_pack"] = None
+                st.session_state["active_dub_vid_sig"] = None
+                st.rerun()
+
+        render_live_multilingual_dubbing_showcase(
+            video_src=custom_pack["preview_video_uri"],
+            audio_tracks=custom_pack["audio_tracks"],
+            default_lang=default_live_l,
+            card_title=f"WaniStudio — {custom_pack.get('video_filename', 'My Video')}",
+            badge_text="⚡ LIVE VIDEO LOADED • ORIGINAL AUDIO" if is_raw else "🧬 100% CLONED LIVE DUBBING"
+        )
+        if is_raw:
+            st.markdown("""
+            <div style="background: rgba(99, 102, 241, 0.12); border: 1.5px solid rgba(99, 102, 241, 0.45); border-radius: 12px; padding: 12px 16px; margin-top: 10px; margin-bottom: 14px;">
+                <div style="font-size: 13.5px; font-weight: 700; color: #818CF8;">🎬 तुमचा व्हिडिओ थेट प्ले होत आहे! (Your video is playing live)</div>
+                <div style="font-size: 12px; color: #CBD5E1; margin-top: 3px;">
+                    व्हिडिओचा मूळ आवाज (Original audio) सुरू आहे. चालू व्हिडिओमध्येच थेट भाषा बदलण्यासाठी (Real-time live multilingual dubbing) खालील <b>'🚀 Generate 100% Cloned LIVE Multilingual Player'</b> बटणावर क्लिक करा!
                 </div>
-                """, unsafe_allow_html=True)
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            render_live_multilingual_dubbing_showcase()
+            st.success(f"⚡ Live Multi-track Player Active with {len(custom_pack.get('audio_tracks', {}))} Languages! Click any language pill directly inside the video to switch speech instantly on the fly.")
     else:
-        render_live_multilingual_dubbing_showcase()
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.65), rgba(15, 23, 42, 0.85)); border: 1.5px dashed rgba(99, 102, 241, 0.4); border-radius: 20px; padding: 30px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+            <div style="font-size: 42px; margin-bottom: 8px;">🎬</div>
+            <div style="font-size: 21px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.3px;">AI Multilingual Video Dubbing Studio</div>
+            <div style="font-size: 13.5px; color: #94A3B8; margin-top: 8px; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                खाली तुमचा कोणताही व्हिडिओ (५०० MB पर्यंत) अपलोड करा. सिस्टीम मूळ वक्त्याचा आवाज १००% हुबेहूब क्लोन करून चालू व्हिडिओमध्येच मराठी, हिंदी, इंग्रजी किंवा इतर भाषांमध्ये रिअल-टाइम लाईव्ह डबिंग सुरू करेल.
+            </div>
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 18px; flex-wrap: wrap;">
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; font-size: 12px; padding: 5px 14px; border-radius: 9999px; font-weight: 600;">✓ ५०० MB पर्यंत HD/4K व्हिडिओ सपोर्ट</span>
+                <span style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); color: #818CF8; font-size: 12px; padding: 5px 14px; border-radius: 9999px; font-weight: 600;">✓ १००% ओरिजिनल स्पीकर व्हॉइस क्लोनिंग</span>
+                <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #FBBF24; font-size: 12px; padding: 5px 14px; border-radius: 9999px; font-weight: 600;">✓ चालू व्हिडिओत ऑन-द-फ्लाय भाषा बदल</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown('<div id="dubbing-upload-anchor" style="margin-top: 24px;"></div>', unsafe_allow_html=True)
     st.markdown("---")
