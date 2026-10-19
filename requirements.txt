@@ -3,3 +3,7 @@ edge-tts>=6.1.18
 requests>=2.31.0
 deep-translator>=1.11.4
 razorpay>=2.0.0
+pypdf>=5.0.0
+SpeechRecognition>=3.14.0
+pydub>=0.25.1
+langdetect>=1.0.9
