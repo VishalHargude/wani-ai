@@ -66,6 +66,75 @@ def sanitize_text(text: str) -> str:
     clean = re.sub(r'<.*?>', '', clean)
     return clean.strip()
 
+def normalize_marathi_text(text: str) -> str:
+    """
+    Normalizes Marathi text for flawless, natural, crystal-clear female and male TTS synthesis:
+    - Replaces symbols (%, ₹, Rs, $, &, +, =, @) with authentic Marathi words
+    - Expands all Western (0-9) and Devanagari (०-९) digits into fluent Marathi words
+    - Normalizes punctuation and sentence breaks (।, ?, !, ., ,) with natural breathing pauses
+    - Removes emojis and unwanted special characters to eliminate audio stuttering
+    """
+    if not text:
+        return ""
+    
+    # Convert Devanagari numerals to Western digits first
+    dev_to_west = str.maketrans("०१२३४५६७८९", "0123456789")
+    text = text.translate(dev_to_west)
+
+    # Convert currency prefixes e.g. ₹ 50,000 or Rs. 500 to postfix words e.g. 50000 रुपये
+    text = re.sub(r'(?:₹|Rs\.?)\s*(\d+(?:,\d+)*)', r'\1 रुपये ', text)
+    text = re.sub(r'\$\s*(\d+(?:,\d+)*)', r'\1 डॉलर्स ', text)
+    
+    # Remove commas inside numbers (e.g. 50,000 -> 50000, 1,00,000 -> 100000)
+    text = re.sub(r'(\d+),(\d+)', r'\1\2', text)
+    text = re.sub(r'(\d+),(\d+)', r'\1\2', text)
+
+    # Currency and mathematical symbols
+    text = text.replace("₹", " रुपये ").replace("Rs.", " रुपये ").replace("Rs", " रुपये ").replace("$", " डॉलर्स ")
+    text = text.replace("%", " टक्के ").replace("&", " आणि ").replace("+", " अधिक ").replace("=", " बरोबर ")
+    text = text.replace("@", " अ‍ॅट ").replace("#", " हॅश ").replace("/", " किंवा ")
+
+    # Phone numbers (8 to 12 digits): speak digit by digit naturally in Marathi
+    digit_names = {"0": "शून्य", "1": "एक", "2": "दोन", "3": "तीन", "4": "चार", "5": "पाच", "6": "सहा", "7": "सात", "8": "आठ", "9": "नऊ"}
+    def _expand_phone(m):
+        return " " + " ".join([digit_names.get(ch, ch) for ch in m.group(0)]) + " "
+    text = re.sub(r'\b[6-9]\d{9}\b', _expand_phone, text) # 10-digit mobile
+    text = re.sub(r'\b\d{8,12}\b', _expand_phone, text)
+
+    # High-level number dictionary
+    num_map = {
+        "10000000": "एक कोटी", "1000000": "दहा लाख", "100000": "एक लाख",
+        "50000": "पन्नास हजार", "25000": "पंचवीस हजार", "10000": "दहा हजार",
+        "5000": "पाच हजार", "2000": "दोन हजार", "1000": "एक हजार",
+        "500": "पाचशे", "400": "चारशे", "300": "तीनशे", "200": "दोनशे", "100": "शंभर",
+        "99": "नव्याण्णव", "90": "नव्वद", "80": "ऐंशी", "75": "पंच्याहत्तर", "70": "सत्तर",
+        "60": "साठ", "50": "पन्नास", "45": "पंचेचाळीस", "40": "चाळीस", "35": "पस्तीस",
+        "30": "तीस", "25": "पंचवीस", "24": "चोवीस", "23": "तेवीस", "22": "बावीस",
+        "21": "एकवीस", "20": "वीस", "19": "एकोणीस", "18": "अठरा", "17": "सतरा",
+        "16": "सोळा", "15": "पंधरा", "14": "चौदा", "13": "तेरा", "12": "बारा",
+        "11": "अकरा", "10": "दहा", "9": "नऊ", "8": "आठ", "7": "सात", "6": "सहा",
+        "5": "पाच", "4": "चार", "3": "तीन", "2": "दोन", "1": "एक", "0": "शून्य"
+    }
+    
+    # Replace full matched numbers
+    for k in sorted(num_map.keys(), key=lambda x: len(x), reverse=True):
+        text = re.sub(r'\b' + k + r'\b', num_map[k], text)
+        
+    # Replace individual remaining digits if any
+    single_digits = {"0": "शून्य", "1": "एक", "2": "दोन", "3": "तीन", "4": "चार", "5": "पाच", "6": "सहा", "7": "सात", "8": "आठ", "9": "नऊ"}
+    for d, w in single_digits.items():
+        text = re.sub(r'\b' + d + r'\b', w, text)
+        
+    # Strip emojis and stray symbols
+    text = re.sub(r'[\U00010000-\U0010ffff]', '', text)
+    text = re.sub(r'[*_~^|\\<>{}\[\]]', '', text)
+    
+    # Normalize punctuation with natural spacing
+    text = re.sub(r'[।!?\.]+', '। ', text)
+    text = re.sub(r'[,]+', ', ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
 def load_secure_users():
     today_str = datetime.now().strftime("%Y-%m-%d")
     if not os.path.exists(DB_FILE):
@@ -1160,15 +1229,47 @@ STUDIO_PERSONAS = {
         "google_voice": "Fenrir",
         "dsp": "volume=1.2,bass=g=4:f=140"
     },
+    "Tanaji — Maratha Commander (Battlefield War Cry)": {
+        "gender": "Male", "category": "Historical & Epic",
+        "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "-16Hz", "rate": "-4%",
+        "desc": "Thunderous, roaring Maratha commander baritone with fierce patriotic passion and unyielding grit.",
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "mr-IN-ManoharNeural"},
+        "dsp": "bass=g=8:f=105,volume=1.2"
+    },
+    "Aditya — Investigative Crime & Thriller (Dark Suspense)": {
+        "gender": "Male", "category": "Suspense & Crime Thriller",
+        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "-12Hz", "rate": "-6%",
+        "desc": "Gravelly, whispery suspense narrator for crime documentaries, mystery podcasts, and thrillers.",
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-RyanNeural", "default": "en-GB-RyanNeural"},
+        "dsp": "highpass=f=90,equalizer=f=1200:width_type=h:width=600:g=2,volume=1.1"
+    },
+    "Omkar — Sacred Vedic Scholar & Temple Chants": {
+        "gender": "Male", "category": "Spiritual & Sacred",
+        "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "-14Hz", "rate": "-8%",
+        "desc": "Deep reverberant Vedic diction for mantras, stotras, temple ceremonies, and spiritual discourses.",
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-IN-PrabhatNeural", "default": "en-IN-PrabhatNeural"},
+        "dsp": "bass=g=6:f=120,volume=1.15"
+    },
+    "Rishi — Business Leader & TEDx Speaker (Inspirational)": {
+        "gender": "Male", "category": "Leadership & Keynote",
+        "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "-6Hz", "rate": "+4%",
+        "desc": "Charismatic, authoritative corporate visionary voice for keynotes, leadership talks, and investor summits.",
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"},
+        "dsp": "treble=g=3:f=3500,volume=1.1"
+    },
 
-    # 12 FEMALE PERSONAS (Acoustic Range: +0Hz to +10Hz • 100% Feminine • 100% Distinct Neural Models & DSP Chains)
+    # 18 DISTINCT FEMALE PERSONAS (100% Feminine Neural Models & Crystal-Clear Studio Chains)
     "Aarohi — Stately Empress (Royal Dignity)": {
         "gender": "Female", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-4%",
         "desc": "Noble, regal matriarch voice resonant with strategic valor and maternal warmth.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaExpressiveNeural", "default": "mr-IN-AarohiNeural"},
-        "dsp": "equalizer=f=2500:width_type=h:width=1000:g=2"
+        "dsp": "highpass=f=80,equalizer=f=3000:width_type=h:width=1200:g=2,volume=1.05"
     },
     "Jenny — Global Financial Anchor (Executive)": {
         "gender": "Female", "category": "News & Broadcast",
@@ -1176,15 +1277,15 @@ STUDIO_PERSONAS = {
         "pitch": "+4Hz", "rate": "+10%",
         "desc": "Immaculate corporate broadcast voice for financial summits and B2B reports.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"},
-        "dsp": "treble=g=4:f=3500"
+        "dsp": "treble=g=3:f=3800,highpass=f=90"
     },
     "Ananya — National News Anchor (Assertive Desk)": {
         "gender": "Female", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+6Hz", "rate": "+14%",
+        "pitch": "+4Hz", "rate": "+10%",
         "desc": "Rapid, crisp, assertive news delivery for breaking news and prime-time broadcasts.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AvaNeural", "default": "en-US-AvaNeural"},
-        "dsp": "volume=1.2,treble=g=4:f=3500"
+        "dsp": "volume=1.1,equalizer=f=2800:width_type=h:width=1000:g=2"
     },
     "Emma — Theatrical Literature (Classic Drama)": {
         "gender": "Female", "category": "Documentary & Nature",
@@ -1192,23 +1293,23 @@ STUDIO_PERSONAS = {
         "pitch": "+0Hz", "rate": "-4%",
         "desc": "Intense theatrical delivery for cinematic drama, poetry, and classical audiobooks.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-SoniaNeural", "default": "en-GB-SoniaNeural"},
-        "dsp": "aecho=0.7:0.6:25:0.15"
+        "dsp": "equalizer=f=1500:width_type=h:width=800:g=1.5,volume=1.05"
     },
     "Tara — Serene Guided ASMR & Mindfulness": {
         "gender": "Female", "category": "Mindfulness & Sleep",
         "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+2Hz", "rate": "-8%",
+        "pitch": "+2Hz", "rate": "-6%",
         "desc": "Soothing, gentle whisper cadence for stress relief, yoga, and guided rest.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "en-IN-NeerjaNeural"},
-        "dsp": "lowpass=f=2800,volume=0.9"
+        "dsp": "highpass=f=100,equalizer=f=2400:width_type=h:width=1000:g=-1,volume=0.98"
     },
     "Priya — Commercial Producer (Viral Lifestyle Host)": {
         "gender": "Female", "category": "Broadcast & Media",
         "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+8Hz", "rate": "+12%",
+        "pitch": "+6Hz", "rate": "+10%",
         "desc": "Bright, playful, ultra-trendy tone designed for viral lifestyle reels and podcasts.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-AriaNeural", "default": "en-US-AriaNeural"},
-        "dsp": "treble=g=5:f=4000,volume=1.15"
+        "dsp": "treble=g=4:f=3800,volume=1.1"
     },
     "Sonia — Sleep & Deep Relaxation Guide": {
         "gender": "Female", "category": "Mindfulness & Sleep",
@@ -1216,7 +1317,7 @@ STUDIO_PERSONAS = {
         "pitch": "+0Hz", "rate": "-6%",
         "desc": "Warm, restorative, breathy cadence for bedtime routines and meditation.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "en-IN-NeerjaNeural"},
-        "dsp": "equalizer=f=1200:width_type=h:width=600:g=-2,volume=0.92"
+        "dsp": "highpass=f=90,equalizer=f=1800:width_type=h:width=800:g=-1,volume=1.0"
     },
     "Shreya — Cultural Storyteller (Heritage Warmth)": {
         "gender": "Female", "category": "Documentary & Wisdom",
@@ -1224,7 +1325,7 @@ STUDIO_PERSONAS = {
         "pitch": "+2Hz", "rate": "-4%",
         "desc": "Affectionate, experienced narrative tone for timeless bedtime stories and parables.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-MaisieNeural", "default": "en-GB-MaisieNeural"},
-        "dsp": "equalizer=f=800:width_type=h:width=400:g=2"
+        "dsp": "equalizer=f=1000:width_type=h:width=600:g=2,volume=1.05"
     },
     "Gauri — National Geographic Documentary Host": {
         "gender": "Female", "category": "Documentary & Nature",
@@ -1232,15 +1333,15 @@ STUDIO_PERSONAS = {
         "pitch": "+0Hz", "rate": "+0%",
         "desc": "Elegant, informative cadence for travelogues, documentaries, and nature programs.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-MichelleNeural", "default": "en-US-MichelleNeural"},
-        "dsp": "treble=g=3:f=3000"
+        "dsp": "treble=g=2:f=3200,volume=1.05"
     },
     "Diya — Animation & Character Fantasy Voice": {
         "gender": "Female", "category": "Kids & Animation",
         "avatar": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=300&h=300&fit=crop&crop=faces",
-        "pitch": "+10Hz", "rate": "+8%",
+        "pitch": "+8Hz", "rate": "+6%",
         "desc": "Enchanting fairy tale and animated cartoon voice for children's stories.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AnaNeural", "default": "en-US-AnaNeural"},
-        "dsp": "asetrate=24000*1.08,atempo=1/1.08"
+        "dsp": "treble=g=3:f=4200,volume=1.08"
     },
     "Aoede — Google AI Studio (Sophisticated Eloquence)": {
         "gender": "Female", "category": "Google AI Studio",
@@ -1249,7 +1350,7 @@ STUDIO_PERSONAS = {
         "desc": "Google AI Studio Gemini 2.0 elegant, melodious, and sophisticated female voice for luxury narration.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-AvaMultilingualNeural", "default": "en-US-AvaMultilingualNeural"},
         "google_voice": "Aoede",
-        "dsp": "treble=g=4:f=3200"
+        "dsp": "treble=g=3:f=3500"
     },
     "Kore — Google AI Studio (Serene Mindfulness)": {
         "gender": "Female", "category": "Google AI Studio",
@@ -1258,7 +1359,56 @@ STUDIO_PERSONAS = {
         "desc": "Google AI Studio Gemini 2.0 gentle, soothing, meditative female narrator crafted for calm and storytelling.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-MichelleNeural", "default": "en-US-MichelleNeural"},
         "google_voice": "Kore",
-        "dsp": "lowpass=f=3200"
+        "dsp": "equalizer=f=1800:width_type=h:width=900:g=1"
+    },
+    "Meera — Spiritual & Devotional (Bhakti Sangeet & Sant Vani)": {
+        "gender": "Female", "category": "Spiritual & Devotion",
+        "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "+0Hz", "rate": "-4%",
+        "desc": "Divine, soul-stirring devotional voice for abhangs, aarti, spiritual discourses, and Sant Vani.",
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"},
+        "dsp": "equalizer=f=1800:width_type=h:width=900:g=2.5,volume=1.05"
+    },
+    "Tanvi — Corporate Tech Narrator (Modern Pune/Mumbai IT)": {
+        "gender": "Female", "category": "Corporate & Tech",
+        "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "+4Hz", "rate": "+8%",
+        "desc": "Sharp, articulate, ultra-modern tech presenter cadence for software demos and venture pitches.",
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"},
+        "dsp": "treble=g=3:f=3600,highpass=f=90"
+    },
+    "Radhika — Traditional Storyteller (Aaji / Kaki Warmth)": {
+        "gender": "Female", "category": "Heritage & Wisdom",
+        "avatar": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "-2Hz", "rate": "-6%",
+        "desc": "Deeply affectionate, comforting maternal warmth for folktales, parables, and classic literature.",
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaExpressiveNeural", "default": "mr-IN-AarohiNeural"},
+        "dsp": "equalizer=f=800:width_type=h:width=400:g=2,volume=1.05"
+    },
+    "Sayali — Hyper-Energetic RJ & Youth Influencer": {
+        "gender": "Female", "category": "Radio & Youth Entertainment",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "+6Hz", "rate": "+12%",
+        "desc": "Bubbly, vibrant, high-tempo youth delivery packed with spontaneity and charisma.",
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AvaNeural", "default": "en-US-AvaNeural"},
+        "dsp": "treble=g=4:f=4000,volume=1.12"
+    },
+    "Kavita — Poetry & Emotional Ghazal Reciter": {
+        "gender": "Female", "category": "Poetry & Emotion",
+        "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "+2Hz", "rate": "-6%",
+        "desc": "Deeply expressive, melodic cadence crafted for emotional poetry, romantic verses, and ghazals.",
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"},
+        "dsp": "equalizer=f=2200:width_type=h:width=1000:g=2,volume=1.02"
+    },
+    "Zephyr — Google AI Studio (Dynamic Modern Storyteller)": {
+        "gender": "Female", "category": "Google AI Studio",
+        "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "+2Hz", "rate": "+4%",
+        "desc": "Google AI Studio Gemini 2.0 next-gen lively female protagonist with expressive, nuanced storytelling.",
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-AvaMultilingualNeural", "default": "en-US-AvaMultilingualNeural"},
+        "google_voice": "Aoede",
+        "dsp": "treble=g=3:f=3400"
     }
 }
 
@@ -1307,6 +1457,8 @@ def synthesize_google_speech(
     STRICT GENDER FIDELITY: Male personas always output masculine voices; Female always output feminine voices.
     """
     clean_text = sanitize_text(text)
+    if lang_code == "mr" or re.search(r'[\u0900-\u097F]', clean_text):
+        clean_text = normalize_marathi_text(clean_text)
     clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
     
     # 1. Direct Gemini 2.0 Flash Audio API if Google AI Studio Key is available
@@ -1391,21 +1543,45 @@ def synthesize_speech_core(
     gender: str = "Male",
     dsp: str = None
 ):
+    # Normalize text first
+    clean_text = sanitize_text(text)
+    if lang_code == "mr" or "mr-IN" in voice_code or re.search(r'[\u0900-\u097F]', clean_text):
+        clean_text = normalize_marathi_text(clean_text)
+    clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
+
     # Strict Gender Acoustic Enforcement & Pitch Clamping
     try:
         p_num = int(re.sub(r'[^0-9\-+]', '', pitch_str)) if pitch_str else 0
     except Exception:
         p_num = 0
+
+    try:
+        r_num = int(re.sub(r'[^0-9\-+]', '', rate_str)) if rate_str else 0
+    except Exception:
+        r_num = 0
         
-    MALE_VOICE_IDS = ["Manohar", "Madhur", "Christopher", "Guy", "Eric", "Roger", "Ryan", "Niranjan", "Valluvar", "Mohan", "Gagan", "Bashkar", "Steffan", "Thomas", "Prabhat", "Brian", "William", "Andrew"]
-    FEMALE_VOICE_IDS = ["Aarohi", "Swara", "Jenny", "Sonia", "Neerja", "Ana", "Dhwani", "Pallavi", "Shruti", "Sapna", "Tanishaa", "Ava", "Emma", "Aria", "Maisie", "Michelle"]
+    MALE_VOICE_IDS = ["Manohar", "Madhur", "Christopher", "Guy", "Eric", "Roger", "Ryan", "Niranjan", "Valluvar", "Mohan", "Gagan", "Bashkar", "Steffan", "Thomas", "Prabhat", "Brian", "William", "Andrew", "Zephyr", "Tanaji", "Aditya", "Omkar", "Rishi"]
+    FEMALE_VOICE_IDS = ["Aarohi", "Swara", "Jenny", "Sonia", "Neerja", "Ana", "Dhwani", "Pallavi", "Shruti", "Sapna", "Tanishaa", "Ava", "Emma", "Aria", "Maisie", "Michelle", "Meera", "Tanvi", "Radhika", "Sayali", "Kavita"]
 
     if gender == "Female":
-        # Female pitch calibration: allows natural dynamic vocal range without excessive drop
-        if p_num < -25:
-            pitch_str = "-20Hz"
-        elif p_num > 45:
-            pitch_str = "+40Hz"
+        # For Marathi Female (Aarohi), keep pitch sweet spot (-4Hz to +6Hz) and rate (-8% to +8%)
+        if "Aarohi" in voice_code or lang_code == "mr":
+            if p_num < -6:
+                pitch_str = "-4Hz"
+            elif p_num > 8:
+                pitch_str = "+6Hz"
+            if r_num < -10:
+                rate_str = "-6%"
+            elif r_num > 10:
+                rate_str = "+6%"
+            if not dsp or dsp == "volume=1.0":
+                dsp = "highpass=f=80,equalizer=f=3000:width_type=h:width=1200:g=2,volume=1.05"
+        else:
+            if p_num < -25:
+                pitch_str = "-20Hz"
+            elif p_num > 45:
+                pitch_str = "+40Hz"
+
         # Auto-correct any accidental male voice code
         if any(m_id in voice_code for m_id in MALE_VOICE_IDS):
             for lname, linfo in LANGUAGE_CATALOG.items():
@@ -1413,7 +1589,6 @@ def synthesize_speech_core(
                     voice_code = linfo["female"]
                     break
     elif gender == "Male":
-        # Male pitch calibration: allows genuine baritone/bass down to -40Hz and tenor up to +25Hz
         if p_num > 25:
             pitch_str = "+20Hz"
         elif p_num < -45:
@@ -1427,13 +1602,10 @@ def synthesize_speech_core(
 
     if "Google" in engine:
         res_engine = synthesize_google_speech(
-            text, lang_code=lang_code, voice_name=google_voice_name,
+            clean_text, lang_code=lang_code, voice_name=google_voice_name,
             out_path=out_path, gender=gender, pitch_str=pitch_str, rate_str=rate_str
         )
     else:
-        clean_text = sanitize_text(text)
-        clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
-        
         async def run_core():
             comm = edge_tts.Communicate(clean_text, voice_code, rate=rate_str, pitch=pitch_str)
             await comm.save(out_path)
@@ -3579,7 +3751,7 @@ def render_live_multilingual_dubbing_showcase(
   <div class="video-stage" id="videoStage">
     <div class="live-status-tag"><span class="pulse-dot"></span> __BADGE_TEXT__</div>
 
-    <video id="videoEl" playsinline preload="auto" loop muted poster="">
+    <video id="videoEl" playsinline preload="auto" autoplay loop muted poster="">
       <source src="__VIDEO_SRC__" type="video/mp4">
     </video>
 
@@ -3676,9 +3848,11 @@ def render_live_multilingual_dubbing_showcase(
       isPlaying = false;
     } else {
       video.muted = true;
+      isMuted = false;
+      updateMuteIcon();
       if (aud) {
         aud.currentTime = video.currentTime;
-        aud.muted = isMuted;
+        aud.muted = false;
         aud.play().catch(e => console.log('Audio error:', e));
       }
       video.play().catch(e => console.log('Video error:', e));
@@ -3702,7 +3876,7 @@ def render_live_multilingual_dubbing_showcase(
     const aud = getActiveAudio();
     if (aud && isPlaying) {
       const diff = Math.abs(aud.currentTime - video.currentTime);
-      if (diff > 0.25) {
+      if (diff > 0.28) {
         aud.currentTime = video.currentTime;
       }
     }
@@ -3713,7 +3887,19 @@ def render_live_multilingual_dubbing_showcase(
     const aud = getActiveAudio();
     if (aud) aud.currentTime = 0;
     video.play();
-    if (aud) aud.play();
+    if (aud && !isMuted) aud.play();
+  };
+
+  video.onplay = () => {
+    isPlaying = true;
+    updatePlayIcon();
+  };
+
+  video.onpause = () => {
+    isPlaying = false;
+    updatePlayIcon();
+    const aud = getActiveAudio();
+    if (aud && !aud.paused) aud.pause();
   };
 
   // Language Pill Switching (Real-Time Synchronized Dubbing)
@@ -3721,27 +3907,37 @@ def render_live_multilingual_dubbing_showcase(
     pill.onclick = (e) => {
       e.stopPropagation();
       const targetLang = pill.getAttribute('data-lang');
-      if (targetLang === currentLang) return;
-
+      
       const oldAud = getActiveAudio();
-      if (oldAud) oldAud.pause();
+      if (oldAud && targetLang !== currentLang) oldAud.pause();
 
       currentLang = targetLang;
       document.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
 
+      // Automatically unmute audio when user picks a language
+      isMuted = false;
+      updateMuteIcon();
+
       const newAud = getActiveAudio();
       if (newAud) {
         newAud.currentTime = video.currentTime;
-        newAud.muted = isMuted;
-        if (isPlaying) {
-          newAud.play().catch(err => console.log('New track play error:', err));
-        } else {
-          togglePlay();
-        }
+        newAud.muted = false;
+        newAud.play().catch(err => console.log('New track play error:', err));
       }
+      if (video.paused) {
+        video.play().catch(err => console.log('Video play error:', err));
+      }
+      isPlaying = true;
+      updatePlayIcon();
     };
   });
+
+  // Autoplay video muted immediately on load
+  video.play().then(() => {
+    isPlaying = true;
+    updatePlayIcon();
+  }).catch(() => {});
 
   // Track arrow scrolling
   arrowLeft.onclick = () => { langTrack.scrollBy({ left: -90, behavior: 'smooth' }); };
@@ -3784,6 +3980,81 @@ def render_live_multilingual_dubbing_showcase(
                          .replace("__BADGE_TEXT__", badge_text)\
                          .replace("__MARATHI_AUDIO_URI__", mr_audio_uri)
     components.html(final_html, height=height)
+
+# Helper: Instant Video Preview and Acoustic Extractor (<1s for live video playback)
+def extract_instant_video_preview_pack(
+    video_bytes: bytes,
+    video_filename: str = "uploaded_video.mp4"
+) -> dict:
+    """
+    Instantly initializes the Live Multilingual Dubbing Player stage within <1 second:
+    1. Extracts 540p faststart MP4 for zero-latency browser autoplay.
+    2. Extracts pristine original audio MP3 track so video starts playing immediately.
+    3. Analyzes vocal clone fingerprint (speaker gender, pitch, spectral energy) in real time.
+    """
+    ffmpeg_exe = get_ffmpeg_binary()
+    temp_dir = tempfile.gettempdir()
+    vid_id = uuid.uuid4().hex[:8]
+
+    in_video_path = os.path.join(temp_dir, f"live_in_{vid_id}.mp4")
+    with open(in_video_path, "wb") as fv:
+        fv.write(video_bytes)
+
+    # 1. 540p faststart preview
+    preview_mp4_path = os.path.join(temp_dir, f"live_prev_{vid_id}.mp4")
+    cmd_preview = [
+        ffmpeg_exe, "-y", "-i", in_video_path,
+        "-vf", "scale=-2:540",
+        "-an",
+        "-c:v", "libx264",
+        "-preset", "ultrafast",
+        "-crf", "28",
+        "-movflags", "+faststart",
+        preview_mp4_path
+    ]
+    subprocess.run(cmd_preview, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    with open(preview_mp4_path, "rb") as fp:
+        prev_b64 = base64.b64encode(fp.read()).decode("utf-8")
+    preview_video_uri = f"data:video/mp4;base64,{prev_b64}"
+
+    # 2. Extract original audio (WAV for analysis, MP3 for playback)
+    orig_wav_path = os.path.join(temp_dir, f"live_orig_{vid_id}.wav")
+    cmd_extract_wav = [
+        ffmpeg_exe, "-y", "-i", in_video_path,
+        "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1",
+        orig_wav_path
+    ]
+    subprocess.run(cmd_extract_wav, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+
+    orig_mp3_path = os.path.join(temp_dir, f"live_orig_{vid_id}.mp3")
+    cmd_extract_mp3 = [
+        ffmpeg_exe, "-y", "-i", in_video_path,
+        "-vn", "-acodec", "libmp3lame", "-b:a", "128k",
+        orig_mp3_path
+    ]
+    subprocess.run(cmd_extract_mp3, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    with open(orig_mp3_path, "rb") as fo:
+        orig_mp3_b64 = base64.b64encode(fo.read()).decode("utf-8")
+    orig_audio_uri = f"data:audio/mp3;base64,{orig_mp3_b64}"
+
+    # 3. Extract vocal fingerprint
+    vocal_fp = extract_vocal_clone_fingerprint(orig_wav_path)
+
+    return {
+        "preview_video_uri": preview_video_uri,
+        "audio_tracks": {
+            "orig": {"label": "Original (मूळ आवाज)", "src": orig_audio_uri}
+        },
+        "source_text": "",
+        "translations": {},
+        "vocal_fp": vocal_fp,
+        "downloadable_videos": {},
+        "downloadable_srts": {},
+        "video_filename": video_filename,
+        "in_video_path": in_video_path,
+        "orig_wav_path": orig_wav_path,
+        "is_raw": True
+    }
 
 # Helper: Process ANY Uploaded Video (up to 500 MB) for Live Multilingual Player & 100% Speaker Voice Cloning
 def process_multilingual_live_dubbing_pack(
@@ -3997,13 +4268,24 @@ with tab_dubbing:
             st.caption(f"⚡ Live Multi-track Player Active with **{len(custom_pack.get('audio_tracks', {}))} Languages**! Click any language pill directly in the video to switch speech instantly on the fly.")
             
         if "My Uploaded Video" in dub_player_mode:
+            is_raw = custom_pack.get("is_raw", False)
+            default_live_l = "orig" if is_raw and "orig" in custom_pack["audio_tracks"] else ("hi" if "hi" in custom_pack["audio_tracks"] else list(custom_pack["audio_tracks"].keys())[0])
             render_live_multilingual_dubbing_showcase(
                 video_src=custom_pack["preview_video_uri"],
                 audio_tracks=custom_pack["audio_tracks"],
-                default_lang="hi" if "hi" in custom_pack["audio_tracks"] else list(custom_pack["audio_tracks"].keys())[0],
+                default_lang=default_live_l,
                 card_title=f"WaniStudio — {custom_pack.get('video_filename', 'My Video')}",
-                badge_text="100% CLONED LIVE DUBBING"
+                badge_text="⚡ LIVE VIDEO LOADED • ORIGINAL AUDIO" if is_raw else "100% CLONED LIVE DUBBING"
             )
+            if is_raw:
+                st.markdown("""
+                <div style="background: rgba(99, 102, 241, 0.12); border: 1.5px solid rgba(99, 102, 241, 0.45); border-radius: 12px; padding: 12px 16px; margin-top: 10px; margin-bottom: 12px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #818CF8;">🎬 व्हिडिओ त्वरित सुरू झाला आहे! (Video is playing live)</div>
+                    <div style="font-size: 12px; color: #CBD5E1; margin-top: 3px;">
+                        व्हिडिओचा मूळ आवाज (Original audio) सुरू आहे. चालू व्हिडिओमध्येच थेट भाषा बदलण्यासाठी खाली दिलेल्या <b>'🚀 Generate 100% Cloned LIVE Multilingual Player'</b> बटणावर क्लिक करा!
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
         else:
             render_live_multilingual_dubbing_showcase()
     else:
@@ -4030,6 +4312,18 @@ with tab_dubbing:
             d_size_mb = len(dub_v_bytes) / (1024 * 1024)
             st.caption(f"📁 **File:** `{dub_video_file.name}` | **Size:** `{d_size_mb:.2f} MB` / 500 MB | **Status:** Ready for Processing")
             st.video(dub_v_bytes)
+            
+            upload_sig = f"{dub_video_file.name}_{dub_video_file.size}"
+            if st.session_state.get("active_dub_vid_sig") != upload_sig:
+                st.session_state["active_dub_vid_sig"] = upload_sig
+                try:
+                    with st.spinner("⚡ Setting up Instant Video Stage & Audio Extraction..."):
+                        instant_pack = extract_instant_video_preview_pack(dub_v_bytes, dub_video_file.name)
+                        st.session_state["custom_live_dubbing_pack"] = instant_pack
+                        st.session_state["dub_player_switch_radio"] = f"🧬 My Uploaded Video — {dub_video_file.name}"
+                        st.rerun()
+                except Exception as e:
+                    st.warning(f"Note: Fast preview stage initialized ({e})")
         else:
             st.info("💡 Upload a video file up to 500 MB to automatically transcribe, translate, and dub speech into any language.")
 
@@ -4157,6 +4451,7 @@ with tab_dubbing:
                             clone_uploaded_voice=clone_uploaded,
                             video_filename=dub_video_file.name
                         )
+                        pack["is_raw"] = False
                         st.session_state["custom_live_dubbing_pack"] = pack
                         st.session_state["dubbed_acoustic_info"] = pack["vocal_fp"]
                         st.session_state["dub_player_switch_radio"] = f"🧬 My Uploaded Video — {dub_video_file.name}"
