@@ -2,5 +2,6 @@ mingit/
 mingit.zip
 cloudflared.exe
 *.mp3
+!marathi_showcase_dub.mp3
 __pycache__/
 .vscode/

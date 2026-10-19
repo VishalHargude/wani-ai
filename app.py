@@ -3195,10 +3195,576 @@ with tab_stt:
                 st.info("Text copied to Voice Studio! Switch to Tab 1 to generate speech.")
 
 # ==============================================================
+# LIVE MULTILINGUAL VIDEO DUBBING SHOWCASE COMPONENT
+# ==============================================================
+MARATHI_SHOWCASE_B64_CACHE = ""
+
+def get_marathi_showcase_data_uri() -> str:
+    global MARATHI_SHOWCASE_B64_CACHE
+    if MARATHI_SHOWCASE_B64_CACHE:
+        return MARATHI_SHOWCASE_B64_CACHE
+    mr_path = os.path.join(os.path.dirname(__file__), "marathi_showcase_dub.mp3")
+    if not os.path.exists(mr_path):
+        try:
+            mr_script = 'थांबा, म्हणजे खरंच तुम्ही लोकांनी घराच्या पाठीमागे संपूर्ण स्टेडियम तयार केलं? अहो हो, १०० टक्के खरं आहे! आम्ही तीन वर्षं सलग मेहनत करून ही अप्रतिम अ‍ॅरेना बनवली आहे!'
+            async def run_mr():
+                comm = edge_tts.Communicate(mr_script, 'mr-IN-ManoharNeural', pitch='+0Hz', rate='+10%')
+                await comm.save(mr_path)
+            asyncio.run(run_mr())
+        except Exception:
+            pass
+    if os.path.exists(mr_path):
+        try:
+            with open(mr_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+                MARATHI_SHOWCASE_B64_CACHE = f"data:audio/mp3;base64,{b64}"
+                return MARATHI_SHOWCASE_B64_CACHE
+        except Exception:
+            return ""
+    return ""
+
+def render_live_multilingual_dubbing_showcase():
+    mr_audio_uri = get_marathi_showcase_data_uri()
+    
+    html_tpl = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; user-select: none; }
+  body { background: transparent; overflow: hidden; padding: 8px; display: flex; justify-content: center; }
+  
+  .showcase-card {
+    background: #F1F3F6;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 26px;
+    padding: 16px 20px 16px 20px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.07);
+    width: 100%;
+    max-width: 920px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* Top Tabs Dock */
+  .top-tabs-dock {
+    display: flex;
+    align-items: center;
+    background: #E5E7EB;
+    border-radius: 9999px;
+    padding: 3.5px;
+    width: fit-content;
+    margin-bottom: 14px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .top-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 18px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4B5563;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .top-tab.active {
+    background: #FFFFFF;
+    color: #111827;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-orange { background: #EA580C; box-shadow: 0 0 6px rgba(234, 88, 12, 0.6); }
+  .dot-green { background: #10B981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.6); }
+  .dot-silver { background: #94A3B8; box-shadow: 0 0 6px rgba(148, 163, 184, 0.6); }
+
+  /* Video Stage Wrapper */
+  .video-stage {
+    position: relative;
+    width: 100%;
+    max-width: 740px;
+    aspect-ratio: 16 / 9;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #000000;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  }
+  .video-stage video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+  }
+
+  /* Sound Mute/Unmute Button (Top Right) */
+  .mute-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s ease;
+  }
+  .mute-btn:hover {
+    background: rgba(15, 23, 42, 0.85);
+    transform: scale(1.08);
+  }
+
+  /* Center Play/Pause Button */
+  .center-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .center-play-btn:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    background: rgba(15, 23, 42, 0.85);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.35);
+  }
+  .video-stage.is-playing .center-play-btn {
+    opacity: 0.15;
+  }
+  .video-stage.is-playing:hover .center-play-btn {
+    opacity: 1;
+  }
+
+  /* Bottom Language Overlay Bar inside video */
+  .lang-overlay-bar {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 5px 10px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    z-index: 20;
+    max-width: 92%;
+  }
+  .arrow-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 15px;
+    cursor: pointer;
+    padding: 4px 6px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+  }
+  .arrow-btn:hover { color: #FFFFFF; }
+
+  .lang-scroll-track {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+  }
+  .lang-scroll-track::-webkit-scrollbar { display: none; }
+
+  .lang-pill {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 5px 13px;
+    border-radius: 9999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .lang-pill:hover {
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.12);
+  }
+  .lang-pill.active {
+    background: #FFFFFF;
+    color: #0F172A;
+    font-weight: 700;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Bottom Feature Nav Bar */
+  .bottom-feature-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 820px;
+    margin-top: 14px;
+    padding: 2px 6px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .feature-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .feat-link {
+    background: transparent;
+    border: none;
+    color: #4B5563;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+  .feat-link:hover {
+    color: #0F172A;
+    background: rgba(0, 0, 0, 0.04);
+  }
+  .feat-link.active {
+    background: #FFFFFF;
+    color: #0F172A;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .signup-btn {
+    background: #000000;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 22px;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .signup-btn:hover {
+    background: #1F2937;
+    transform: scale(1.04);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Live dubbing status indicator tag */
+  .live-status-tag {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(16, 185, 129, 0.9);
+    color: #FFFFFF;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    backdrop-filter: blur(8px);
+    z-index: 20;
+    letter-spacing: 0.5px;
+  }
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    animation: livePulse 1.4s infinite;
+  }
+  @keyframes livePulse {
+    0% { opacity: 0.4; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0.4; transform: scale(0.8); }
+  }
+</style>
+</head>
+<body>
+
+<div class="showcase-card">
+  <!-- Top Tabs -->
+  <div class="top-tabs-dock">
+    <button class="top-tab active" id="tabCreative"><span class="dot dot-orange"></span> WaniCreative</button>
+    <button class="top-tab" id="tabAgents"><span class="dot dot-green"></span> WaniAgents</button>
+    <button class="top-tab" id="tabApi"><span class="dot dot-silver"></span> WaniAPI</button>
+  </div>
+
+  <!-- Video Stage -->
+  <div class="video-stage" id="videoStage">
+    <div class="live-status-tag"><span class="pulse-dot"></span> LIVE DUBBING</div>
+
+    <video id="videoEl" playsinline preload="auto" loop muted poster="https://eleven-public-cdn.elevenlabs.io/payloadcms/video-derived/6a184b41ff464f65c08e32c1/h264_720.mp4">
+      <source src="https://eleven-public-cdn.elevenlabs.io/payloadcms/video-derived/6a184b41ff464f65c08e32c1/h264_720.mp4" type="video/mp4">
+    </video>
+
+    <!-- Audio Tracks for Synchronized Live Dubbing -->
+    <audio id="audio_en" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/ny5ykdiwmb.mp3"></audio>
+    <audio id="audio_pt" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/ovfai5i88jd.mp3"></audio>
+    <audio id="audio_de" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/jicvfwkdre9.mp3"></audio>
+    <audio id="audio_it" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/nvbceiamt1.mp3"></audio>
+    <audio id="audio_hi" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/ckn43hcxbxu.mp3"></audio>
+    <audio id="audio_es" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/v9grnli26c.mp3"></audio>
+    <audio id="audio_mr" preload="auto" src="__MARATHI_AUDIO_URI__"></audio>
+
+    <!-- Sound Mute/Unmute -->
+    <button class="mute-btn" id="muteBtn" title="Toggle Audio Sound">
+      <svg id="volIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>
+    </button>
+
+    <!-- Center Play/Pause Button -->
+    <button class="center-play-btn" id="centerPlayBtn" title="Play / Pause Video">
+      <svg id="playIconSvg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+      </svg>
+    </button>
+
+    <!-- Language Overlay Bar Inside Video -->
+    <div class="lang-overlay-bar">
+      <button class="arrow-btn" id="arrowLeft">&lt;</button>
+      <div class="lang-scroll-track" id="langTrack">
+        <button class="lang-pill" data-lang="en">English</button>
+        <button class="lang-pill" data-lang="pt">Portuguese</button>
+        <button class="lang-pill" data-lang="de">German</button>
+        <button class="lang-pill" data-lang="it">Italian</button>
+        <button class="lang-pill active" data-lang="hi">Hindi</button>
+        <button class="lang-pill" data-lang="es">Spanish</button>
+        <button class="lang-pill" data-lang="mr">Marathi</button>
+      </div>
+      <button class="arrow-btn" id="arrowRight">&gt;</button>
+    </div>
+  </div>
+
+  <!-- Bottom Feature Nav Bar -->
+  <div class="bottom-feature-nav">
+    <div class="feature-group">
+      <button class="feat-link" onclick="handleNav('speech')">AI Voice Generator</button>
+      <button class="feat-link" onclick="handleNav('speech')">Text to Speech</button>
+      <button class="feat-link" onclick="handleNav('speech')">Music</button>
+      <button class="feat-link" onclick="handleNav('stt')">Speech to Text</button>
+      <button class="feat-link" onclick="handleNav('cloner')">Voice Cloning</button>
+      <button class="feat-link active" onclick="handleNav('dubbing')">Dubbing</button>
+    </div>
+    <button class="signup-btn" onclick="handleNav('auth')">Sign up</button>
+  </div>
+</div>
+
+<script>
+  const video = document.getElementById('videoEl');
+  const stage = document.getElementById('videoStage');
+  const playBtn = document.getElementById('centerPlayBtn');
+  const playIcon = document.getElementById('playIconSvg');
+  const muteBtn = document.getElementById('muteBtn');
+  const volIcon = document.getElementById('volIcon');
+  const langTrack = document.getElementById('langTrack');
+  const arrowLeft = document.getElementById('arrowLeft');
+  const arrowRight = document.getElementById('arrowRight');
+
+  let currentLang = 'hi';
+  let isPlaying = false;
+  let isMuted = false;
+
+  const audioTracks = {
+    'en': document.getElementById('audio_en'),
+    'pt': document.getElementById('audio_pt'),
+    'de': document.getElementById('audio_de'),
+    'it': document.getElementById('audio_it'),
+    'hi': document.getElementById('audio_hi'),
+    'es': document.getElementById('audio_es'),
+    'mr': document.getElementById('audio_mr')
+  };
+
+  function getActiveAudio() {
+    return audioTracks[currentLang] || audioTracks['hi'];
+  }
+
+  function updatePlayIcon() {
+    if (isPlaying) {
+      stage.classList.add('is-playing');
+      playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+    } else {
+      stage.classList.remove('is-playing');
+      playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+    }
+  }
+
+  function updateMuteIcon() {
+    if (isMuted) {
+      volIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
+    } else {
+      volIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+    }
+  }
+
+  function togglePlay() {
+    const aud = getActiveAudio();
+    if (isPlaying) {
+      video.pause();
+      if (aud) aud.pause();
+      isPlaying = false;
+    } else {
+      video.muted = true;
+      if (aud) {
+        aud.currentTime = video.currentTime;
+        aud.muted = isMuted;
+        aud.play().catch(e => console.log('Audio error:', e));
+      }
+      video.play().catch(e => console.log('Video error:', e));
+      isPlaying = true;
+    }
+    updatePlayIcon();
+  }
+
+  playBtn.onclick = togglePlay;
+  video.onclick = togglePlay;
+
+  muteBtn.onclick = () => {
+    isMuted = !isMuted;
+    const aud = getActiveAudio();
+    if (aud) aud.muted = isMuted;
+    updateMuteIcon();
+  };
+
+  // Keep Audio and Video Strictly Synchronized
+  video.ontimeupdate = () => {
+    const aud = getActiveAudio();
+    if (aud && isPlaying) {
+      const diff = Math.abs(aud.currentTime - video.currentTime);
+      if (diff > 0.25) {
+        aud.currentTime = video.currentTime;
+      }
+    }
+  };
+
+  video.onended = () => {
+    video.currentTime = 0;
+    const aud = getActiveAudio();
+    if (aud) aud.currentTime = 0;
+    video.play();
+    if (aud) aud.play();
+  };
+
+  // Language Pill Switching (Real-Time Synchronized Dubbing)
+  document.querySelectorAll('.lang-pill').forEach(pill => {
+    pill.onclick = (e) => {
+      e.stopPropagation();
+      const targetLang = pill.getAttribute('data-lang');
+      if (targetLang === currentLang) return;
+
+      const oldAud = getActiveAudio();
+      if (oldAud) oldAud.pause();
+
+      currentLang = targetLang;
+      document.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+
+      const newAud = getActiveAudio();
+      if (newAud) {
+        newAud.currentTime = video.currentTime;
+        newAud.muted = isMuted;
+        if (isPlaying) {
+          newAud.play().catch(err => console.log('New track play error:', err));
+        } else {
+          togglePlay();
+        }
+      }
+    };
+  });
+
+  // Track arrow scrolling
+  arrowLeft.onclick = () => { langTrack.scrollBy({ left: -90, behavior: 'smooth' }); };
+  arrowRight.onclick = () => { langTrack.scrollBy({ left: 90, behavior: 'smooth' }); };
+
+  // Top Tabs switching
+  ['tabCreative', 'tabAgents', 'tabApi'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.onclick = () => {
+        document.querySelectorAll('.top-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+      };
+    }
+  });
+
+  // Bottom Navigation handler
+  window.handleNav = function(target) {
+    document.querySelectorAll('.feat-link').forEach(el => el.classList.remove('active'));
+    if (event && event.target && event.target.classList.contains('feat-link')) {
+      event.target.classList.add('active');
+    }
+    // Smooth scroll down to custom upload engine if dubbing selected
+    if (target === 'dubbing') {
+      try {
+        window.parent.document.getElementById('dubbing-upload-anchor').scrollIntoView({ behavior: 'smooth' });
+      } catch(e) {}
+    }
+    window.parent.postMessage({ type: 'wani_nav', tab: target }, '*');
+  };
+</script>
+</body>
+</html>"""
+
+    final_html = html_tpl.replace("__MARATHI_AUDIO_URI__", mr_audio_uri)
+    components.html(final_html, height=590)
+
+# ==============================================================
 # TAB 3: AUTOMATIC AI VIDEO DUBBING STUDIO (UP TO 500 MB)
 # ==============================================================
 with tab_dubbing:
     st.markdown('<div class="studio-banner">🎬 AI Video Dubbing Studio — Automated Multilingual Video Dubbing with Audio Remuxing (Up to 500 MB)</div>', unsafe_allow_html=True)
+    
+    # 1. RENDER ELEVENLABS-STYLE LIVE MULTILINGUAL DUBBING SHOWCASE
+    render_live_multilingual_dubbing_showcase()
+    
+    st.markdown('<div id="dubbing-upload-anchor" style="margin-top: 24px;"></div>', unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("### 📤 Upload Your Own Custom Video to Dub (Up to 500 MB)")
+    st.caption("Upload any HD/4K video file (.mp4, .mov, .mkv, .avi, .webm) up to 500 MB to automatically transcribe, translate, and re-dub with 100% video speaker voice cloning.")
     
     col_dub_v1, col_dub_v2 = st.columns([1.2, 1])
     
