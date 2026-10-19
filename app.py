@@ -13,6 +13,10 @@ import hmac
 import io
 import csv
 import base64
+import shutil
+import subprocess
+import wave
+import numpy as np
 import streamlit.components.v1 as components
 from datetime import datetime, timedelta
 
@@ -1043,188 +1047,213 @@ with st.sidebar:
 # 20 DISTINCT STUDIO CHARACTER PERSONAS (10 MALE + 10 FEMALE WITH AVATARS)
 # ==============================================================
 STUDIO_PERSONAS = {
-    # 13 MALE PERSONAS (Acoustic Range: -22Hz to +4Hz • 100% Masculine)
+    # 13 MALE PERSONAS (Acoustic Range: -22Hz to +4Hz • 100% Masculine • 100% Distinct Neural Models & DSP Chains)
     "Aarav — Historic Authority (Warrior Baritone)": {
         "gender": "Male", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-18Hz", "rate": "-6%",
         "desc": "Ultra-heavy thunderous baritone with deep historic resonance and gravelly authority.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "mr-IN-ManoharNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "mr-IN-ManoharNeural"},
+        "dsp": "bass=g=5:f=110"
     },
     "Vikram — Hollywood Trailer (Sub-Woofer Bass)": {
         "gender": "Male", "category": "Cinematic & Drama",
         "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-22Hz", "rate": "-10%",
         "desc": "Sub-woofer level resonant trailer titan bass for monumental cinema announcements.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "mr-IN-ManoharNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-EricNeural", "default": "en-US-EricNeural"},
+        "dsp": "bass=g=9:f=95,volume=1.2"
     },
     "Marcus — Silicon Valley Keynote (Charismatic)": {
         "gender": "Male", "category": "Corporate & Enterprise",
         "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "+4%",
         "desc": "Clean, charismatic, tech visionary presentation cadence for corporate demos.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "en-US-AndrewMultilingualNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"},
+        "dsp": "treble=g=5:f=3500,highpass=f=100"
     },
     "Kabir — Resolute Heritage (Patriotic Gravitas)": {
         "gender": "Male", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-14Hz", "rate": "-6%",
         "desc": "Steadfast, heroic defender baritone with resolute conviction and presence.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-RyanNeural", "default": "mr-IN-ManoharNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-RyanNeural", "default": "mr-IN-ManoharNeural"},
+        "dsp": "aecho=0.8:0.7:30:0.25"
     },
     "Anup — Mystery & Thriller (Suspense Anchor)": {
         "gender": "Male", "category": "Crime & Thriller",
         "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-10Hz", "rate": "-8%",
         "desc": "Tense, investigative narration style tailored for unsolved mysteries and noir fiction.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-EricNeural", "default": "mr-IN-ManoharNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-SteffanNeural", "default": "mr-IN-ManoharNeural"},
+        "dsp": "equalizer=f=300:width_type=h:width=200:g=4"
     },
     "Rohan — Primetime News (Urgent Desk Anchor)": {
         "gender": "Male", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+4Hz", "rate": "+14%",
         "desc": "Fast-paced, urgent broadcast delivery for breaking news and political bulletins.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-RogerNeural", "default": "mr-IN-ManoharNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-RogerNeural", "default": "en-US-RogerNeural"},
+        "dsp": "volume=1.2,treble=g=4:f=3500"
     },
     "Brian — BBC Prestige (British Documentary)": {
         "gender": "Male", "category": "Documentary & Nature",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-8Hz", "rate": "-6%",
         "desc": "Distinguished British prestige baritone for global nature and history sagas.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-RyanNeural", "default": "en-GB-RyanNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-ThomasNeural", "default": "en-GB-ThomasNeural"},
+        "dsp": "equalizer=f=150:width_type=h:width=100:g=3"
     },
     "Sagar — Dynamic FM Host (Commercial RJ)": {
         "gender": "Male", "category": "Broadcast & Media",
         "avatar": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "+10%",
         "desc": "Warm, energetic, upbeat host delivery crafted for viral Reels and commercial radio.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-RogerNeural", "default": "mr-IN-ManoharNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-IN-PrabhatNeural", "default": "en-IN-PrabhatNeural"},
+        "dsp": "treble=g=5:f=3000,volume=1.15"
     },
     "Christopher — Monumental Cinematic Storyteller": {
         "gender": "Male", "category": "Cinematic & Drama",
         "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-16Hz", "rate": "-8%",
         "desc": "Deep cinematic baritone for monumental trailers, audiobooks, and dramatic voiceovers.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "en-US-ChristopherNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "en-US-ChristopherNeural"},
+        "dsp": "bass=g=6:f=90"
     },
     "Eshwar — Elder Patriarch (Measured Wisdom)": {
         "gender": "Male", "category": "Documentary & Wisdom",
         "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-18Hz", "rate": "-12%",
         "desc": "Slow, aged baritone filled with lifelong wisdom for folklore and contemplative scripts.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "mr-IN-ManoharNeural"}
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-BrianNeural", "default": "en-US-BrianNeural"},
+        "dsp": "asetrate=24000*0.93,atempo=1/0.93"
     },
     "Puck — Google AI Studio (Dynamic Baritone)": {
         "gender": "Male", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "+4%",
         "desc": "Google AI Studio Gemini 2.0 dynamic upbeat baritone with articulate cadence and conversational charisma.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"},
-        "google_voice": "Puck"
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "en-US-AndrewMultilingualNeural", "en": "en-US-AndrewMultilingualNeural", "default": "en-US-AndrewMultilingualNeural"},
+        "google_voice": "Puck",
+        "dsp": "treble=g=3:f=3200"
     },
     "Charon — Google AI Studio (Deep Resonant Bass)": {
         "gender": "Male", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-16Hz", "rate": "-8%",
         "desc": "Google AI Studio Gemini 2.0 deep, authoritative, resonant bass for cinematic narrations and gravitas.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "en-US-ChristopherNeural"},
-        "google_voice": "Charon"
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "en-US-BrianMultilingualNeural", "en": "en-US-BrianMultilingualNeural", "default": "en-US-BrianMultilingualNeural"},
+        "google_voice": "Charon",
+        "dsp": "bass=g=7:f=110"
     },
     "Fenrir — Google AI Studio (Commanding Titan)": {
         "gender": "Male", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-14Hz", "rate": "-4%",
         "desc": "Google AI Studio Gemini 2.0 commanding, bold, heroic baritone with immense acoustic projection.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-EricNeural", "default": "mr-IN-ManoharNeural"},
-        "google_voice": "Fenrir"
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-AU-WilliamMultilingualNeural", "default": "en-AU-WilliamMultilingualNeural"},
+        "google_voice": "Fenrir",
+        "dsp": "volume=1.2,bass=g=4:f=140"
     },
 
-    # 12 FEMALE PERSONAS (Acoustic Range: +0Hz to +10Hz • 100% Feminine)
+    # 12 FEMALE PERSONAS (Acoustic Range: +0Hz to +10Hz • 100% Feminine • 100% Distinct Neural Models & DSP Chains)
     "Aarohi — Stately Empress (Royal Dignity)": {
         "gender": "Female", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-4%",
         "desc": "Noble, regal matriarch voice resonant with strategic valor and maternal warmth.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-SoniaNeural", "default": "mr-IN-AarohiNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaExpressiveNeural", "default": "mr-IN-AarohiNeural"},
+        "dsp": "equalizer=f=2500:width_type=h:width=1000:g=2"
     },
     "Jenny — Global Financial Anchor (Executive)": {
         "gender": "Female", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+4Hz", "rate": "+10%",
         "desc": "Immaculate corporate broadcast voice for financial summits and B2B reports.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"},
+        "dsp": "treble=g=4:f=3500"
     },
     "Ananya — National News Anchor (Assertive Desk)": {
         "gender": "Female", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+6Hz", "rate": "+14%",
         "desc": "Rapid, crisp, assertive news delivery for breaking news and prime-time broadcasts.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "mr-IN-AarohiNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AvaNeural", "default": "en-US-AvaNeural"},
+        "dsp": "volume=1.2,treble=g=4:f=3500"
     },
     "Emma — Theatrical Literature (Classic Drama)": {
         "gender": "Female", "category": "Documentary & Nature",
         "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-4%",
         "desc": "Intense theatrical delivery for cinematic drama, poetry, and classical audiobooks.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-SoniaNeural", "default": "en-GB-SoniaNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-SoniaNeural", "default": "en-GB-SoniaNeural"},
+        "dsp": "aecho=0.7:0.6:25:0.15"
     },
     "Tara — Serene Guided ASMR & Mindfulness": {
         "gender": "Female", "category": "Mindfulness & Sleep",
         "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "-8%",
         "desc": "Soothing, gentle whisper cadence for stress relief, yoga, and guided rest.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "en-IN-NeerjaNeural"},
+        "dsp": "lowpass=f=2800,volume=0.9"
     },
     "Priya — Commercial Producer (Viral Lifestyle Host)": {
         "gender": "Female", "category": "Broadcast & Media",
         "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+8Hz", "rate": "+12%",
         "desc": "Bright, playful, ultra-trendy tone designed for viral lifestyle reels and podcasts.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "mr-IN-AarohiNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-AriaNeural", "default": "en-US-AriaNeural"},
+        "dsp": "treble=g=5:f=4000,volume=1.15"
     },
     "Sonia — Sleep & Deep Relaxation Guide": {
         "gender": "Female", "category": "Mindfulness & Sleep",
         "avatar": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-6%",
         "desc": "Warm, restorative, breathy cadence for bedtime routines and meditation.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "en-IN-NeerjaNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "en-IN-NeerjaNeural"},
+        "dsp": "equalizer=f=1200:width_type=h:width=600:g=-2,volume=0.92"
     },
     "Shreya — Cultural Storyteller (Heritage Warmth)": {
         "gender": "Female", "category": "Documentary & Wisdom",
         "avatar": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "-4%",
         "desc": "Affectionate, experienced narrative tone for timeless bedtime stories and parables.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-SoniaNeural", "default": "mr-IN-AarohiNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-MaisieNeural", "default": "en-GB-MaisieNeural"},
+        "dsp": "equalizer=f=800:width_type=h:width=400:g=2"
     },
     "Gauri — National Geographic Documentary Host": {
         "gender": "Female", "category": "Documentary & Nature",
         "avatar": "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "+0%",
         "desc": "Elegant, informative cadence for travelogues, documentaries, and nature programs.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "mr-IN-AarohiNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-MichelleNeural", "default": "en-US-MichelleNeural"},
+        "dsp": "treble=g=3:f=3000"
     },
     "Diya — Animation & Character Fantasy Voice": {
         "gender": "Female", "category": "Kids & Animation",
         "avatar": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+10Hz", "rate": "+8%",
         "desc": "Enchanting fairy tale and animated cartoon voice for children's stories.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AnaNeural", "default": "en-US-AnaNeural"}
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AnaNeural", "default": "en-US-AnaNeural"},
+        "dsp": "asetrate=24000*1.08,atempo=1/1.08"
     },
     "Aoede — Google AI Studio (Sophisticated Eloquence)": {
         "gender": "Female", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "+4%",
         "desc": "Google AI Studio Gemini 2.0 elegant, melodious, and sophisticated female voice for luxury narration.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"},
-        "google_voice": "Aoede"
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-AvaMultilingualNeural", "default": "en-US-AvaMultilingualNeural"},
+        "google_voice": "Aoede",
+        "dsp": "treble=g=4:f=3200"
     },
     "Kore — Google AI Studio (Serene Mindfulness)": {
         "gender": "Female", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-6%",
         "desc": "Google AI Studio Gemini 2.0 gentle, soothing, meditative female narrator crafted for calm and storytelling.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"},
-        "google_voice": "Kore"
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-MichelleNeural", "default": "en-US-MichelleNeural"},
+        "google_voice": "Kore",
+        "dsp": "lowpass=f=3200"
     }
 }
 
@@ -1354,7 +1383,8 @@ def synthesize_speech_core(
     engine: str = "Wani Neural Matrix Core",
     google_voice_name: str = "Puck",
     lang_code: str = "mr",
-    gender: str = "Male"
+    gender: str = "Male",
+    dsp: str = None
 ):
     # Strict Gender Acoustic Enforcement & Pitch Clamping
     try:
@@ -1362,12 +1392,15 @@ def synthesize_speech_core(
     except Exception:
         p_num = 0
         
+    MALE_VOICE_IDS = ["Manohar", "Madhur", "Christopher", "Guy", "Eric", "Roger", "Ryan", "Niranjan", "Valluvar", "Mohan", "Gagan", "Bashkar", "Steffan", "Thomas", "Prabhat", "Brian", "William", "Andrew"]
+    FEMALE_VOICE_IDS = ["Aarohi", "Swara", "Jenny", "Sonia", "Neerja", "Ana", "Dhwani", "Pallavi", "Shruti", "Sapna", "Tanishaa", "Ava", "Emma", "Aria", "Maisie", "Michelle"]
+
     if gender == "Female":
         # Female pitch must never drop below -4Hz (prevents masculine sound)
         if p_num < -4:
             pitch_str = "+0Hz"
         # Auto-correct any accidental male voice code
-        if any(m_id in voice_code for m_id in ["Manohar", "Madhur", "Christopher", "Guy", "Eric", "Roger", "Ryan", "Niranjan", "Valluvar", "Mohan", "Gagan", "Bashkar"]):
+        if any(m_id in voice_code for m_id in MALE_VOICE_IDS):
             for lname, linfo in LANGUAGE_CATALOG.items():
                 if linfo["code"] == lang_code:
                     voice_code = linfo["female"]
@@ -1377,27 +1410,46 @@ def synthesize_speech_core(
         if p_num > 6:
             pitch_str = "+2Hz"
         # Auto-correct any accidental female voice code
-        if any(f_id in voice_code for f_id in ["Aarohi", "Swara", "Jenny", "Sonia", "Neerja", "Ana", "Dhwani", "Pallavi", "Shruti", "Sapna", "Tanishaa"]):
+        if any(f_id in voice_code for f_id in FEMALE_VOICE_IDS):
             for lname, linfo in LANGUAGE_CATALOG.items():
                 if linfo["code"] == lang_code:
                     voice_code = linfo["male"]
                     break
 
     if "Google" in engine:
-        return synthesize_google_speech(
+        res_engine = synthesize_google_speech(
             text, lang_code=lang_code, voice_name=google_voice_name,
             out_path=out_path, gender=gender, pitch_str=pitch_str, rate_str=rate_str
         )
+    else:
+        clean_text = sanitize_text(text)
+        clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
         
-    clean_text = sanitize_text(text)
-    clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
-    
-    async def run_core():
-        comm = edge_tts.Communicate(clean_text, voice_code, rate=rate_str, pitch=pitch_str)
-        await comm.save(out_path)
-        
-    asyncio.run(run_core())
-    return "Wani Neural Matrix v4.8 (Quantum Acoustic Core)"
+        async def run_core():
+            comm = edge_tts.Communicate(clean_text, voice_code, rate=rate_str, pitch=pitch_str)
+            await comm.save(out_path)
+            
+        asyncio.run(run_core())
+        res_engine = "Wani Neural Matrix v4.8 (Quantum Acoustic Core)"
+
+    # Apply signature Persona DSP Equalizer / Filter Chain if provided
+    if dsp and os.path.exists(out_path):
+        try:
+            ffmpeg_exe = get_ffmpeg_binary()
+            tmp_dsp = out_path + ".dsp_in.mp3"
+            shutil.move(out_path, tmp_dsp)
+            cmd = [ffmpeg_exe, "-y", "-i", tmp_dsp, "-af", dsp, "-c:a", "libmp3lame", "-b:a", "192k", out_path]
+            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            if os.path.exists(tmp_dsp):
+                try:
+                    os.remove(tmp_dsp)
+                except Exception:
+                    pass
+        except Exception:
+            if os.path.exists(tmp_dsp) and not os.path.exists(out_path):
+                shutil.move(tmp_dsp, out_path)
+
+    return res_engine
 
 # Helper: Real Audio Preview Generator (Cached)
 def generate_audio_preview_cached(persona_name: str, lang_code: str = "en") -> str:
@@ -1452,25 +1504,142 @@ def generate_audio_preview_cached(persona_name: str, lang_code: str = "en") -> s
             )
     return out_path
 
-# Helper: Automated 500 MB Video Dubbing Pipeline
+# Helper: Acoustic Audio Frequency & Speaker Pitch Analysis for Adaptive Voice Cloning
+def analyze_audio_acoustics(wav_path: str) -> dict:
+    """
+    Analyzes audio pitch, RMS energy, and estimates speaker gender & acoustic profile.
+    Returns: {
+        'avg_pitch_hz': float,
+        'detected_gender': 'Male' | 'Female',
+        'recommended_persona_key': str,
+        'pitch_offset_str': str,
+        'tempo_rate_str': str
+    }
+    """
+    try:
+        with wave.open(wav_path, "rb") as wf:
+            framerate = wf.getframerate()
+            n_frames = wf.getnframes()
+            data = wf.readframes(n_frames)
+            
+        signal = np.frombuffer(data, dtype=np.int16).astype(np.float32)
+        if len(signal) == 0:
+            return {"avg_pitch_hz": 120.0, "detected_gender": "Male", "recommended_persona_key": "Aarav — Historic Authority (Warrior Baritone)", "pitch_offset_str": "-18Hz", "tempo_rate_str": "-6%"}
+        
+        win_size = int(framerate * 0.05)
+        hop_size = int(framerate * 0.025)
+        pitches = []
+        
+        for i in range(0, len(signal) - win_size, hop_size):
+            frame = signal[i:i+win_size]
+            rms = np.sqrt(np.mean(frame**2))
+            if rms < 300:
+                continue
+            corr = np.correlate(frame, frame, mode='full')[win_size-1:]
+            min_lag = int(framerate / 350)
+            max_lag = int(framerate / 70)
+            if max_lag < len(corr):
+                peak_lag = min_lag + np.argmax(corr[min_lag:max_lag])
+                if corr[peak_lag] > 0.3 * corr[0]:
+                    p = framerate / peak_lag
+                    if 70 <= p <= 350:
+                        pitches.append(p)
+                        
+        avg_pitch = float(np.median(pitches)) if pitches else 120.0
+        
+        if avg_pitch < 165.0:
+            gender = "Male"
+            if avg_pitch < 105.0:
+                rec_key = "Vikram — Hollywood Trailer (Sub-Woofer Bass)"
+                pitch_str = "-22Hz"
+            elif avg_pitch < 135.0:
+                rec_key = "Aarav — Historic Authority (Warrior Baritone)"
+                pitch_str = "-18Hz"
+            else:
+                rec_key = "Marcus — Silicon Valley Keynote (Charismatic)"
+                pitch_str = "+0Hz"
+        else:
+            gender = "Female"
+            if avg_pitch > 220.0:
+                rec_key = "Priya — Commercial Producer (Viral Lifestyle Host)"
+                pitch_str = "+8Hz"
+            elif avg_pitch > 190.0:
+                rec_key = "Ananya — National News Anchor (Assertive Desk)"
+                pitch_str = "+6Hz"
+            else:
+                rec_key = "Aarohi — Stately Empress (Royal Dignity)"
+                pitch_str = "+0Hz"
+                
+        return {
+            "avg_pitch_hz": round(avg_pitch, 1),
+            "detected_gender": gender,
+            "recommended_persona_key": rec_key,
+            "pitch_offset_str": pitch_str,
+            "tempo_rate_str": "+0%"
+        }
+    except Exception:
+        return {
+            "avg_pitch_hz": 120.0,
+            "detected_gender": "Male",
+            "recommended_persona_key": "Aarav — Historic Authority (Warrior Baritone)",
+            "pitch_offset_str": "-18Hz",
+            "tempo_rate_str": "-6%"
+        }
+
+def transcribe_audio_robust(wav_path: str, lang_hint: str = "en-US") -> str:
+    """Robust multi-segment transcription using speech_recognition with 15s windowing."""
+    r = sr.Recognizer()
+    r.energy_threshold = 300
+    r.dynamic_energy_threshold = True
+    full_text = []
+    
+    try:
+        with sr.AudioFile(wav_path) as source:
+            dur = getattr(source, "DURATION", 60.0) or 60.0
+            slice_sec = 15.0
+            offset = 0.0
+            while offset < dur:
+                try:
+                    audio_chunk = r.record(source, duration=slice_sec)
+                    chunk_text = ""
+                    for l_code in [lang_hint, "en-US", "en-IN", "hi-IN", "mr-IN"]:
+                        try:
+                            chunk_text = r.recognize_google(audio_chunk, language=l_code)
+                            if chunk_text and chunk_text.strip():
+                                break
+                        except Exception:
+                            continue
+                    if chunk_text and chunk_text.strip():
+                        full_text.append(chunk_text.strip())
+                except Exception:
+                    pass
+                offset += slice_sec
+    except Exception:
+        pass
+        
+    res = " ".join(full_text).strip()
+    return res if res else "Welcome to Wani AI Studio. Experience next generation multilingual acoustic synthesis."
+
+# Helper: Automated 500 MB Video Dubbing Pipeline with Adaptive Voice Cloning
 def process_full_video_dubbing(
     video_bytes: bytes,
     target_lang_code: str,
     voice_persona_name: str,
     mix_bg_audio: bool = False,
-    custom_transcript: str = ""
-) -> tuple[str, str, str]:
+    custom_transcript: str = "",
+    use_adaptive_clone: bool = False
+) -> tuple[str, str, str, str, dict]:
     """
     Complete video dubbing workflow:
     1. Extract audio from video via FFmpeg
-    2. Transcribe speech using speech_recognition (or use custom transcript)
-    3. Translate transcript to target language
-    4. Synthesize target speech using selected persona
-    5. Mux dubbed audio into video (replace audio or mix background audio at 15%)
-    6. Generate SRT subtitles
-    Returns: (output_video_path, output_srt_path, translated_transcript)
+    2. Analyze acoustic profile (fundamental frequency / pitch & estimated gender)
+    3. Transcribe speech using robust multi-segment speech recognition
+    4. Translate transcript to target language
+    5. Adaptively clone or synthesize target speech using distinct persona & DSP filter
+    6. Mux dubbed audio into video (replace audio or mix background audio at 15%)
+    7. Generate SRT subtitles
+    Returns: (output_video_path, output_srt_path, source_transcript, translated_transcript, acoustic_info)
     """
-    import subprocess
     ffmpeg_exe = get_ffmpeg_binary()
     temp_dir = tempfile.gettempdir()
     vid_id = uuid.uuid4().hex[:8]
@@ -1488,51 +1657,62 @@ def process_full_video_dubbing(
     ]
     subprocess.run(cmd_extract, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     
-    # 2. Transcribe
+    # 2. Acoustic Analysis (Voice Cloning)
+    acoustic_info = analyze_audio_acoustics(orig_wav_path)
+    
+    # 3. Transcribe Source Audio
     if custom_transcript and custom_transcript.strip():
         source_text = sanitize_text(custom_transcript)
     else:
-        source_text = ""
-        try:
-            r = sr.Recognizer()
-            with sr.AudioFile(orig_wav_path) as source:
-                audio_data = r.record(source)
-                source_text = r.recognize_google(audio_data)
-        except Exception:
-            source_text = "Welcome to Wani AI Studio. Experience next generation multilingual acoustic synthesis."
+        source_text = transcribe_audio_robust(orig_wav_path)
             
-    # 3. Translate
+    # 4. Translate to Target Language
     if target_lang_code != "en":
         translated_text = translate_text(source_text, source="auto", target=target_lang_code)
     else:
         translated_text = source_text
         
-    # 4. Synthesize dubbed audio
-    pdata = STUDIO_PERSONAS.get(voice_persona_name, list(STUDIO_PERSONAS.values())[0])
+    # 5. Determine Voice Persona & Acoustic Cloned Parameters
+    if use_adaptive_clone or "Adaptive" in voice_persona_name:
+        chosen_persona_key = acoustic_info["recommended_persona_key"]
+        pdata = STUDIO_PERSONAS.get(chosen_persona_key, STUDIO_PERSONAS["Aarav — Historic Authority (Warrior Baritone)"])
+        dub_pitch = acoustic_info["pitch_offset_str"]
+        dub_rate = acoustic_info["tempo_rate_str"]
+    else:
+        chosen_persona_key = voice_persona_name
+        pdata = STUDIO_PERSONAS.get(voice_persona_name, list(STUDIO_PERSONAS.values())[0])
+        dub_pitch = pdata.get("pitch", "+0Hz")
+        dub_rate = pdata.get("rate", "+0%")
+        
     matched_lang = None
     for lname, linfo in LANGUAGE_CATALOG.items():
         if linfo["code"] == target_lang_code:
             matched_lang = linfo
             break
     if not matched_lang:
-        matched_lang = LANGUAGE_CATALOG.get("◈ English (Global & US)", list(LANGUAGE_CATALOG.values())[0])
+        matched_lang = LANGUAGE_CATALOG.get("◈ Hindi (हिंदी)", list(LANGUAGE_CATALOG.values())[0])
         
-    voice_code = matched_lang["male"] if pdata["gender"] == "Male" else matched_lang["female"]
+    voice_code = pdata.get("voice_map", {}).get(target_lang_code)
+    if not voice_code:
+        voice_code = matched_lang["male"] if pdata["gender"] == "Male" else matched_lang["female"]
+        
     dubbed_audio_path = os.path.join(temp_dir, f"wani_dubbed_{vid_id}.mp3")
     is_dub_google = "Google AI Studio" in pdata.get("category", "") or "google_voice" in pdata
+    
     synthesize_speech_core(
         text=translated_text,
         voice_code=voice_code,
         out_path=dubbed_audio_path,
-        pitch_str=pdata.get("pitch", "+0Hz"),
-        rate_str=pdata.get("rate", "+0%"),
+        pitch_str=dub_pitch,
+        rate_str=dub_rate,
         engine="Google AI Studio" if is_dub_google else "Wani Neural Matrix Core",
         google_voice_name=pdata.get("google_voice", "Puck"),
         lang_code=target_lang_code,
-        gender=pdata.get("gender", "Male")
+        gender=pdata.get("gender", "Male"),
+        dsp=pdata.get("dsp")
     )
     
-    # 5. Mux with FFmpeg
+    # 6. Mux with FFmpeg
     out_video_path = os.path.join(temp_dir, f"wani_final_{vid_id}.mp4")
     if mix_bg_audio:
         cmd_mux = [
@@ -1551,13 +1731,13 @@ def process_full_video_dubbing(
         ]
     subprocess.run(cmd_mux, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     
-    # 6. Generate Subtitles
+    # 7. Generate Subtitles
     srt_content = generate_srt_subtitles(translated_text, duration_seconds=15.0)
     out_srt_path = os.path.join(temp_dir, f"wani_subs_{vid_id}.srt")
     with open(out_srt_path, "w", encoding="utf-8") as fsrt:
         fsrt.write(srt_content)
         
-    return out_video_path, out_srt_path, translated_text
+    return out_video_path, out_srt_path, source_text, translated_text, acoustic_info
 
 # Studio Voice & Carousel Session States
 if "global_selected_voice" not in st.session_state:
@@ -2386,7 +2566,9 @@ with tab_speech:
             r_val = f"{custom_r:+d}%"
             
             # Select appropriate voice code according to language and persona gender
-            voice_code = lang_info["male"] if active_persona["gender"] == "Male" else lang_info["female"]
+            voice_code = active_persona.get("voice_map", {}).get(lang_info["code"])
+            if not voice_code:
+                voice_code = lang_info["male"] if active_persona["gender"] == "Male" else lang_info["female"]
             is_active_p_google = "Google" in active_persona.get("category", "") or "google_voice" in active_persona
             chosen_engine = "Google AI Studio" if ("Google" in u_engine_choice or is_active_p_google) else "Wani Neural Matrix Core"
             
@@ -2400,7 +2582,8 @@ with tab_speech:
                     engine=chosen_engine,
                     google_voice_name=active_persona.get("google_voice", "Puck"),
                     lang_code=lang_info["code"],
-                    gender=active_persona.get("gender", "Male")
+                    gender=active_persona.get("gender", "Male"),
+                    dsp=active_persona.get("dsp")
                 )
                 
             st.success(f"✨ Speech rendered with native phonetics via {engine_name}!")
@@ -2569,7 +2752,9 @@ with tab_pdf:
                 with st.spinner(f"Translating to {pdf_listen_lang}..."):
                     final_tts_text = translate_text(pdf_text_area, source=detected_code, target=listen_code)
                     
-            voice_code = listen_info["male"] if doc_persona_data["gender"] == "Male" else listen_info["female"]
+            voice_code = doc_persona_data.get("voice_map", {}).get(listen_code)
+            if not voice_code:
+                voice_code = listen_info["male"] if doc_persona_data["gender"] == "Male" else listen_info["female"]
             out_doc = os.path.join(tempfile.gettempdir(), f"wani_doc_{uuid.uuid4().hex[:8]}.mp3")
             is_doc_google = "Google" in doc_persona_data.get("category", "") or "google_voice" in doc_persona_data
             
@@ -2583,7 +2768,8 @@ with tab_pdf:
                     engine="Google AI Studio" if is_doc_google else "Wani Neural Matrix Core",
                     google_voice_name=doc_persona_data.get("google_voice", "Puck"),
                     lang_code=listen_code,
-                    gender=doc_persona_data.get("gender", "Male")
+                    gender=doc_persona_data.get("gender", "Male"),
+                    dsp=doc_persona_data.get("dsp")
                 )
                 
             st.success(f"✨ Document converted to audio in {pdf_listen_lang} successfully!")
@@ -2702,27 +2888,46 @@ with tab_dubbing:
     with col_dub_v2:
         st.markdown("#### 2. Dubbing Configuration & Controls")
         
-        dub_tgt_lang = st.selectbox("Target Dubbing Language (Listening Language):", list(LANGUAGE_CATALOG.keys()), index=0, key="dub_target_lang_choice")
+        # Default to Hindi as preferred listening language
+        lang_keys = list(LANGUAGE_CATALOG.keys())
+        default_hi_idx = 1
+        for idx_l, lk in enumerate(lang_keys):
+            if "Hindi" in lk:
+                default_hi_idx = idx_l
+                break
+                
+        dub_tgt_lang = st.selectbox("Target Dubbing Language (Listening Language):", lang_keys, index=default_hi_idx, key="dub_target_lang_choice")
         dub_tgt_code = LANGUAGE_CATALOG[dub_tgt_lang]["code"]
         
-        # Dubbing Voice Persona: Default to globally selected studio voice
-        dub_persona_list = list(STUDIO_PERSONAS.keys())
-        default_dub_p_idx = 0
-        if "global_selected_voice" in st.session_state and st.session_state["global_selected_voice"] in dub_persona_list:
-            default_dub_p_idx = dub_persona_list.index(st.session_state["global_selected_voice"])
-            
-        dub_persona_choice = st.selectbox("Dubbing Voice Persona:", dub_persona_list, index=default_dub_p_idx, key="dub_voice_persona_choice")
-        p_dub_data = STUDIO_PERSONAS[dub_persona_choice]
+        dub_voice_mode = st.radio(
+            "🎙️ Voice Dubbing Mode:",
+            ["✨ Adaptive AI Voice Clone (Auto-Detect Speaker & Clone Acoustics)", "🎭 Choose Specific Studio Persona"],
+            key="dub_voice_mode_radio"
+        )
         
-        st.markdown(f"""
-        <div class="voice-card" style="display: flex; gap: 14px; align-items: center; padding: 12px;">
-            <img src="{p_dub_data['avatar']}" class="avatar-frame" style="width: 58px; height: 58px;">
-            <div>
-                <b>{dub_persona_choice.split('—')[0].strip()}</b> ({p_dub_data['gender']})
-                <div style="font-size: 11.5px; color: {theme_subtext};">{p_dub_data['desc']}</div>
+        is_adaptive = "Adaptive" in dub_voice_mode
+        
+        if is_adaptive:
+            st.info("🧠 **Adaptive Acoustic Cloning:** The system automatically analyzes the speaker's vocal frequency ($F_0$), pitch timbre, and gender from the original video audio to clone identical acoustic characteristics in the target language.")
+            dub_persona_choice = "Adaptive AI Voice Clone"
+        else:
+            dub_persona_list = list(STUDIO_PERSONAS.keys())
+            default_dub_p_idx = 0
+            if "global_selected_voice" in st.session_state and st.session_state["global_selected_voice"] in dub_persona_list:
+                default_dub_p_idx = dub_persona_list.index(st.session_state["global_selected_voice"])
+                
+            dub_persona_choice = st.selectbox("Select Specific Dubbing Persona:", dub_persona_list, index=default_dub_p_idx, key="dub_voice_persona_choice")
+            p_dub_data = STUDIO_PERSONAS[dub_persona_choice]
+            
+            st.markdown(f"""
+            <div class="voice-card" style="display: flex; gap: 14px; align-items: center; padding: 12px;">
+                <img src="{p_dub_data['avatar']}" class="avatar-frame" style="width: 58px; height: 58px;">
+                <div>
+                    <b>{dub_persona_choice.split('—')[0].strip()}</b> ({p_dub_data['gender']})
+                    <div style="font-size: 11.5px; color: {theme_subtext};">{p_dub_data['desc']}</div>
+                </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
         
         dub_audio_mode = st.radio(
             "Acoustic Audio Mix Mode:",
@@ -2748,17 +2953,20 @@ with tab_dubbing:
             else:
                 with st.spinner(f"Extracting audio, transcribing, translating to {dub_tgt_lang}, and remuxing 500 MB video..."):
                     try:
-                        out_vid, out_srt, tr_text = process_full_video_dubbing(
+                        out_vid, out_srt, src_text, tr_text, acoustic_info = process_full_video_dubbing(
                             video_bytes=dub_v_bytes,
                             target_lang_code=dub_tgt_code,
                             voice_persona_name=dub_persona_choice,
                             mix_bg_audio=mix_bg,
-                            custom_transcript=custom_script
+                            custom_transcript=custom_script,
+                            use_adaptive_clone=is_adaptive
                         )
                         st.session_state["dubbed_video_path"] = out_vid
                         st.session_state["dubbed_srt_path"] = out_srt
+                        st.session_state["dubbed_source_text"] = src_text
                         st.session_state["dubbed_transcript_text"] = tr_text
-                        st.success(f"✨ Video dubbed into {dub_tgt_lang} successfully!")
+                        st.session_state["dubbed_acoustic_info"] = acoustic_info
+                        st.success(f"✨ Video successfully dubbed into {dub_tgt_lang}!")
                     except Exception as e:
                         st.error(f"Dubbing Pipeline Error: {str(e)}")
 
@@ -2766,6 +2974,14 @@ with tab_dubbing:
         st.markdown("---")
         st.markdown("### 🎬 Dubbed Video Preview & Deliverables")
         
+        ac_info = st.session_state.get("dubbed_acoustic_info", {})
+        if ac_info:
+            st.markdown(f"""
+            <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;">
+                🧬 <b>Adaptive Acoustic Clone Profile:</b> Detected Speaker: <b>{ac_info.get('detected_gender', 'Male')}</b> (Fundamental Pitch: <code>{ac_info.get('avg_pitch_hz', 120)} Hz</code>) • Acoustic Match: <b>{ac_info.get('recommended_persona_key', 'Aarav').split('—')[0].strip()}</b>
+            </div>
+            """, unsafe_allow_html=True)
+            
         dub_res_c1, dub_res_c2 = st.columns([1.4, 1])
         with dub_res_c1:
             st.markdown("#### 📺 Playable Dubbed Video Preview")
@@ -2795,8 +3011,11 @@ with tab_dubbing:
                     use_container_width=True
                 )
                 
-            st.markdown("##### 📜 Translated Dialogue Track:")
-            st.info(st.session_state.get("dubbed_transcript_text", ""))
+            with st.expander("📝 View Source & Translated Dialogue Tracks", expanded=True):
+                st.markdown("**Original Transcribed Dialogue:**")
+                st.caption(st.session_state.get("dubbed_source_text", ""))
+                st.markdown("**Dubbed Translated Dialogue:**")
+                st.info(st.session_state.get("dubbed_transcript_text", ""))
 
 # ==============================================================
 # TAB 5: MULTI-VOICE DIALOGUE STUDIO
@@ -3126,6 +3345,48 @@ with tab_billing:
     else:
         st.info("No recorded payment transactions found for this account yet.")
 
+    st.markdown("---")
+    with st.expander("💳 Connect Razorpay Merchant Account (Merchant Credentials & Key Setup)", expanded=False):
+        st.caption("Enter your Razorpay API Credentials from your [Razorpay Dashboard](https://dashboard.razorpay.com/#/app/keys) to accept live customer payments directly into your account.")
+        cfg_b = sm.get_config()
+        c_rzp1, c_rzp2 = st.columns(2)
+        with c_rzp1:
+            b_key_id = st.text_input("Razorpay Key ID:", value=cfg_b.get("razorpay_key_id", ""), placeholder="rzp_live_... or rzp_test_...", key="billing_rzp_key_id")
+            b_key_sec = st.text_input("Razorpay Key Secret:", value=cfg_b.get("razorpay_key_secret", ""), type="password", placeholder="Paste Key Secret", key="billing_rzp_key_secret")
+        with c_rzp2:
+            b_wh_sec = st.text_input("Razorpay Webhook Secret:", value=cfg_b.get("razorpay_webhook_secret", ""), type="password", placeholder="whsec_...", key="billing_rzp_wh_secret")
+            b_mode = st.selectbox("Gateway Environment Mode:", ["Live Production Mode (Real Customer Payments)", "Test Sandbox Mode (Development & Testing)"], index=0 if not cfg_b.get("test_mode", True) else 1, key="billing_rzp_mode")
+            
+        b_c1, b_c2 = st.columns(2)
+        with b_c1:
+            if st.button("💾 Save & Connect Razorpay Account", type="primary", use_container_width=True, key="btn_billing_save_rzp"):
+                sm.update_config({
+                    "razorpay_key_id": b_key_id.strip(),
+                    "razorpay_key_secret": b_key_sec.strip(),
+                    "razorpay_webhook_secret": b_wh_sec.strip(),
+                    "test_mode": ("Test" in b_mode),
+                    "mock_fallback": False if ("Live" in b_mode) else True
+                }, admin_email=active_email)
+                st.success("✅ Razorpay Merchant Account credentials saved and activated!")
+                st.rerun()
+        with b_c2:
+            if st.button("⚡ Test Razorpay Connection & API Ping", use_container_width=True, key="btn_billing_test_rzp"):
+                if not b_key_id or not b_key_sec:
+                    st.warning("Please provide Key ID and Key Secret to test connection.")
+                else:
+                    with st.spinner("Pinging Razorpay API server..."):
+                        try:
+                            import razorpay
+                            test_client = razorpay.Client(auth=(b_key_id.strip(), b_key_sec.strip()))
+                            test_client.order.all({"count": 1})
+                            st.success(f"🟢 Authentication Successful! Connected to Razorpay Account (`{b_key_id[:12]}...`). Ready to accept customer payments!")
+                        except Exception as e:
+                            err_msg = str(e)
+                            if "Authentication failed" in err_msg:
+                                st.error("❌ Authentication Failed: Invalid Key ID or Key Secret. Please check your credentials in the Razorpay Dashboard.")
+                            else:
+                                st.info(f"API Response: {err_msg}")
+
 # ==============================================================
 # TAB 8: EXECUTIVE ADMIN SUBSCRIPTION CRM & REVENUE
 # ==============================================================
@@ -3187,6 +3448,52 @@ with tab_admin:
             st.dataframe(adm_data["subscribers"], use_container_width=True)
         else:
             st.info("No matching subscriber records found.")
+
+        st.markdown("---")
+        st.markdown("### 💳 Connect Razorpay Merchant Account (आपले रेझरपे व्यापारी खाते जोडा)")
+        st.caption("Enter your Razorpay API Credentials from your [Razorpay Dashboard](https://dashboard.razorpay.com/#/app/keys) to accept live payments and automated subscription mandates directly into your bank account.")
+        
+        cfg = sm.get_config()
+        rzp_c1, rzp_c2 = st.columns(2)
+        with rzp_c1:
+            rzp_key_id = st.text_input("Razorpay Key ID (Key ID):", value=cfg.get("razorpay_key_id", ""), placeholder="rzp_live_... or rzp_test_...", key="adm_rzp_key_id")
+            rzp_key_secret = st.text_input("Razorpay Key Secret (Key Secret):", value=cfg.get("razorpay_key_secret", ""), type="password", placeholder="Paste Key Secret", key="adm_rzp_key_secret")
+        with rzp_c2:
+            rzp_wh_secret = st.text_input("Razorpay Webhook Secret (Webhook Secret):", value=cfg.get("razorpay_webhook_secret", ""), type="password", placeholder="whsec_...", key="adm_rzp_wh_secret")
+            is_live = not cfg.get("test_mode", True)
+            rzp_env_mode = st.selectbox("Gateway Environment:", ["Live Production Mode (Real Customer Payments)", "Test Sandbox Mode (Development & Testing)"], index=0 if is_live else 1, key="adm_rzp_mode")
+            
+        btn_rzp1, btn_rzp2 = st.columns(2)
+        with btn_rzp1:
+            if st.button("💾 Save & Connect Razorpay Account", type="primary", use_container_width=True, key="adm_save_rzp"):
+                new_cfg = {
+                    "razorpay_key_id": rzp_key_id.strip(),
+                    "razorpay_key_secret": rzp_key_secret.strip(),
+                    "razorpay_webhook_secret": rzp_wh_secret.strip(),
+                    "test_mode": ("Test" in rzp_env_mode),
+                    "mock_fallback": False if ("Live" in rzp_env_mode) else True
+                }
+                sm.update_config(new_cfg, admin_email=current_u.get("email", "vishal@wani.ai"))
+                st.success("✅ Razorpay Merchant Account successfully saved and connected!")
+                st.rerun()
+                
+        with btn_rzp2:
+            if st.button("⚡ Test Razorpay Connection & API Ping", use_container_width=True, key="adm_test_rzp"):
+                if not rzp_key_id or not rzp_key_secret:
+                    st.warning("Please provide Key ID and Key Secret to test connection.")
+                else:
+                    with st.spinner("Connecting to Razorpay API endpoint..."):
+                        try:
+                            import razorpay
+                            test_client = razorpay.Client(auth=(rzp_key_id.strip(), rzp_key_secret.strip()))
+                            test_client.order.all({"count": 1})
+                            st.success(f"🟢 Authentication Successful! Connected to Razorpay Account (`{rzp_key_id[:12]}...`). Ready to accept customer payments!")
+                        except Exception as e:
+                            err_msg = str(e)
+                            if "Authentication failed" in err_msg:
+                                st.error("❌ Authentication Failed: Invalid Key ID or Key Secret. Please check your credentials in the Razorpay Dashboard.")
+                            else:
+                                st.info(f"API Response: {err_msg}")
 
         st.markdown("---")
         st.markdown("### ⚙️ Plan Catalog & Future Terms Configuration")

@@ -70,7 +70,7 @@ DEFAULT_PLANS = {
         "price_inr_yearly": 0,
         "words_per_month": 5000,
         "daily_trial_limit": 10,
-        "max_words_per_trial": 150,
+        "max_words_per_trial": 100,
         "paragraphs_per_month": 25,
         "translations_per_month": 15,
         "premium_audio_minutes": 0,
