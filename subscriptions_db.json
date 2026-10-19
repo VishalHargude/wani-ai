@@ -263,5 +263,32 @@
     "current_period_end": "2026-11-18T01:53:54.018009+05:30",
     "last_payment_id": "pay_http_8504",
     "last_payment_amount": 29900
+  },
+  "vishal@wani.ai": {
+    "user_email": "vishal@wani.ai",
+    "plan_code": "starter",
+    "billing_cycle": "yearly",
+    "locked_plan_terms": {
+      "price_inr": 2999,
+      "words_per_month": 50000,
+      "paragraphs_per_month": 100,
+      "translations_per_month": 50,
+      "premium_audio_minutes": 60
+    },
+    "razorpay_subscription_id": "sub_wani_starter_yearly_4c0c7b0c",
+    "razorpay_plan_id": "plan_starter_yearly",
+    "status": "created",
+    "current_period_start": "2026-10-19T02:08:47.748196+05:30",
+    "current_period_end": null,
+    "cancel_at_cycle_end": false,
+    "cancelled_at": null,
+    "failed_at": null,
+    "grace_period_expires_at": null,
+    "last_payment_status": "pending",
+    "last_payment_id": null,
+    "last_payment_amount": 299900,
+    "created_at": "2026-10-19T02:08:47.748196+05:30",
+    "updated_at": "2026-10-19T02:08:47.748196+05:30",
+    "last_event_timestamp": 1792355927
   }
 }

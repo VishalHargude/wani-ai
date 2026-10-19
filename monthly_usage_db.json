@@ -88,5 +88,15 @@
     "daily_trials_today": 0,
     "last_trial_date": "2026-10-19",
     "last_reset": "2026-10-19T01:53:54.018009+05:30"
+  },
+  "vishal@wani.ai": {
+    "period_start": "2026-10-19T02:07:57.056210+05:30",
+    "words_used": 34,
+    "paragraphs_used": 2,
+    "translations_used": 0,
+    "audio_minutes_used": 0.0,
+    "daily_trials_today": 2,
+    "last_trial_date": "2026-10-19",
+    "last_reset": "2026-10-19T02:07:57.056210+05:30"
   }
 }

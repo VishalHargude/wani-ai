@@ -298,5 +298,29 @@
     "event_type": "checkout.authorized",
     "timestamp": "2026-10-19T01:58:25.130466+05:30",
     "receipt_id": "REC-WANI-E6BDD704"
+  },
+  {
+    "payment_id": "pay_rzp_c4e2290c80",
+    "subscription_id": "sub_wani_starter_yearly_ba8ce364",
+    "user_email": "vishal@wani.ai",
+    "amount_inr": 2999.0,
+    "amount_paise": 299900,
+    "currency": "INR",
+    "status": "captured",
+    "event_type": "checkout.authorized",
+    "timestamp": "2026-10-19T02:02:24.669277+05:30",
+    "receipt_id": "REC-WANI-3F44DBCE"
+  },
+  {
+    "payment_id": "pay_rzp_5699d5a324",
+    "subscription_id": "sub_wani_starter_yearly_75f627f5",
+    "user_email": "vishal@wani.ai",
+    "amount_inr": 2999.0,
+    "amount_paise": 299900,
+    "currency": "INR",
+    "status": "captured",
+    "event_type": "checkout.authorized",
+    "timestamp": "2026-10-19T02:02:33.923072+05:30",
+    "receipt_id": "REC-WANI-679BAEA1"
   }
 ]

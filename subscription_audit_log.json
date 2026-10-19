@@ -346,5 +346,245 @@
     "user_email": "test_user_quota@wani.ai",
     "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
     "details": "Payment pay_q_1792355305 verified. Plan STARTER active until 2026-11-18T01:58:25.118862+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T02:01:36.275148+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_feee3364 (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T02:01:49.950027+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (monthly) checkout: sub_wani_starter_monthly_5697636f (₹299)"
+  },
+  {
+    "timestamp": "2026-10-19T02:01:53.839092+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_47bf6d25 (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T02:01:59.311125+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_42860fb2 (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T02:02:02.854065+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_a43bbab5 (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T02:02:05.144058+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created PRO (monthly) checkout: sub_wani_pro_monthly_696ae691 (₹699)"
+  },
+  {
+    "timestamp": "2026-10-19T02:02:06.346315+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_e42004e8 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:02:24.644851+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_ba8ce364 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:02:24.683412+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_rzp_c4e2290c80 verified. Plan STARTER active until 2027-10-19T02:02:24.667597+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T02:02:30.027592+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_f4250f82 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:02:33.902007+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_75f627f5 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:02:33.936967+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_ACTIVATED_VIA_CHECKOUT",
+    "details": "Payment pay_rzp_5699d5a324 verified. Plan STARTER active until 2027-10-19T02:02:33.920560+05:30"
+  },
+  {
+    "timestamp": "2026-10-19T02:02:39.163902+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_5be2f7ac (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:03:13.735599+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_cbcf49b0 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:03:19.782923+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_d0b8f762 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:03:40.350999+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_8b080678 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:03:50.423073+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_a21bbac1 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:04:49.370939+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_d03a5967 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:04:52.540733+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_0ae46524 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:04:53.954226+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_939b1b25 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:18.402051+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_38441203 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:21.760188+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_08a36193 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:23.283425+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_32a13790 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:23.487980+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_11c0fdaa (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:42.796322+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_b760437f (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:44.453090+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_9d576d91 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:44.518593+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "PLAN_CHANGE_REQUESTED",
+    "details": "From starter to starter (Cycle End: False)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:44.701975+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_9f2713c8 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:47.267781+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_020ba974 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:47.323806+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "PLAN_CHANGE_REQUESTED",
+    "details": "From starter to starter (Cycle End: False)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:47.519423+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_5517e212 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:53.604624+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_6c48aa76 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:56.221506+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_15d2ae56 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:57.015486+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_aed8a663 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:57.072048+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "PLAN_CHANGE_REQUESTED",
+    "details": "From starter to business (Cycle End: False)"
+  },
+  {
+    "timestamp": "2026-10-19T02:07:57.246775+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_068d65bc (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:08:05.356377+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_78eeefa2 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:08:34.627345+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_6f092f07 (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:08:37.651734+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_5cdc793f (₹2999)"
+  },
+  {
+    "timestamp": "2026-10-19T02:08:47.749984+05:30",
+    "user_email": "vishal@wani.ai",
+    "action": "SUBSCRIPTION_CHECKOUT_CREATED",
+    "details": "Created STARTER (yearly) checkout: sub_wani_starter_yearly_4c0c7b0c (₹2999)"
   }
 ]
