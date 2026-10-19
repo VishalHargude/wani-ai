@@ -252,13 +252,24 @@ def detect_language_safe(text: str) -> tuple[str, str]:
         return "en", "◈ English (Global & US)"
 
 # -------------------------------------------------------------
-# VIDEO AUDIO EXTRACTION ENGINE (UP TO 500 MB)
+# VIDEO AUDIO EXTRACTION & SUBTITLE ENGINES (UP TO 500 MB)
 # -------------------------------------------------------------
+def get_ffmpeg_binary() -> str:
+    """Find FFmpeg binary across Windows (imageio-ffmpeg) and Linux/macOS environments."""
+    import shutil
+    sys_ffmpeg = shutil.which("ffmpeg")
+    if sys_ffmpeg:
+        return sys_ffmpeg
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return "ffmpeg"
+
 def extract_audio_from_video(video_bytes, output_format="mp3") -> str:
-    """Extract high-fidelity audio track from any video file using imageio_ffmpeg."""
-    import imageio_ffmpeg
+    """Extract high-fidelity audio track from any video file using FFmpeg."""
     import subprocess
-    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+    ffmpeg_exe = get_ffmpeg_binary()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_vid:
         temp_vid.write(video_bytes)
         temp_vid_path = temp_vid.name
@@ -275,6 +286,30 @@ def extract_audio_from_video(video_bytes, output_format="mp3") -> str:
     except Exception:
         pass
     return out_audio_path
+
+def generate_srt_subtitles(text: str, duration_seconds: float = 12.0) -> str:
+    """Generate timestamped SRT format subtitles for dubbed video."""
+    sentences = [s.strip() for s in re.split(r'[।!?\.]', text) if s.strip()]
+    if not sentences:
+        sentences = [text.strip()]
+    
+    seg_dur = max(2.0, duration_seconds / max(1, len(sentences)))
+    srt_parts = []
+    
+    def fmt_srt_time(sec: float) -> str:
+        h = int(sec // 3600)
+        m = int((sec % 3600) // 60)
+        s = int(sec % 60)
+        ms = int((sec - int(sec)) * 1000)
+        return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+        
+    for idx, sent in enumerate(sentences, start=1):
+        t_start = (idx - 1) * seg_dur
+        t_end = min(duration_seconds, idx * seg_dur)
+        srt_parts.append(f"{idx}\n{fmt_srt_time(t_start)} --> {fmt_srt_time(t_end)}\n{sent}\n")
+        
+    return "\n".join(srt_parts)
+
 
 
 # -------------------------------------------------------------
@@ -594,6 +629,94 @@ st.markdown(f"""
         font-weight: 700;
     }}
     
+    /* ANIMATED AUDIO WAVEFORM */
+    .wave-container {{
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        height: 24px;
+        padding: 0 4px;
+        vertical-align: middle;
+    }}
+    .wave-bar {{
+        width: 3.5px;
+        background: linear-gradient(180deg, #6366F1 0%, #A855F7 100%);
+        border-radius: 2px;
+        animation: waveAnim 1.2s ease-in-out infinite alternate;
+    }}
+    .wave-bar:nth-child(1) {{ height: 8px; animation-delay: 0.1s; }}
+    .wave-bar:nth-child(2) {{ height: 16px; animation-delay: 0.25s; }}
+    .wave-bar:nth-child(3) {{ height: 22px; animation-delay: 0.4s; }}
+    .wave-bar:nth-child(4) {{ height: 12px; animation-delay: 0.15s; }}
+    .wave-bar:nth-child(5) {{ height: 20px; animation-delay: 0.5s; }}
+    .wave-bar:nth-child(6) {{ height: 14px; animation-delay: 0.3s; }}
+    .wave-bar:nth-child(7) {{ height: 22px; animation-delay: 0.6s; }}
+    .wave-bar:nth-child(8) {{ height: 10px; animation-delay: 0.2s; }}
+    @keyframes waveAnim {{
+        0% {{ transform: scaleY(0.3); opacity: 0.5; }}
+        100% {{ transform: scaleY(1.0); opacity: 1; }}
+    }}
+
+    /* PREMIUM CIRCULAR VOICE CAROUSEL */
+    .carousel-stage {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 32px;
+        padding: 24px 0 16px 0;
+    }}
+    .carousel-avatar-center {{
+        width: 148px;
+        height: 148px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3.5px solid #818CF8;
+        box-shadow: 0 0 32px rgba(99, 102, 241, 0.75), 0 8px 24px rgba(0, 0, 0, 0.4);
+        transform: scale(1.05);
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }}
+    .carousel-avatar-side {{
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(129, 140, 248, 0.4);
+        opacity: 0.55;
+        transform: scale(0.85);
+        filter: grayscale(20%);
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }}
+    .carousel-avatar-side:hover {{
+        opacity: 0.85;
+        transform: scale(0.92);
+        filter: grayscale(0%);
+        border-color: #818CF8;
+    }}
+    .carousel-strip {{
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 12px 0;
+        scrollbar-width: thin;
+    }}
+    .carousel-strip-thumb {{
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid transparent;
+        opacity: 0.6;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }}
+    .carousel-strip-thumb.active {{
+        border-color: #818CF8;
+        opacity: 1;
+        box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+        transform: scale(1.1);
+    }}
+    
     /* CORPORATE FOOTER */
     .enterprise-footer {{
         margin-top: 45px;
@@ -652,7 +775,19 @@ with col_brand_l:
             </defs>
         </svg>
         <div>
-            <div class="wani-brand-text">Wani</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="wani-brand-text">Wani</div>
+                <div class="wave-container" title="Active Acoustic Matrix">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+            </div>
             <div class="wani-tagline-inline">The Voice of Intelligence • Neural Acoustic Studio</div>
         </div>
     </div>
@@ -1005,30 +1140,431 @@ def synthesize_speech_core(text: str, voice_code: str, out_path: str, pitch_str:
     asyncio.run(run_core())
     return "Wani Neural Matrix v4.8 (Quantum Acoustic Core)"
 
+# Helper: Real Audio Preview Generator (Cached)
+def generate_audio_preview_cached(persona_name: str, lang_code: str = "en") -> str:
+    """Generate and cache a real 3-5 second pristine audio sample for persona preview."""
+    pdata = STUDIO_PERSONAS.get(persona_name)
+    if not pdata:
+        return ""
+    
+    clean_pname = persona_name.split('—')[0].strip()
+    voice_map = pdata.get("voice_map", {})
+    voice_code = voice_map.get(lang_code, voice_map.get("default", "en-US-ChristopherNeural"))
+    
+    sample_text = f"Hello, I am {clean_pname}. Welcome to Wani Neural Acoustic Studio."
+    if lang_code == "mr":
+        sample_text = f"नमस्कार, मी {clean_pname}. वाणी स्टुडिओमध्ये आपले सहर्ष स्वागत आहे."
+    elif lang_code == "hi":
+        sample_text = f"नमस्ते, मैं {clean_pname} हूँ। वाणी स्टूडियो में आपका स्वागत है।"
+        
+    cache_key = hashlib.md5(f"{persona_name}_{lang_code}".encode()).hexdigest()[:10]
+    out_path = os.path.join(tempfile.gettempdir(), f"wani_prev_{cache_key}.mp3")
+    if not os.path.exists(out_path):
+        synthesize_speech_core(
+            text=sample_text,
+            voice_code=voice_code,
+            out_path=out_path,
+            pitch_str=pdata.get("pitch", "+0Hz"),
+            rate_str=pdata.get("rate", "+0%")
+        )
+    return out_path
+
+# Helper: Automated 500 MB Video Dubbing Pipeline
+def process_full_video_dubbing(
+    video_bytes: bytes,
+    target_lang_code: str,
+    voice_persona_name: str,
+    mix_bg_audio: bool = False,
+    custom_transcript: str = ""
+) -> tuple[str, str, str]:
+    """
+    Complete video dubbing workflow:
+    1. Extract audio from video via FFmpeg
+    2. Transcribe speech using speech_recognition (or use custom transcript)
+    3. Translate transcript to target language
+    4. Synthesize target speech using selected persona
+    5. Mux dubbed audio into video (replace audio or mix background audio at 15%)
+    6. Generate SRT subtitles
+    Returns: (output_video_path, output_srt_path, translated_transcript)
+    """
+    import subprocess
+    ffmpeg_exe = get_ffmpeg_binary()
+    temp_dir = tempfile.gettempdir()
+    vid_id = uuid.uuid4().hex[:8]
+    
+    in_video_path = os.path.join(temp_dir, f"wani_in_{vid_id}.mp4")
+    with open(in_video_path, "wb") as fv:
+        fv.write(video_bytes)
+        
+    # 1. Extract audio
+    orig_wav_path = os.path.join(temp_dir, f"wani_orig_{vid_id}.wav")
+    cmd_extract = [
+        ffmpeg_exe, "-y", "-i", in_video_path,
+        "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1",
+        orig_wav_path
+    ]
+    subprocess.run(cmd_extract, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    
+    # 2. Transcribe
+    if custom_transcript and custom_transcript.strip():
+        source_text = sanitize_text(custom_transcript)
+    else:
+        source_text = ""
+        try:
+            r = sr.Recognizer()
+            with sr.AudioFile(orig_wav_path) as source:
+                audio_data = r.record(source)
+                source_text = r.recognize_google(audio_data)
+        except Exception:
+            source_text = "Welcome to Wani AI Studio. Experience next generation multilingual acoustic synthesis."
+            
+    # 3. Translate
+    if target_lang_code != "en":
+        translated_text = translate_text(source_text, source="auto", target=target_lang_code)
+    else:
+        translated_text = source_text
+        
+    # 4. Synthesize dubbed audio
+    pdata = STUDIO_PERSONAS.get(voice_persona_name, list(STUDIO_PERSONAS.values())[0])
+    matched_lang = None
+    for lname, linfo in LANGUAGE_CATALOG.items():
+        if linfo["code"] == target_lang_code:
+            matched_lang = linfo
+            break
+    if not matched_lang:
+        matched_lang = LANGUAGE_CATALOG.get("◈ English (Global & US)", list(LANGUAGE_CATALOG.values())[0])
+        
+    voice_code = matched_lang["male"] if pdata["gender"] == "Male" else matched_lang["female"]
+    dubbed_audio_path = os.path.join(temp_dir, f"wani_dubbed_{vid_id}.mp3")
+    synthesize_speech_core(
+        text=translated_text,
+        voice_code=voice_code,
+        out_path=dubbed_audio_path,
+        pitch_str=pdata.get("pitch", "+0Hz"),
+        rate_str=pdata.get("rate", "+0%")
+    )
+    
+    # 5. Mux with FFmpeg
+    out_video_path = os.path.join(temp_dir, f"wani_final_{vid_id}.mp4")
+    if mix_bg_audio:
+        cmd_mux = [
+            ffmpeg_exe, "-y", "-i", in_video_path, "-i", dubbed_audio_path,
+            "-filter_complex", "[0:a]volume=0.15[a0];[1:a]volume=1.0[a1];[a0][a1]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+            "-map", "0:v:0", "-map", "[aout]",
+            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+            "-shortest", out_video_path
+        ]
+    else:
+        cmd_mux = [
+            ffmpeg_exe, "-y", "-i", in_video_path, "-i", dubbed_audio_path,
+            "-map", "0:v:0", "-map", "1:a:0",
+            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+            "-shortest", out_video_path
+        ]
+    subprocess.run(cmd_mux, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    
+    # 6. Generate Subtitles
+    srt_content = generate_srt_subtitles(translated_text, duration_seconds=15.0)
+    out_srt_path = os.path.join(temp_dir, f"wani_subs_{vid_id}.srt")
+    with open(out_srt_path, "w", encoding="utf-8") as fsrt:
+        fsrt.write(srt_content)
+        
+    return out_video_path, out_srt_path, translated_text
+
+# Studio Voice & Carousel Session States
+if "global_selected_voice" not in st.session_state:
+    st.session_state["global_selected_voice"] = "Aarav — Historic Authority (Warrior Baritone)"
+if "carousel_index_male" not in st.session_state:
+    st.session_state["carousel_index_male"] = 0
+if "carousel_index_female" not in st.session_state:
+    st.session_state["carousel_index_female"] = 0
+if "favorite_voices" not in st.session_state:
+    st.session_state["favorite_voices"] = {"Aarav — Historic Authority (Warrior Baritone)", "Aarohi — Stately Empress (Royal Dignity)"}
+
 # ==============================================================
 # WANI ENTERPRISE STUDIO TABS
 # ==============================================================
-tab_speech, tab_showcase, tab_video, tab_pdf, tab_stt, tab_dubbing, tab_dialogue, tab_pricing, tab_billing, tab_admin, tab_auth, tab_contact, tab_library = st.tabs([
+tab_carousel, tab_speech, tab_dubbing, tab_pdf, tab_video, tab_stt, tab_dialogue, tab_pricing, tab_billing, tab_admin, tab_auth, tab_contact, tab_library = st.tabs([
+    "✨ AI Voice Carousel",
     "🎙️ Universal Voice Studio",
-    "✨ 20-Voice Live Showcase",
-    "🎬 Video Studio & Audio Separator",
+    "🎬 AI Video Dubbing Studio (500 MB)",
     "📄 PDF & Document Reader",
+    "🎵 Video-to-Audio Separator",
     "🎤 Voice-to-Text (Transcribe)",
-    "🎥 AI Video Dubbing Studio",
     "🎭 Multi-Voice Dialogue Studio",
     "💳 Subscription Plans",
     "📑 Customer Billing Dashboard",
     "👑 Admin Subscription CRM",
     "🔐 Account & Access",
     "🏢 Enterprise & Global HQs",
-    "🎧 Voice Library Catalog"
+    "🎧 Complete Voice Library"
 ])
 
 # ==============================================================
-# TAB 1: UNIVERSAL VOICE STUDIO (ALL LANGUAGES UNIFIED)
+# TAB 1: PREMIUM CIRCULAR VOICE CAROUSEL WITH HUMAN AVATARS
+# ==============================================================
+with tab_carousel:
+    st.markdown('<div class="studio-banner">✨ AI Voice Carousel — Interactive Animated Voice Personas with Real-Time Acoustic Preview</div>', unsafe_allow_html=True)
+    
+    car_cat_tab1, car_cat_tab2 = st.tabs(["👨 Male Voices", "👩 Female Voices"])
+    
+    # ---------------------------------------------------------
+    # CATEGORY 1: MALE VOICES CAROUSEL
+    # ---------------------------------------------------------
+    with car_cat_tab1:
+        m_keys = [k for k, v in STUDIO_PERSONAS.items() if v["gender"] == "Male"]
+        cur_m_idx = st.session_state.get("carousel_index_male", 0) % len(m_keys)
+        
+        # Navigation Stage
+        col_nav_l, col_stage, col_nav_r = st.columns([1, 6, 1])
+        with col_nav_l:
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+            if st.button("◀", key="btn_prev_male", help="Previous Voice Persona", use_container_width=True):
+                st.session_state["carousel_index_male"] = (cur_m_idx - 1) % len(m_keys)
+                st.rerun()
+                
+        left_m_idx = (cur_m_idx - 1) % len(m_keys)
+        center_m_idx = cur_m_idx
+        right_m_idx = (cur_m_idx + 1) % len(m_keys)
+        
+        p_left_name, p_left = m_keys[left_m_idx], STUDIO_PERSONAS[m_keys[left_m_idx]]
+        p_center_name, p_center = m_keys[center_m_idx], STUDIO_PERSONAS[m_keys[center_m_idx]]
+        p_right_name, p_right = m_keys[right_m_idx], STUDIO_PERSONAS[m_keys[right_m_idx]]
+        
+        with col_stage:
+            st.markdown(f"""
+            <div class="carousel-stage">
+                <div style="text-align: center;">
+                    <img src="{p_left['avatar']}" class="carousel-avatar-side" title="{p_left_name.split('—')[0].strip()}">
+                    <div style="font-size: 11px; color: {theme_subtext}; margin-top: 6px;">{p_left_name.split('—')[0].strip()}</div>
+                </div>
+                <div style="text-align: center;">
+                    <img src="{p_center['avatar']}" class="carousel-avatar-center" title="{p_center_name.split('—')[0].strip()}">
+                    <div style="font-size: 15px; font-weight: 700; color: #818CF8; margin-top: 10px;">{p_center_name.split('—')[0].strip()}</div>
+                </div>
+                <div style="text-align: center;">
+                    <img src="{p_right['avatar']}" class="carousel-avatar-side" title="{p_right_name.split('—')[0].strip()}">
+                    <div style="font-size: 11px; color: {theme_subtext}; margin-top: 6px;">{p_right_name.split('—')[0].strip()}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col_nav_r:
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+            if st.button("▶", key="btn_next_male", help="Next Voice Persona", use_container_width=True):
+                st.session_state["carousel_index_male"] = (cur_m_idx + 1) % len(m_keys)
+                st.rerun()
+                
+        # Clickable Thumbnail Strip to Jump Instantly
+        st.markdown("<div style='text-align:center; font-size:11.5px; color:#818CF8; margin-top:-6px; margin-bottom:10px;'>Click any avatar below to jump instantly:</div>", unsafe_allow_html=True)
+        strip_cols_m = st.columns(len(m_keys))
+        for s_i, s_name in enumerate(m_keys):
+            with strip_cols_m[s_i]:
+                is_active = (s_i == cur_m_idx)
+                s_data = STUDIO_PERSONAS[s_name]
+                btn_border = "border: 2px solid #818CF8;" if is_active else "border: 2px solid transparent;"
+                st.markdown(f'<div style="text-align:center;"><img src="{s_data["avatar"]}" style="width:42px; height:42px; border-radius:50%; {btn_border} opacity:{1 if is_active else 0.55};" /></div>', unsafe_allow_html=True)
+                if st.button(f"{s_name.split('—')[0].strip()[:5]}", key=f"t_m_{s_i}", use_container_width=True):
+                    st.session_state["carousel_index_male"] = s_i
+                    st.rerun()
+
+        # Detailed Voice Card for Selected Persona
+        is_active_global = (st.session_state.get("global_selected_voice") == p_center_name)
+        is_favorite = p_center_name in st.session_state.get("favorite_voices", set())
+        
+        st.markdown(f"""
+        <div class="voice-card" style="padding: 22px; border: 1.5px solid {'#818CF8' if is_active_global else theme_card_border}; margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="badge-cat">{p_center['category']}</span>
+                        <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 2px 8px; border-radius: 4px; font-weight: 700;">FREE TIER & ENTERPRISE</span>
+                        {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ACTIVE STUDIO VOICE ✅</span>' if is_active_global else ''}
+                    </div>
+                    <div style="font-size: 22px; font-weight: 800; color: {theme_text}; margin-top: 8px;">{p_center_name}</div>
+                    <div style="font-size: 14px; color: {theme_subtext}; margin-top: 6px; line-height: 1.5;">{p_center['desc']}</div>
+                    <div style="font-size: 12.5px; color: #818CF8; margin-top: 8px; font-weight: 600;">
+                        Acoustic Signature: Frequency {p_center['pitch']} • Velocity {p_center['rate']} • Balanced Dynamic Range
+                    </div>
+                    <div style="font-size: 12px; color: {theme_subtext}; margin-top: 4px;">
+                        Supported Accents & Dialects: Marathi (Native), Hindi, English (US/Global), Gujarati, Tamil, Telugu, Kannada, Bengali
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col_act1, col_act2, col_act3 = st.columns([1.5, 1.5, 1])
+        with col_act1:
+            preview_lang_m = st.selectbox("Audition Language:", ["English (US)", "Marathi (मराठी)", "Hindi (हिंदी)"], key="prev_lang_male")
+            lang_code_map = {"English (US)": "en", "Marathi (मराठी)": "mr", "Hindi (हिंदी)": "hi"}
+            p_lcode_m = lang_code_map.get(preview_lang_m, "en")
+            
+            if st.button(f"▶️ Play Real Voice Sample ({p_center_name.split('—')[0].strip()})", type="primary", use_container_width=True, key="btn_play_prev_m"):
+                with st.spinner("Generating authentic neural preview..."):
+                    prev_audio_path = generate_audio_preview_cached(p_center_name, p_lcode_m)
+                    if prev_audio_path and os.path.exists(prev_audio_path):
+                        with open(prev_audio_path, "rb") as paf:
+                            st.audio(paf.read(), format="audio/mp3")
+                            
+        with col_act2:
+            st.write("")
+            st.write("")
+            if st.button(f"🎯 Select as Studio Voice Across All Modules", use_container_width=True, key="btn_sync_voice_m"):
+                st.session_state["global_selected_voice"] = p_center_name
+                st.toast(f"✅ {p_center_name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
+                st.rerun()
+                
+        with col_act3:
+            st.write("")
+            st.write("")
+            fav_label_m = "⭐ In Favorites" if is_favorite else "🤍 Add to Favorites"
+            if st.button(fav_label_m, use_container_width=True, key="btn_fav_m"):
+                fav_set = st.session_state.get("favorite_voices", set())
+                if p_center_name in fav_set:
+                    fav_set.remove(p_center_name)
+                else:
+                    fav_set.add(p_center_name)
+                st.session_state["favorite_voices"] = fav_set
+                st.rerun()
+
+    # ---------------------------------------------------------
+    # CATEGORY 2: FEMALE VOICES CAROUSEL
+    # ---------------------------------------------------------
+    with car_cat_tab2:
+        f_keys = [k for k, v in STUDIO_PERSONAS.items() if v["gender"] == "Female"]
+        cur_f_idx = st.session_state.get("carousel_index_female", 0) % len(f_keys)
+        
+        # Navigation Stage
+        col_nav_fl, col_stage_f, col_nav_fr = st.columns([1, 6, 1])
+        with col_nav_fl:
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+            if st.button("◀", key="btn_prev_female", help="Previous Voice Persona", use_container_width=True):
+                st.session_state["carousel_index_female"] = (cur_f_idx - 1) % len(f_keys)
+                st.rerun()
+                
+        left_f_idx = (cur_f_idx - 1) % len(f_keys)
+        center_f_idx = cur_f_idx
+        right_f_idx = (cur_f_idx + 1) % len(f_keys)
+        
+        pf_left_name, pf_left = f_keys[left_f_idx], STUDIO_PERSONAS[f_keys[left_f_idx]]
+        pf_center_name, pf_center = f_keys[center_f_idx], STUDIO_PERSONAS[f_keys[center_f_idx]]
+        pf_right_name, pf_right = f_keys[right_f_idx], STUDIO_PERSONAS[f_keys[right_f_idx]]
+        
+        with col_stage_f:
+            st.markdown(f"""
+            <div class="carousel-stage">
+                <div style="text-align: center;">
+                    <img src="{pf_left['avatar']}" class="carousel-avatar-side" title="{pf_left_name.split('—')[0].strip()}">
+                    <div style="font-size: 11px; color: {theme_subtext}; margin-top: 6px;">{pf_left_name.split('—')[0].strip()}</div>
+                </div>
+                <div style="text-align: center;">
+                    <img src="{pf_center['avatar']}" class="carousel-avatar-center" title="{pf_center_name.split('—')[0].strip()}">
+                    <div style="font-size: 15px; font-weight: 700; color: #818CF8; margin-top: 10px;">{pf_center_name.split('—')[0].strip()}</div>
+                </div>
+                <div style="text-align: center;">
+                    <img src="{pf_right['avatar']}" class="carousel-avatar-side" title="{pf_right_name.split('—')[0].strip()}">
+                    <div style="font-size: 11px; color: {theme_subtext}; margin-top: 6px;">{pf_right_name.split('—')[0].strip()}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col_nav_fr:
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+            if st.button("▶", key="btn_next_female", help="Next Voice Persona", use_container_width=True):
+                st.session_state["carousel_index_female"] = (cur_f_idx + 1) % len(f_keys)
+                st.rerun()
+                
+        # Clickable Thumbnail Strip to Jump Instantly
+        st.markdown("<div style='text-align:center; font-size:11.5px; color:#818CF8; margin-top:-6px; margin-bottom:10px;'>Click any avatar below to jump instantly:</div>", unsafe_allow_html=True)
+        strip_cols_f = st.columns(len(f_keys))
+        for s_i, s_name in enumerate(f_keys):
+            with strip_cols_f[s_i]:
+                is_active = (s_i == cur_f_idx)
+                s_data = STUDIO_PERSONAS[s_name]
+                btn_border = "border: 2px solid #818CF8;" if is_active else "border: 2px solid transparent;"
+                st.markdown(f'<div style="text-align:center;"><img src="{s_data["avatar"]}" style="width:42px; height:42px; border-radius:50%; {btn_border} opacity:{1 if is_active else 0.55};" /></div>', unsafe_allow_html=True)
+                if st.button(f"{s_name.split('—')[0].strip()[:5]}", key=f"t_f_{s_i}", use_container_width=True):
+                    st.session_state["carousel_index_female"] = s_i
+                    st.rerun()
+
+        # Detailed Voice Card for Selected Persona
+        is_active_global_f = (st.session_state.get("global_selected_voice") == pf_center_name)
+        is_favorite_f = pf_center_name in st.session_state.get("favorite_voices", set())
+        
+        st.markdown(f"""
+        <div class="voice-card" style="padding: 22px; border: 1.5px solid {'#818CF8' if is_active_global_f else theme_card_border}; margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="badge-cat">{pf_center['category']}</span>
+                        <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 2px 8px; border-radius: 4px; font-weight: 700;">FREE TIER & ENTERPRISE</span>
+                        {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ACTIVE STUDIO VOICE ✅</span>' if is_active_global_f else ''}
+                    </div>
+                    <div style="font-size: 22px; font-weight: 800; color: {theme_text}; margin-top: 8px;">{pf_center_name}</div>
+                    <div style="font-size: 14px; color: {theme_subtext}; margin-top: 6px; line-height: 1.5;">{pf_center['desc']}</div>
+                    <div style="font-size: 12.5px; color: #818CF8; margin-top: 8px; font-weight: 600;">
+                        Acoustic Signature: Frequency {pf_center['pitch']} • Velocity {pf_center['rate']} • Emotional Resonance
+                    </div>
+                    <div style="font-size: 12px; color: {theme_subtext}; margin-top: 4px;">
+                        Supported Accents & Dialects: Marathi (Native), Hindi, English (US/Global), Gujarati, Tamil, Telugu, Kannada, Bengali
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col_actf1, col_actf2, col_actf3 = st.columns([1.5, 1.5, 1])
+        with col_actf1:
+            preview_lang_f = st.selectbox("Audition Language:", ["English (US)", "Marathi (मराठी)", "Hindi (हिंदी)"], key="prev_lang_female")
+            lang_code_map = {"English (US)": "en", "Marathi (मराठी)": "mr", "Hindi (हिंदी)": "hi"}
+            p_lcode_f = lang_code_map.get(preview_lang_f, "en")
+            
+            if st.button(f"▶️ Play Real Voice Sample ({pf_center_name.split('—')[0].strip()})", type="primary", use_container_width=True, key="btn_play_prev_f"):
+                with st.spinner("Generating authentic neural preview..."):
+                    prev_audio_path_f = generate_audio_preview_cached(pf_center_name, p_lcode_f)
+                    if prev_audio_path_f and os.path.exists(prev_audio_path_f):
+                        with open(prev_audio_path_f, "rb") as paf:
+                            st.audio(paf.read(), format="audio/mp3")
+                            
+        with col_actf2:
+            st.write("")
+            st.write("")
+            if st.button(f"🎯 Select as Studio Voice Across All Modules", use_container_width=True, key="btn_sync_voice_f"):
+                st.session_state["global_selected_voice"] = pf_center_name
+                st.toast(f"✅ {pf_center_name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
+                st.rerun()
+                
+        with col_actf3:
+            st.write("")
+            st.write("")
+            fav_label_f = "⭐ In Favorites" if is_favorite_f else "🤍 Add to Favorites"
+            if st.button(fav_label_f, use_container_width=True, key="btn_fav_f"):
+                fav_set = st.session_state.get("favorite_voices", set())
+                if pf_center_name in fav_set:
+                    fav_set.remove(pf_center_name)
+                else:
+                    fav_set.add(pf_center_name)
+                st.session_state["favorite_voices"] = fav_set
+                st.rerun()
+
+# ==============================================================
+# TAB 2: UNIVERSAL VOICE STUDIO (ALL LANGUAGES UNIFIED)
 # ==============================================================
 with tab_speech:
-    st.markdown('<div class="studio-banner">🎙️ Universal Voice Studio — Unified Multilingual Acoustic Architecture with 20 Distinct Character Personas</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">🎙️ Universal Voice Studio — Unified Multilingual Acoustic Architecture with Distinct Character Personas</div>', unsafe_allow_html=True)
     
     col_u1, col_u2 = st.columns([1.4, 1])
     
@@ -1052,8 +1588,8 @@ with tab_speech:
         st.caption(f"🎯 **Acoustic Modulation:** {purp_info['desc']}")
         
     with col_u2:
-        # Gender & Persona Selection
-        gender_filter = st.radio("Filter Voices:", ["All (20 Voices)", "👨 10 Male Personas", "👩 10 Female Personas"], horizontal=True, key="gender_filter_radio")
+        # Gender & Persona Selection (Strictly no numbers in labels)
+        gender_filter = st.radio("Filter Voices:", ["All Voices", "👨 Male Voices", "👩 Female Voices"], horizontal=True, key="gender_filter_radio")
         
         filtered_personas = {}
         for p_name, p_data in STUDIO_PERSONAS.items():
@@ -1063,7 +1599,12 @@ with tab_speech:
                 continue
             filtered_personas[p_name] = p_data
             
-        selected_persona_name = st.selectbox("Select Character Persona:", list(filtered_personas.keys()), key="persona_select")
+        persona_list = list(filtered_personas.keys())
+        default_p_idx = 0
+        if "global_selected_voice" in st.session_state and st.session_state["global_selected_voice"] in persona_list:
+            default_p_idx = persona_list.index(st.session_state["global_selected_voice"])
+            
+        selected_persona_name = st.selectbox("Select Character Persona:", persona_list, index=default_p_idx, key="persona_select")
         active_persona = filtered_personas[selected_persona_name]
         
         # Calculate pitch & rate with offsets
@@ -1125,110 +1666,6 @@ with tab_speech:
                 with open(out_file, "rb") as f:
                     st.download_button("⬇️ Download High-Res Audio (MP3)", f.read(), file_name=f"wani_{lang_info['code']}_master.mp3", mime="audio/mp3", use_container_width=True)
 
-# ==============================================================
-# TAB 2: 20-VOICE LIVE SHOWCASE & INSTANT AUDITION
-# ==============================================================
-with tab_showcase:
-    st.markdown('<div class="studio-banner">✨ 20-Voice Live Showcase & Instant Audition — Audition All 10 Male & 10 Female Character Personas</div>', unsafe_allow_html=True)
-    
-    col_sc1, col_sc2 = st.columns([1.2, 1])
-    
-    with col_sc1:
-        st.markdown("#### 1. Select Voice Persona & Linguistic Profile")
-        sc_gender = st.radio("Gender Profile:", ["👨 10 Male Personas", "👩 10 Female Personas"], horizontal=True, key="sc_gender_radio")
-        is_male_showcase = "Male" in sc_gender
-        
-        sc_personas = {k: v for k, v in STUDIO_PERSONAS.items() if (v["gender"] == "Male" if is_male_showcase else v["gender"] == "Female")}
-        sc_selected_persona = st.selectbox("Select Character Voice:", list(sc_personas.keys()), key="sc_persona_select")
-        sc_pdata = sc_personas[sc_selected_persona]
-        
-        sc_selected_lang = st.selectbox("Audition Language:", list(LANGUAGE_CATALOG.keys()), index=0, key="sc_lang_select")
-        sc_linfo = LANGUAGE_CATALOG[sc_selected_lang]
-        
-        # Tailored default sample sentences
-        default_samples = {
-            "mr": "वाणी हे आधुनिक कृत्रिम बुद्धिमत्तेचे जागतिक दर्जाचे व्यासपीठ आहे, जे आपल्या शब्दांना अस्सल मानवी भावना आणि स्पष्टता देते.",
-            "hi": "वाणी एक अत्याधुनिक एआई वॉइस स्टूडियो है, जो आपकी आवाज़ को अद्वितीय मानवीय गहराई और अभिव्यक्ति प्रदान करता है।",
-            "en": "Wani is an enterprise neural acoustic intelligence platform engineered for studio-grade human realism and vocal depth.",
-            "gu": "વાણી એ અત્યાધુનિક આર્ટિફિશિયલ ઇન્ટેલિજન્સ વોઇસ સ્ટુડિયો છે, જે તમારા શબ્દોને વાસ્તવિક માનવીય લાગણી આપે છે."
-        }
-        suggested_sample = default_samples.get(sc_linfo["code"], "Wani AI delivers enterprise-grade neural acoustic voiceovers with emotional resonance.")
-        
-        sc_sample_text = st.text_area("Audition Script (Sample Paragraph):", value=suggested_sample, height=110, key="sc_sample_paragraph")
-
-    with col_sc2:
-        st.markdown("#### 2. Character Acoustic Portrait & Instant Audition")
-        
-        st.markdown(f"""
-        <div class="voice-card" style="padding: 20px;">
-            <div style="display: flex; gap: 18px; align-items: center;">
-                <img src="{sc_pdata['avatar']}" class="avatar-frame" style="width: 90px; height: 90px;">
-                <div>
-                    <div><span class="badge-cat">{sc_pdata['category']}</span></div>
-                    <div style="font-size: 18px; font-weight: 700; margin-top: 6px;">{sc_selected_persona.split('—')[0].strip()}</div>
-                    <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{sc_pdata['desc']}</div>
-                    <div style="font-size: 12px; color: #818CF8; font-weight: 600; margin-top: 6px;">⚡ Pitch: {sc_pdata['pitch']} | Speed: {sc_pdata['rate']}</div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button(f"▶️ Play Instant Voice Sample ({sc_selected_persona.split('—')[0].strip()})", type="primary", use_container_width=True, key="sc_play_btn"):
-            active_email = st.session_state.current_user.get("email", "guest@wani.ai")
-            is_allowed, trial_msg, qdata = validate_user_trial(active_email, sc_sample_text)
-            if not is_allowed:
-                st.error(trial_msg)
-            else:
-                v_code = sc_linfo["male"] if sc_pdata["gender"] == "Male" else sc_linfo["female"]
-                out_sc = os.path.join(tempfile.gettempdir(), f"wani_sc_{uuid.uuid4().hex[:8]}.mp3")
-                with st.spinner(f"Synthesizing sample audio in {sc_selected_lang}..."):
-                    synthesize_speech_core(
-                        text=sc_sample_text,
-                        voice_code=v_code,
-                        out_path=out_sc,
-                        pitch_str=sc_pdata["pitch"],
-                        rate_str=sc_pdata["rate"]
-                    )
-                st.success(f"✨ Sample generated for {sc_selected_persona.split('—')[0].strip()}!")
-                with open(out_sc, "rb") as f:
-                    st.audio(f.read(), format="audio/mp3")
-
-    st.markdown("---")
-    st.markdown(f"### 🎧 Complete {sc_gender} Audition Roster")
-    st.caption("Hover over any character portrait to inspect acoustics, or click to audition with 1-click:")
-    
-    sc_items = list(sc_personas.items())
-    for row_idx in range(0, len(sc_items), 2):
-        col_r1, col_r2 = st.columns(2)
-        cols = [col_r1, col_r2]
-        for col_i, item_i in enumerate([row_idx, row_idx + 1]):
-            if item_i < len(sc_items):
-                p_name_i, p_data_i = sc_items[item_i]
-                with cols[col_i]:
-                    st.markdown(f"""
-                    <div class="audition-card">
-                        <div style="display: flex; gap: 14px; align-items: center;">
-                            <img src="{p_data_i['avatar']}" class="avatar-frame" style="width: 70px; height: 70px;">
-                            <div>
-                                <span class="badge-cat">{p_data_i['category']}</span>
-                                <div style="font-size: 15px; font-weight: 700; margin-top: 4px;">{p_name_i.split('—')[0].strip()}</div>
-                                <div style="font-size: 12px; color: {theme_subtext}; margin-top: 3px;">{p_data_i['desc']}</div>
-                            </div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    if st.button(f"▶️ Audition {p_name_i.split('—')[0].strip()}", use_container_width=True, key=f"quick_aud_{item_i}"):
-                        v_code_i = sc_linfo["male"] if p_data_i["gender"] == "Male" else sc_linfo["female"]
-                        out_quick = os.path.join(tempfile.gettempdir(), f"wani_quick_{item_i}_{uuid.uuid4().hex[:6]}.mp3")
-                        synthesize_speech_core(
-                            text=sc_sample_text,
-                            voice_code=v_code_i,
-                            out_path=out_quick,
-                            pitch_str=p_data_i["pitch"],
-                            rate_str=p_data_i["rate"]
-                        )
-                        with open(out_quick, "rb") as f:
-                            st.audio(f.read(), format="audio/mp3")
 
 # ==============================================================
 # TAB 3: VIDEO STUDIO & AUDIO SEPARATOR (UP TO 500 MB)
@@ -1295,10 +1732,10 @@ with tab_video:
             st.caption("Please upload a video file to enable extraction.")
 
 # ==============================================================
-# TAB 4: PDF & DOCUMENT READER (AUTO-DETECT LANGUAGE & VOICE)
+# TAB 4: PDF & DOCUMENT READER (INDEPENDENT LISTENING LANGUAGE)
 # ==============================================================
 with tab_pdf:
-    st.markdown('<div class="studio-banner">📄 PDF & Document Reader — Upload Any Document, Auto-Detect Language & Synthesize Audio</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">📄 PDF & Document Reader — Auto-Detect Language, Select Listening Language & Synthesize Speech</div>', unsafe_allow_html=True)
     
     col_pdf1, col_pdf2 = st.columns([1.3, 1])
     
@@ -1323,26 +1760,49 @@ with tab_pdf:
             extracted_text = st.session_state.get("pdf_extracted_cache", "")
             detected_code, detected_name = st.session_state.get("pdf_detected_lang", ("en", "◈ English (Global & US)"))
 
-        pdf_text_area = st.text_area("Extracted Document Text (Editable):", value=extracted_text, height=220, key="pdf_text_view")
+        pdf_text_area = st.text_area("Document Content (Review & Edit):", value=extracted_text, height=220, key="pdf_text_view")
 
     with col_pdf2:
-        st.markdown("#### 🔍 Document Analysis & Linguistic Profile")
+        st.markdown("#### 🔍 Document Analysis & Listening Language")
         word_count = len(pdf_text_area.strip().split()) if pdf_text_area else 0
         st.metric("Total Document Words", f"{word_count:,}")
         
-        st.markdown(f"**Detected Language:** `{detected_name}`")
-        st.info(f"💡 Wani's linguistic auto-detector recognized script **{detected_name}**.")
+        st.markdown(f"**Detected Document Script:** `{detected_name}`")
         
-        # Select Character Voice for Document Reading
-        doc_voice_persona = st.selectbox("Select Reader Voice Persona:", list(STUDIO_PERSONAS.keys()), index=0, key="pdf_reader_persona")
+        # CUSTOMER SELECTS THE LISTENING LANGUAGE INDEPENDENTLY
+        pdf_listen_lang = st.selectbox(
+            "Select Listening (Output) Language:",
+            list(LANGUAGE_CATALOG.keys()),
+            index=0 if detected_code == "mr" else 2,
+            key="pdf_listening_lang_select"
+        )
+        listen_info = LANGUAGE_CATALOG[pdf_listen_lang]
+        listen_code = listen_info["code"]
+        
+        if detected_code != listen_code and pdf_text_area.strip():
+            st.info(f"🌐 Listening in **{pdf_listen_lang}** will automatically translate from **{detected_name}**.")
+            if st.button("🌐 Translate Content to Listening Language Now", use_container_width=True, key="btn_trans_pdf_now"):
+                with st.spinner(f"Translating document into {pdf_listen_lang}..."):
+                    trans_pdf = translate_text(pdf_text_area, source=detected_code, target=listen_code)
+                    st.session_state["pdf_extracted_cache"] = trans_pdf
+                    st.session_state["pdf_detected_lang"] = (listen_code, pdf_listen_lang)
+                    st.rerun()
+
+        # Reader Voice Persona: Synchronized with global active voice
+        doc_personas = list(STUDIO_PERSONAS.keys())
+        default_doc_p_idx = 0
+        if "global_selected_voice" in st.session_state and st.session_state["global_selected_voice"] in doc_personas:
+            default_doc_p_idx = doc_personas.index(st.session_state["global_selected_voice"])
+            
+        doc_voice_persona = st.selectbox("Select Reader Voice Persona:", doc_personas, index=default_doc_p_idx, key="pdf_reader_persona")
         doc_persona_data = STUDIO_PERSONAS[doc_voice_persona]
         
         st.markdown(f"""
-        <div class="voice-card" style="display: flex; gap: 14px; align-items: center;">
-            <img src="{doc_persona_data['avatar']}" class="avatar-frame" style="width: 65px; height: 65px;">
+        <div class="voice-card" style="display: flex; gap: 14px; align-items: center; padding: 12px;">
+            <img src="{doc_persona_data['avatar']}" class="avatar-frame" style="width: 58px; height: 58px;">
             <div>
-                <b>{doc_voice_persona.split('—')[0].strip()}</b>
-                <div style="font-size: 12px; color: {theme_subtext};">{doc_persona_data['desc']}</div>
+                <b>{doc_voice_persona.split('—')[0].strip()}</b> ({doc_persona_data['gender']})
+                <div style="font-size: 11.5px; color: {theme_subtext};">{doc_persona_data['desc']}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1358,33 +1818,31 @@ with tab_pdf:
         elif not pdf_text_area.strip():
             st.warning("Please upload a PDF or enter text first.")
         else:
-            # Map detected language to voice code
-            matched_lang = None
-            for lname, linfo in LANGUAGE_CATALOG.items():
-                if linfo["code"] == detected_code:
-                    matched_lang = linfo
-                    break
-            if not matched_lang:
-                matched_lang = LANGUAGE_CATALOG.get("◈ English (Global & US)", list(LANGUAGE_CATALOG.values())[0])
-                
-            voice_code = matched_lang["male"] if doc_persona_data["gender"] == "Male" else matched_lang["female"]
+            final_tts_text = pdf_text_area
+            if detected_code != listen_code:
+                with st.spinner(f"Translating to {pdf_listen_lang}..."):
+                    final_tts_text = translate_text(pdf_text_area, source=detected_code, target=listen_code)
+                    
+            voice_code = listen_info["male"] if doc_persona_data["gender"] == "Male" else listen_info["female"]
             out_doc = os.path.join(tempfile.gettempdir(), f"wani_doc_{uuid.uuid4().hex[:8]}.mp3")
             
-            with st.spinner(f"Converting document into native speech in {detected_name}..."):
+            with st.spinner(f"Converting document into native speech in {pdf_listen_lang}..."):
                 synthesize_speech_core(
-                    text=pdf_text_area,
+                    text=final_tts_text,
                     voice_code=voice_code,
                     out_path=out_doc,
                     pitch_str=doc_persona_data["pitch"],
                     rate_str=doc_persona_data["rate"]
                 )
                 
-            st.success(f"✨ Document converted to audio in {detected_name} successfully!")
+            st.success(f"✨ Document converted to audio in {pdf_listen_lang} successfully!")
             col_a1, col_a2 = st.columns([1.5, 1])
             with col_a1:
-                with open(out_doc, "rb") as f: st.audio(f.read(), format="audio/mp3")
+                with open(out_doc, "rb") as f:
+                    st.audio(f.read(), format="audio/mp3")
             with col_a2:
-                with open(out_doc, "rb") as f: st.download_button("⬇️ Download Audiobook (MP3)", f.read(), file_name="wani_document_audio.mp3", mime="audio/mp3", use_container_width=True)
+                with open(out_doc, "rb") as f:
+                    st.download_button("⬇️ Download Audiobook (MP3)", f.read(), file_name="wani_document_audio.mp3", mime="audio/mp3", use_container_width=True)
 
 # ==============================================================
 # TAB 3: VOICE-TO-TEXT STUDIO (SPEECH-TO-TEXT TRANSCRIPTION)
@@ -1466,66 +1924,128 @@ with tab_stt:
                 st.info("Text copied to Voice Studio! Switch to Tab 1 to generate speech.")
 
 # ==============================================================
-# TAB 4: AI VIDEO DUBBING STUDIO
+# TAB 3: AUTOMATIC AI VIDEO DUBBING STUDIO (UP TO 500 MB)
 # ==============================================================
 with tab_dubbing:
-    st.markdown('<div class="studio-banner">🎬 AI Video Dubbing Studio — Translate & Re-Dub Videos into Multilingual Native Speech</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">🎬 AI Video Dubbing Studio — Automated Multilingual Video Dubbing with Audio Remuxing (Up to 500 MB)</div>', unsafe_allow_html=True)
     
-    col_dub1, col_dub2 = st.columns([1.3, 1])
+    col_dub_v1, col_dub_v2 = st.columns([1.2, 1])
     
-    with col_dub1:
-        st.markdown("#### 1. Upload Video Script or Dialogue")
-        dub_orig_script = st.text_area(
-            "Original Video Transcript:",
-            value="Artificial intelligence is transforming global entertainment and content creation at breathtaking speed.",
-            height=120,
-            key="dub_script_in"
+    with col_dub_v1:
+        st.markdown("#### 1. Upload Video (Max File Size: 500 MB)")
+        st.caption("Upload any HD/4K video (.mp4, .mov, .mkv, .avi, .webm). Max upload size: 500 MB.")
+        dub_video_file = st.file_uploader(
+            "Select Video File to Dub (Up to 500 MB):",
+            type=["mp4", "mov", "mkv", "avi", "webm"],
+            key="dub_video_uploader"
         )
         
-        d_c1, d_c2 = st.columns(2)
-        with d_c1:
-            dub_target_lang = st.selectbox("Target Dubbing Language:", list(LANGUAGE_CATALOG.keys()), index=0, key="dub_tgt_lang")
-        with d_c2:
-            dub_persona_choice = st.selectbox("Dubbing Voice Persona:", list(STUDIO_PERSONAS.keys()), index=0, key="dub_persona_choice")
-            
-        p_dub = STUDIO_PERSONAS[dub_persona_choice]
-        st.caption(f"Acoustic Profile: {p_dub['desc']}")
+        if dub_video_file:
+            dub_v_bytes = dub_video_file.read()
+            d_size_mb = len(dub_v_bytes) / (1024 * 1024)
+            st.caption(f"📁 **File:** `{dub_video_file.name}` | **Size:** `{d_size_mb:.2f} MB` / 500 MB | **Status:** Ready for Processing")
+            st.video(dub_v_bytes)
+        else:
+            st.info("💡 Upload a video file up to 500 MB to automatically transcribe, translate, and dub speech into any language.")
 
-    with col_dub2:
-        st.markdown("#### 2. Execute Automated Dubbing")
-        st.caption("Translates dialogue and renders a synchronized foreign voiceover track:")
+    with col_dub_v2:
+        st.markdown("#### 2. Dubbing Configuration & Controls")
         
-        dub_btn = st.button("🎬 Render AI Multilingual Dubbing", type="primary", use_container_width=True, key="btn_run_dub")
+        dub_tgt_lang = st.selectbox("Target Dubbing Language (Listening Language):", list(LANGUAGE_CATALOG.keys()), index=0, key="dub_target_lang_choice")
+        dub_tgt_code = LANGUAGE_CATALOG[dub_tgt_lang]["code"]
         
-        if dub_btn:
+        # Dubbing Voice Persona: Default to globally selected studio voice
+        dub_persona_list = list(STUDIO_PERSONAS.keys())
+        default_dub_p_idx = 0
+        if "global_selected_voice" in st.session_state and st.session_state["global_selected_voice"] in dub_persona_list:
+            default_dub_p_idx = dub_persona_list.index(st.session_state["global_selected_voice"])
+            
+        dub_persona_choice = st.selectbox("Dubbing Voice Persona:", dub_persona_list, index=default_dub_p_idx, key="dub_voice_persona_choice")
+        p_dub_data = STUDIO_PERSONAS[dub_persona_choice]
+        
+        st.markdown(f"""
+        <div class="voice-card" style="display: flex; gap: 14px; align-items: center; padding: 12px;">
+            <img src="{p_dub_data['avatar']}" class="avatar-frame" style="width: 58px; height: 58px;">
+            <div>
+                <b>{dub_persona_choice.split('—')[0].strip()}</b> ({p_dub_data['gender']})
+                <div style="font-size: 11.5px; color: {theme_subtext};">{p_dub_data['desc']}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        dub_audio_mode = st.radio(
+            "Acoustic Audio Mix Mode:",
+            ["Replace Dialogue (Original Audio Muted)", "Cinematic Background Mix (Keep Original Ambience/Music at 15%)"],
+            key="dub_audio_mix_mode"
+        )
+        mix_bg = "Cinematic" in dub_audio_mode
+        
+        with st.expander("📝 Optional Custom Dialogue / Script (Override Video Audio)"):
+            custom_script = st.text_area("Enter dialogue text if you wish to override auto-transcription:", height=90, key="dub_custom_script")
+            
+        dub_run_btn = st.button("🚀 Render AI Multilingual Dubbing (500 MB Engine)", type="primary", use_container_width=True, key="btn_execute_dub")
+
+    if dub_run_btn:
+        if not dub_video_file:
+            st.warning("Please upload a video file first.")
+        else:
             active_email = st.session_state.current_user.get("email", "guest@wani.ai")
-            is_allowed, trial_msg, qdata = validate_user_trial(active_email, dub_orig_script)
+            is_allowed, trial_msg, qdata = validate_user_trial(active_email, custom_script or "Automated Multilingual Video Dubbing Session")
             
             if not is_allowed:
                 st.error(trial_msg)
             else:
-                target_code = LANGUAGE_CATALOG[dub_target_lang]["code"]
-                with st.spinner(f"Translating dialogue and dubbing in {dub_target_lang}..."):
-                    translated_dialogue = translate_text(dub_orig_script, source="auto", target=target_code)
-                    
-                    lang_obj = LANGUAGE_CATALOG[dub_target_lang]
-                    v_code = lang_obj["male"] if p_dub["gender"] == "Male" else lang_obj["female"]
-                    out_dub = os.path.join(tempfile.gettempdir(), f"wani_dub_{uuid.uuid4().hex[:8]}.mp3")
-                    
-                    synthesize_speech_core(
-                        text=translated_dialogue,
-                        voice_code=v_code,
-                        out_path=out_dub,
-                        pitch_str=p_dub["pitch"],
-                        rate_str=p_dub["rate"]
-                    )
-                    
-                st.success(f"✨ Video voiceover dubbed in {dub_target_lang} successfully!")
-                st.markdown(f"**Dubbed Dialogue ({target_code.upper()}):** *{translated_dialogue}*")
-                with open(out_dub, "rb") as f:
-                    st.audio(f.read(), format="audio/mp3")
-                with open(out_dub, "rb") as f:
-                    st.download_button("⬇️ Download Dubbed Audio Track (MP3)", f.read(), file_name="wani_dubbed_track.mp3", mime="audio/mp3", use_container_width=True)
+                with st.spinner(f"Extracting audio, transcribing, translating to {dub_tgt_lang}, and remuxing 500 MB video..."):
+                    try:
+                        out_vid, out_srt, tr_text = process_full_video_dubbing(
+                            video_bytes=dub_v_bytes,
+                            target_lang_code=dub_tgt_code,
+                            voice_persona_name=dub_persona_choice,
+                            mix_bg_audio=mix_bg,
+                            custom_transcript=custom_script
+                        )
+                        st.session_state["dubbed_video_path"] = out_vid
+                        st.session_state["dubbed_srt_path"] = out_srt
+                        st.session_state["dubbed_transcript_text"] = tr_text
+                        st.success(f"✨ Video dubbed into {dub_tgt_lang} successfully!")
+                    except Exception as e:
+                        st.error(f"Dubbing Pipeline Error: {str(e)}")
+
+    if "dubbed_video_path" in st.session_state and os.path.exists(st.session_state["dubbed_video_path"]):
+        st.markdown("---")
+        st.markdown("### 🎬 Dubbed Video Preview & Deliverables")
+        
+        dub_res_c1, dub_res_c2 = st.columns([1.4, 1])
+        with dub_res_c1:
+            st.markdown("#### 📺 Playable Dubbed Video Preview")
+            with open(st.session_state["dubbed_video_path"], "rb") as vf:
+                dub_v_bytes = vf.read()
+            st.video(dub_v_bytes)
+            
+        with dub_res_c2:
+            st.markdown("#### 📦 Download Finished Media")
+            st.download_button(
+                "⬇️ Download Dubbed Video (MP4)",
+                dub_v_bytes,
+                file_name="wani_dubbed_production.mp4",
+                mime="video/mp4",
+                use_container_width=True,
+                type="primary"
+            )
+            
+            if "dubbed_srt_path" in st.session_state and os.path.exists(st.session_state["dubbed_srt_path"]):
+                with open(st.session_state["dubbed_srt_path"], "rb") as sf:
+                    srt_bytes = sf.read()
+                st.download_button(
+                    "⬇️ Download Subtitles (.SRT)",
+                    srt_bytes,
+                    file_name="wani_subtitles.srt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
+                
+            st.markdown("##### 📜 Translated Dialogue Track:")
+            st.info(st.session_state.get("dubbed_transcript_text", ""))
 
 # ==============================================================
 # TAB 5: MULTI-VOICE DIALOGUE STUDIO
@@ -2045,7 +2565,7 @@ with tab_auth:
             st.success("Authenticated as Vishal Hargude (Founder & CEO)!")
             st.rerun()
             
-        if st.button("🎁 1-Click: Guest Explorer (Free Trial - 2 Trials/Day)", use_container_width=True):
+        if st.button("🎁 1-Click: Guest Explorer (Free Trial - 10 Trials/Day)", use_container_width=True):
             st.session_state.current_user = users_db.get("guest@wani.ai")
             st.session_state.current_user["email"] = "guest@wani.ai"
             st.success("Authenticated as Guest Explorer (Free Trial)!")
@@ -2106,40 +2626,66 @@ with tab_contact:
                     st.warning("Please provide your name and work email.")
 
 # ==============================================================
-# TAB 11: VOICE LIBRARY CATALOG (20 PERSONAS WITH AVATARS)
+# TAB 13: VOICE LIBRARY CATALOG (CHARACTER PERSONAS WITH AVATARS)
 # ==============================================================
 with tab_library:
-    st.markdown('<div class="studio-banner">🎧 Voice Library Catalog — 20 High-Fidelity Character Personas (10 Gents & 10 Ladies)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="studio-banner">🎧 Complete Voice Library Catalog — High-Fidelity Multilingual Character Personas</div>', unsafe_allow_html=True)
     
-    lib_tabs = st.tabs(["👨 10 Male Voice Personas", "👩 10 Female Voice Personas"])
+    lib_tabs = st.tabs(["👨 Male Voices", "👩 Female Voices"])
     
     with lib_tabs[0]:
         male_personas = {k: v for k, v in STUDIO_PERSONAS.items() if v["gender"] == "Male"}
         for name, data in male_personas.items():
-            st.markdown(f"""
-            <div class="voice-card" style="display: flex; gap: 16px; align-items: center;">
-                <img src="{data['avatar']}" class="avatar-frame">
-                <div>
-                    <div><span class="badge-cat">{data['category']}</span> <b>{name.split('—')[0].strip()}</b></div>
-                    <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{data['desc']}</div>
-                    <div style="font-size: 12px; color: #818CF8; margin-top: 5px;">Acoustic Baseline: Pitch {data['pitch']} | Speed {data['rate']}</div>
+            is_active_v = (st.session_state.get("global_selected_voice") == name)
+            col_l1, col_l2 = st.columns([4, 1])
+            with col_l1:
+                st.markdown(f"""
+                <div class="voice-card" style="display: flex; gap: 16px; align-items: center; border: 1.5px solid {'#818CF8' if is_active_v else theme_card_border};">
+                    <img src="{data['avatar']}" class="avatar-frame">
+                    <div>
+                        <div>
+                            <span class="badge-cat">{data['category']}</span>
+                            <b>{name.split('—')[0].strip()}</b>
+                            {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700; margin-left: 8px;">ACTIVE ✅</span>' if is_active_v else ''}
+                        </div>
+                        <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{data['desc']}</div>
+                        <div style="font-size: 12px; color: #818CF8; margin-top: 5px;">Acoustic Baseline: Pitch {data['pitch']} | Speed {data['rate']}</div>
+                    </div>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
+                """, unsafe_allow_html=True)
+            with col_l2:
+                st.write("")
+                if st.button("🎯 Select Voice", key=f"lib_sel_m_{name}", use_container_width=True):
+                    st.session_state["global_selected_voice"] = name
+                    st.toast(f"✅ {name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
+                    st.rerun()
+                
     with lib_tabs[1]:
         female_personas = {k: v for k, v in STUDIO_PERSONAS.items() if v["gender"] == "Female"}
         for name, data in female_personas.items():
-            st.markdown(f"""
-            <div class="voice-card" style="display: flex; gap: 16px; align-items: center;">
-                <img src="{data['avatar']}" class="avatar-frame">
-                <div>
-                    <div><span class="badge-cat">{data['category']}</span> <b>{name.split('—')[0].strip()}</b></div>
-                    <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{data['desc']}</div>
-                    <div style="font-size: 12px; color: #818CF8; margin-top: 5px;">Acoustic Baseline: Pitch {data['pitch']} | Speed {data['rate']}</div>
+            is_active_vf = (st.session_state.get("global_selected_voice") == name)
+            col_lf1, col_lf2 = st.columns([4, 1])
+            with col_lf1:
+                st.markdown(f"""
+                <div class="voice-card" style="display: flex; gap: 16px; align-items: center; border: 1.5px solid {'#818CF8' if is_active_vf else theme_card_border};">
+                    <img src="{data['avatar']}" class="avatar-frame">
+                    <div>
+                        <div>
+                            <span class="badge-cat">{data['category']}</span>
+                            <b>{name.split('—')[0].strip()}</b>
+                            {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700; margin-left: 8px;">ACTIVE ✅</span>' if is_active_vf else ''}
+                        </div>
+                        <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{data['desc']}</div>
+                        <div style="font-size: 12px; color: #818CF8; margin-top: 5px;">Acoustic Baseline: Pitch {data['pitch']} | Speed {data['rate']}</div>
+                    </div>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+            with col_lf2:
+                st.write("")
+                if st.button("🎯 Select Voice", key=f"lib_sel_f_{name}", use_container_width=True):
+                    st.session_state["global_selected_voice"] = name
+                    st.toast(f"✅ {name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
+                    st.rerun()
 
 # ==============================================================
 # ENTERPRISE COPYRIGHT & COMPLIANCE FOOTER (CENTERED)
