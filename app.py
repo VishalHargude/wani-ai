@@ -318,29 +318,33 @@ def generate_srt_subtitles(text: str, duration_seconds: float = 12.0) -> str:
 is_dark = (st.session_state.theme == "Dark")
 
 if is_dark:
-    theme_bg = "#080C14"
-    theme_card_bg = "#0E1422"
-    theme_card_border = "#1E293B"
+    theme_bg = "#030712"
+    theme_mesh = "radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.14) 0px, transparent 50%), radial-gradient(at 50% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%), #030712"
+    theme_card_bg = "rgba(15, 23, 42, 0.68)"
+    theme_card_border = "rgba(255, 255, 255, 0.09)"
     theme_text = "#F8FAFC"
     theme_subtext = "#94A3B8"
-    theme_nav_bg = "#0B101C"
-    theme_featured_bg = "linear-gradient(180deg, #1A1F36 0%, #0F1322 100%)"
-    theme_featured_border = "#6366F1"
-    theme_shadow = "0 8px 24px rgba(0, 0, 0, 0.55)"
-    theme_input_bg = "#0F1626"
-    theme_input_border = "#1E293B"
+    theme_nav_bg = "rgba(3, 7, 18, 0.88)"
+    theme_featured_bg = "linear-gradient(135deg, rgba(99, 102, 241, 0.22) 0%, rgba(168, 85, 247, 0.18) 50%, rgba(15, 23, 42, 0.85) 100%)"
+    theme_featured_border = "rgba(129, 140, 248, 0.55)"
+    theme_shadow = "0 8px 32px 0 rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.08)"
+    theme_input_bg = "rgba(15, 23, 42, 0.78)"
+    theme_input_border = "rgba(255, 255, 255, 0.12)"
+    theme_blur = "backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);"
 else:
     theme_bg = "#F8FAFC"
-    theme_card_bg = "#FFFFFF"
-    theme_card_border = "#E2E8F0"
+    theme_mesh = "radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.06) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.06) 0px, transparent 50%), #F8FAFC"
+    theme_card_bg = "rgba(255, 255, 255, 0.88)"
+    theme_card_border = "rgba(226, 232, 240, 0.95)"
     theme_text = "#0F172A"
     theme_subtext = "#475569"
-    theme_nav_bg = "#FFFFFF"
-    theme_featured_bg = "linear-gradient(180deg, #F5F7FF 0%, #FFFFFF 100%)"
-    theme_featured_border = "#4F46E5"
-    theme_shadow = "0 4px 16px rgba(0, 0, 0, 0.05)"
+    theme_nav_bg = "rgba(255, 255, 255, 0.92)"
+    theme_featured_bg = "linear-gradient(135deg, #EEF2FF 0%, #FAF5FF 100%)"
+    theme_featured_border = "#6366F1"
+    theme_shadow = "0 4px 20px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9)"
     theme_input_bg = "#FFFFFF"
     theme_input_border = "#CBD5E1"
+    theme_blur = "backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);"
 
 st.markdown(f"""
 <style>
@@ -405,53 +409,95 @@ st.markdown(f"""
         visibility: hidden !important;
     }}
     
-    /* THEME BASE CONTAINER */
+    /* THEME BASE CONTAINER WITH MIDNIGHT AMBIENT MESH */
     .stApp {{
-        background-color: {theme_bg} !important;
+        background: {theme_mesh} !important;
+        background-attachment: fixed !important;
         color: {theme_text} !important;
     }}
     
-    /* INPUTS & TEXTAREAS COMPATIBILITY */
+    /* MIDNIGHT GLASS INPUTS & TEXTAREAS */
     .stTextInput input, .stTextArea textarea {{
-        background-color: {theme_input_bg} !important;
+        background: {theme_input_bg} !important;
+        {theme_blur}
         color: {theme_text} !important;
         border: 1px solid {theme_input_border} !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25) !important;
         font-family: 'Josefin Sans', 'Noto Sans Devanagari', sans-serif !important;
+        transition: all 0.25s ease !important;
+    }}
+    .stTextInput input:focus, .stTextArea textarea:focus {{
+        border-color: #818CF8 !important;
+        box-shadow: 0 0 16px rgba(99, 102, 241, 0.45), inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
     }}
     
     .stSelectbox div[data-baseweb="select"] {{
-        background-color: {theme_input_bg} !important;
+        background: {theme_input_bg} !important;
+        {theme_blur}
         color: {theme_text} !important;
-        border-color: {theme_input_border} !important;
+        border: 1px solid {theme_input_border} !important;
+        border-radius: 8px !important;
     }}
     
-    /* SIDEBAR COMPATIBILITY */
+    /* FROSTED GLASS SIDEBAR */
     section[data-testid="stSidebar"] {{
-        background-color: {theme_card_bg} !important;
+        background: {theme_nav_bg} !important;
+        {theme_blur}
         border-right: 1px solid {theme_card_border} !important;
     }}
     section[data-testid="stSidebar"] * {{
         color: {theme_text} !important;
     }}
     
-    /* TABS STYLING */
+    /* ELEVENLABS / LINEAR STYLE GLASS TABS NAVIGATION */
     .stTabs [data-baseweb="tab-list"] {{
-        border-bottom: 1px solid {theme_card_border} !important;
+        background: rgba(15, 23, 42, 0.45) !important;
+        {theme_blur}
+        border: 1px solid {theme_card_border} !important;
+        border-radius: 12px !important;
+        padding: 5px !important;
         gap: 6px;
+        margin-bottom: 20px !important;
     }}
     .stTabs [data-baseweb="tab"] {{
         color: {theme_subtext} !important;
         font-weight: 600 !important;
         font-size: 13.5px !important;
-        padding: 8px 14px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        border: none !important;
+        transition: all 0.2s ease !important;
     }}
     .stTabs [aria-selected="true"] {{
-        color: #6366F1 !important;
-        border-bottom: 2px solid #6366F1 !important;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.22) 100%) !important;
+        color: #818CF8 !important;
+        border: 1px solid rgba(129, 140, 248, 0.4) !important;
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
     }}
     
-    /* UNBOXED PURE BRAND HEADER (NO BOX, NO BORDER) */
+    /* PRIMARY & SECONDARY BUTTONS OVERHAUL */
+    button[kind="primary"], .stButton button[kind="primary"] {{
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.45) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }}
+    button[kind="primary"]:hover, .stButton button[kind="primary"]:hover {{
+        box-shadow: 0 6px 28px rgba(139, 92, 246, 0.7) !important;
+        transform: translateY(-1.5px) !important;
+    }}
+    
+    .stButton button {{
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.25s ease !important;
+    }}
+    
+    /* UNBOXED PURE BRAND HEADER */
     .brand-unboxed {{
         display: flex;
         align-items: center;
@@ -466,12 +512,13 @@ st.markdown(f"""
         font-size: 42px;
         font-weight: 800;
         letter-spacing: -1.2px;
-        background: linear-gradient(135deg, #FF6B6B 0%, #9B51E0 50%, #4A90E2 100%);
+        background: linear-gradient(135deg, #818CF8 0%, #C084FC 45%, #38BDF8 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         display: inline-block;
         line-height: 1;
         font-family: 'Josefin Sans', sans-serif !important;
+        filter: drop-shadow(0 2px 12px rgba(129, 140, 248, 0.4));
     }}
     
     .wani-tagline-inline {{
@@ -485,11 +532,12 @@ st.markdown(f"""
     
     /* SILICON VALLEY SOCIAL PROOF BANNER */
     .us-social-proof {{
-        background: {theme_card_bg};
-        border: 1px solid {theme_card_border};
-        border-radius: 8px;
-        padding: 8px 18px;
-        margin-bottom: 20px;
+        background: {theme_card_bg} !important;
+        {theme_blur}
+        border: 1px solid {theme_card_border} !important;
+        border-radius: 12px !important;
+        padding: 10px 20px;
+        margin-bottom: 22px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -497,63 +545,75 @@ st.markdown(f"""
         gap: 12px;
         font-size: 12px;
         color: {theme_subtext};
+        box-shadow: {theme_shadow} !important;
     }}
     
     .user-pill {{
         background: {theme_card_bg};
+        {theme_blur}
         border: 1px solid {theme_card_border};
         border-radius: 20px;
-        padding: 5px 14px;
+        padding: 6px 16px;
         font-size: 12.5px;
         font-weight: 600;
         color: {theme_text};
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        box-shadow: {theme_shadow};
     }}
     
-    /* CARDS & BANNERS */
+    /* GLASS CARDS & BANNERS */
     .studio-banner {{
-        background: {theme_card_bg};
-        border: 1px solid {theme_card_border};
-        border-radius: 10px;
-        padding: 12px 18px;
+        background: {theme_card_bg} !important;
+        {theme_blur}
+        border: 1px solid {theme_card_border} !important;
+        border-radius: 12px !important;
+        padding: 14px 20px;
         font-weight: 600;
         font-size: 14px;
         color: {theme_text};
-        margin-bottom: 18px;
-        box-shadow: {theme_shadow};
+        margin-bottom: 20px;
+        box-shadow: {theme_shadow} !important;
     }}
     
     .pricing-card {{
-        background: {theme_card_bg};
-        border: 1px solid {theme_card_border};
-        border-radius: 12px;
-        padding: 22px 18px;
+        background: {theme_card_bg} !important;
+        {theme_blur}
+        border: 1px solid {theme_card_border} !important;
+        border-radius: 14px !important;
+        padding: 24px 20px;
         text-align: center;
-        box-shadow: {theme_shadow};
-        transition: transform 0.2s ease, border-color 0.2s ease;
+        box-shadow: {theme_shadow} !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         color: {theme_text};
     }}
-    
     .pricing-card:hover {{
-        transform: translateY(-3px);
-        border-color: #6366F1;
+        transform: translateY(-4px);
+        border-color: rgba(129, 140, 248, 0.6) !important;
+        box-shadow: 0 16px 40px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
     }}
     
     .pricing-featured {{
-        background: {theme_featured_bg};
-        border: 2px solid {theme_featured_border};
+        background: {theme_featured_bg} !important;
+        border: 2px solid {theme_featured_border} !important;
+        box-shadow: 0 12px 36px rgba(99, 102, 241, 0.35) !important;
     }}
     
     .voice-card {{
-        background: {theme_card_bg};
-        border: 1px solid {theme_card_border};
-        border-radius: 10px;
-        padding: 14px 18px;
-        margin-bottom: 12px;
-        box-shadow: {theme_shadow};
+        background: {theme_card_bg} !important;
+        {theme_blur}
+        border: 1px solid {theme_card_border} !important;
+        border-radius: 12px !important;
+        padding: 16px 20px;
+        margin-bottom: 14px;
+        box-shadow: {theme_shadow} !important;
         color: {theme_text};
+        transition: all 0.25s ease;
+    }}
+    .voice-card:hover {{
+        border-color: rgba(129, 140, 248, 0.45) !important;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2) !important;
     }}
     
     .avatar-frame {{
@@ -561,22 +621,22 @@ st.markdown(f"""
         height: 82px;
         border-radius: 50%;
         object-fit: cover;
-        border: 2.5px solid #6366F1;
-        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+        border: 2.5px solid #818CF8;
+        box-shadow: 0 4px 18px rgba(99, 102, 241, 0.4);
         transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         cursor: pointer;
     }}
-    
     .avatar-frame:hover {{
         transform: scale(1.08);
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.7);
-        border-color: #818CF8;
+        box-shadow: 0 0 24px rgba(129, 140, 248, 0.75);
+        border-color: #C084FC;
     }}
     
     .audition-card {{
-        background: {theme_card_bg};
-        border: 1px solid {theme_card_border};
-        border-radius: 12px;
+        background: {theme_card_bg} !important;
+        {theme_blur}
+        border: 1px solid {theme_card_border} !important;
+        border-radius: 12px !important;
         padding: 16px;
         transition: all 0.25s ease;
         display: flex;
@@ -584,36 +644,40 @@ st.markdown(f"""
         justify-content: space-between;
         margin-bottom: 12px;
     }}
-    
     .audition-card:hover {{
-        border-color: #6366F1;
+        border-color: #818CF8 !important;
         transform: translateY(-3px);
-        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
+        box-shadow: 0 10px 28px rgba(99, 102, 241, 0.3) !important;
     }}
     
     .badge-cat {{
-        background: rgba(99, 102, 241, 0.15);
-        color: #818CF8;
-        padding: 3px 9px;
-        border-radius: 4px;
+        background: rgba(99, 102, 241, 0.18) !important;
+        border: 1px solid rgba(129, 140, 248, 0.35) !important;
+        color: #A5B4FC !important;
+        padding: 3px 10px;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
         margin-right: 8px;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
     }}
     
     .status-badge-active {{
-        background: rgba(16, 185, 129, 0.15);
-        color: #10B981;
+        background: rgba(16, 185, 129, 0.18) !important;
+        border: 1px solid rgba(16, 185, 129, 0.4) !important;
+        color: #34D399;
         padding: 3px 10px;
         border-radius: 6px;
         font-size: 12px;
         font-weight: 700;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
     }}
     
     .status-badge-grace {{
-        background: rgba(245, 158, 11, 0.15);
-        color: #F59E0B;
+        background: rgba(245, 158, 11, 0.18) !important;
+        border: 1px solid rgba(245, 158, 11, 0.4) !important;
+        color: #FBBF24;
         padding: 3px 10px;
         border-radius: 6px;
         font-size: 12px;
@@ -621,15 +685,16 @@ st.markdown(f"""
     }}
     
     .status-badge-halted {{
-        background: rgba(239, 68, 68, 0.15);
-        color: #EF4444;
+        background: rgba(239, 68, 68, 0.18) !important;
+        border: 1px solid rgba(239, 68, 68, 0.4) !important;
+        color: #F87171;
         padding: 3px 10px;
         border-radius: 6px;
         font-size: 12px;
         font-weight: 700;
     }}
     
-    /* ANIMATED AUDIO WAVEFORM */
+    /* ANIMATED AUDIO WAVEFORM (CYAN-INDIGO-PURPLE) */
     .wave-container {{
         display: inline-flex;
         align-items: center;
@@ -640,9 +705,10 @@ st.markdown(f"""
     }}
     .wave-bar {{
         width: 3.5px;
-        background: linear-gradient(180deg, #6366F1 0%, #A855F7 100%);
+        background: linear-gradient(180deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
         border-radius: 2px;
         animation: waveAnim 1.2s ease-in-out infinite alternate;
+        box-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
     }}
     .wave-bar:nth-child(1) {{ height: 8px; animation-delay: 0.1s; }}
     .wave-bar:nth-child(2) {{ height: 16px; animation-delay: 0.25s; }}
@@ -657,7 +723,7 @@ st.markdown(f"""
         100% {{ transform: scaleY(1.0); opacity: 1; }}
     }}
 
-    /* PREMIUM CIRCULAR VOICE CAROUSEL */
+    /* PREMIUM CIRCULAR VOICE CAROUSEL (MIDNIGHT GLASS) */
     .carousel-stage {{
         display: flex;
         justify-content: center;
@@ -671,7 +737,7 @@ st.markdown(f"""
         border-radius: 50%;
         object-fit: cover;
         border: 3.5px solid #818CF8;
-        box-shadow: 0 0 32px rgba(99, 102, 241, 0.75), 0 8px 24px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 0 38px rgba(129, 140, 248, 0.8), 0 12px 32px rgba(0, 0, 0, 0.6);
         transform: scale(1.05);
         transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }}
@@ -680,10 +746,10 @@ st.markdown(f"""
         height: 90px;
         border-radius: 50%;
         object-fit: cover;
-        border: 2px solid rgba(129, 140, 248, 0.4);
+        border: 2px solid rgba(129, 140, 248, 0.35);
         opacity: 0.55;
         transform: scale(0.85);
-        filter: grayscale(20%);
+        filter: grayscale(15%);
         transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }}
     .carousel-avatar-side:hover {{
@@ -706,15 +772,15 @@ st.markdown(f"""
         border-radius: 50%;
         object-fit: cover;
         border: 2px solid transparent;
-        opacity: 0.6;
+        opacity: 0.55;
         transition: all 0.2s ease;
         cursor: pointer;
     }}
     .carousel-strip-thumb.active {{
         border-color: #818CF8;
         opacity: 1;
-        box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
-        transform: scale(1.1);
+        box-shadow: 0 0 16px rgba(129, 140, 248, 0.75);
+        transform: scale(1.12);
     }}
     
     /* CORPORATE FOOTER */
