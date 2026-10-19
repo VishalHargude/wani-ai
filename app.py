@@ -195,6 +195,11 @@ def translate_text(text: str, source='auto', target='mr') -> str:
     cleaned = sanitize_text(text)
     if not cleaned:
         return ""
+    if source == 'auto' or not source:
+        src_detected, _ = detect_language_safe(cleaned)
+        source = src_detected or 'en'
+    if source == target:
+        return cleaned
     try:
         url = f"https://api.mymemory.translated.net/get?q={urllib.parse.quote(cleaned)}&langpair={source}|{target}"
         r = requests.get(url, timeout=12)
@@ -3223,8 +3228,46 @@ def get_marathi_showcase_data_uri() -> str:
             return ""
     return ""
 
-def render_live_multilingual_dubbing_showcase():
+def render_live_multilingual_dubbing_showcase(
+    video_src: str = None,
+    audio_tracks: dict = None,
+    default_lang: str = "hi",
+    card_title: str = "WaniCreative",
+    badge_text: str = "LIVE DUBBING",
+    height: int = 590
+):
     mr_audio_uri = get_marathi_showcase_data_uri()
+    
+    if not video_src:
+        video_src = "https://eleven-public-cdn.elevenlabs.io/payloadcms/video-derived/6a184b41ff464f65c08e32c1/h264_720.mp4"
+        
+    if not audio_tracks:
+        audio_tracks = {
+            "en": {"label": "English", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/ny5ykdiwmb.mp3"},
+            "pt": {"label": "Portuguese", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/ovfai5i88jd.mp3"},
+            "de": {"label": "German", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/jicvfwkdre9.mp3"},
+            "it": {"label": "Italian", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/nvbceiamt1.mp3"},
+            "hi": {"label": "Hindi", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/ckn43hcxbxu.mp3"},
+            "es": {"label": "Spanish", "src": "https://eleven-public-cdn.elevenlabs.io/payloadcms/v9grnli26c.mp3"},
+            "mr": {"label": "Marathi", "src": mr_audio_uri}
+        }
+        
+    if default_lang not in audio_tracks:
+        default_lang = list(audio_tracks.keys())[0] if audio_tracks else "hi"
+        
+    audio_tags_list = []
+    for code, tinfo in audio_tracks.items():
+        src = tinfo.get("src", "")
+        if src:
+            audio_tags_list.append(f'<audio id="audio_{code}" preload="auto" src="{src}"></audio>')
+    audio_tags_html = "\n    ".join(audio_tags_list)
+    
+    pills_list = []
+    for code, tinfo in audio_tracks.items():
+        label = tinfo.get("label", code.upper())
+        active_cls = " active" if code == default_lang else ""
+        pills_list.append(f'<button class="lang-pill{active_cls}" data-lang="{code}">{label}</button>')
+    pills_html = "\n        ".join(pills_list)
     
     html_tpl = """<!DOCTYPE html>
 <html lang="en">
@@ -3527,27 +3570,21 @@ def render_live_multilingual_dubbing_showcase():
 <div class="showcase-card">
   <!-- Top Tabs -->
   <div class="top-tabs-dock">
-    <button class="top-tab active" id="tabCreative"><span class="dot dot-orange"></span> WaniCreative</button>
+    <button class="top-tab active" id="tabCreative"><span class="dot dot-orange"></span> __CARD_TITLE__</button>
     <button class="top-tab" id="tabAgents"><span class="dot dot-green"></span> WaniAgents</button>
     <button class="top-tab" id="tabApi"><span class="dot dot-silver"></span> WaniAPI</button>
   </div>
 
   <!-- Video Stage -->
   <div class="video-stage" id="videoStage">
-    <div class="live-status-tag"><span class="pulse-dot"></span> LIVE DUBBING</div>
+    <div class="live-status-tag"><span class="pulse-dot"></span> __BADGE_TEXT__</div>
 
-    <video id="videoEl" playsinline preload="auto" loop muted poster="https://eleven-public-cdn.elevenlabs.io/payloadcms/video-derived/6a184b41ff464f65c08e32c1/h264_720.mp4">
-      <source src="https://eleven-public-cdn.elevenlabs.io/payloadcms/video-derived/6a184b41ff464f65c08e32c1/h264_720.mp4" type="video/mp4">
+    <video id="videoEl" playsinline preload="auto" loop muted poster="">
+      <source src="__VIDEO_SRC__" type="video/mp4">
     </video>
 
     <!-- Audio Tracks for Synchronized Live Dubbing -->
-    <audio id="audio_en" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/ny5ykdiwmb.mp3"></audio>
-    <audio id="audio_pt" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/ovfai5i88jd.mp3"></audio>
-    <audio id="audio_de" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/jicvfwkdre9.mp3"></audio>
-    <audio id="audio_it" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/nvbceiamt1.mp3"></audio>
-    <audio id="audio_hi" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/ckn43hcxbxu.mp3"></audio>
-    <audio id="audio_es" preload="auto" src="https://eleven-public-cdn.elevenlabs.io/payloadcms/v9grnli26c.mp3"></audio>
-    <audio id="audio_mr" preload="auto" src="__MARATHI_AUDIO_URI__"></audio>
+    __AUDIO_TAGS_HTML__
 
     <!-- Sound Mute/Unmute -->
     <button class="mute-btn" id="muteBtn" title="Toggle Audio Sound">
@@ -3568,13 +3605,7 @@ def render_live_multilingual_dubbing_showcase():
     <div class="lang-overlay-bar">
       <button class="arrow-btn" id="arrowLeft">&lt;</button>
       <div class="lang-scroll-track" id="langTrack">
-        <button class="lang-pill" data-lang="en">English</button>
-        <button class="lang-pill" data-lang="pt">Portuguese</button>
-        <button class="lang-pill" data-lang="de">German</button>
-        <button class="lang-pill" data-lang="it">Italian</button>
-        <button class="lang-pill active" data-lang="hi">Hindi</button>
-        <button class="lang-pill" data-lang="es">Spanish</button>
-        <button class="lang-pill" data-lang="mr">Marathi</button>
+        __LANG_PILLS_HTML__
       </div>
       <button class="arrow-btn" id="arrowRight">&gt;</button>
     </div>
@@ -3605,22 +3636,18 @@ def render_live_multilingual_dubbing_showcase():
   const arrowLeft = document.getElementById('arrowLeft');
   const arrowRight = document.getElementById('arrowRight');
 
-  let currentLang = 'hi';
+  let currentLang = '__DEFAULT_LANG__';
   let isPlaying = false;
   let isMuted = false;
 
-  const audioTracks = {
-    'en': document.getElementById('audio_en'),
-    'pt': document.getElementById('audio_pt'),
-    'de': document.getElementById('audio_de'),
-    'it': document.getElementById('audio_it'),
-    'hi': document.getElementById('audio_hi'),
-    'es': document.getElementById('audio_es'),
-    'mr': document.getElementById('audio_mr')
-  };
+  const audioTracks = {};
+  document.querySelectorAll('audio[id^="audio_"]').forEach(a => {
+    const code = a.id.replace('audio_', '');
+    audioTracks[code] = a;
+  });
 
   function getActiveAudio() {
-    return audioTracks[currentLang] || audioTracks['hi'];
+    return audioTracks[currentLang] || Object.values(audioTracks)[0] || null;
   }
 
   function updatePlayIcon() {
@@ -3749,8 +3776,201 @@ def render_live_multilingual_dubbing_showcase():
 </body>
 </html>"""
 
-    final_html = html_tpl.replace("__MARATHI_AUDIO_URI__", mr_audio_uri)
-    components.html(final_html, height=590)
+    final_html = html_tpl.replace("__VIDEO_SRC__", video_src)\
+                         .replace("__AUDIO_TAGS_HTML__", audio_tags_html)\
+                         .replace("__LANG_PILLS_HTML__", pills_html)\
+                         .replace("__DEFAULT_LANG__", default_lang)\
+                         .replace("__CARD_TITLE__", card_title)\
+                         .replace("__BADGE_TEXT__", badge_text)\
+                         .replace("__MARATHI_AUDIO_URI__", mr_audio_uri)
+    components.html(final_html, height=height)
+
+# Helper: Process ANY Uploaded Video (up to 500 MB) for Live Multilingual Player & 100% Speaker Voice Cloning
+def process_multilingual_live_dubbing_pack(
+    video_bytes: bytes,
+    target_lang_codes: list,
+    voice_persona_name: str = "Adaptive AI Voice Clone",
+    mix_bg_audio: bool = False,
+    custom_transcript: str = "",
+    clone_uploaded_voice: bool = True,
+    video_filename: str = "uploaded_video.mp4"
+) -> dict:
+    """
+    Processes ANY uploaded video (up to 500 MB) for real-time live multilingual switching:
+    1. Creates ultra-optimized 540p faststart preview MP4 for zero-latency in-browser streaming.
+    2. Extracts 16kHz WAV original audio for vocal fingerprinting & STT.
+    3. Extracts speaker vocal clone fingerprint (F0 pitch, formant ratio, 6-band FFT spectral EQ).
+    4. Transcribes speech and translates to each selected target language.
+    5. Synthesizes 100% cloned speech audio for each language into base64 data URIs.
+    6. Remuxes downloadable MP4 video files and SRT subtitle files for each language.
+    """
+    ffmpeg_exe = get_ffmpeg_binary()
+    temp_dir = tempfile.gettempdir()
+    vid_id = uuid.uuid4().hex[:8]
+
+    in_video_path = os.path.join(temp_dir, f"live_in_{vid_id}.mp4")
+    with open(in_video_path, "wb") as fv:
+        fv.write(video_bytes)
+
+    # 1. Generate lightweight 540p video preview for 60fps HTML5 player
+    preview_mp4_path = os.path.join(temp_dir, f"live_prev_{vid_id}.mp4")
+    cmd_preview = [
+        ffmpeg_exe, "-y", "-i", in_video_path,
+        "-vf", "scale=-2:540",
+        "-an",
+        "-c:v", "libx264",
+        "-preset", "ultrafast",
+        "-crf", "28",
+        "-movflags", "+faststart",
+        preview_mp4_path
+    ]
+    subprocess.run(cmd_preview, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    with open(preview_mp4_path, "rb") as fp:
+        prev_b64 = base64.b64encode(fp.read()).decode("utf-8")
+    preview_video_uri = f"data:video/mp4;base64,{prev_b64}"
+
+    # 2. Extract original audio (WAV for analysis, MP3 for original audio playback)
+    orig_wav_path = os.path.join(temp_dir, f"live_orig_{vid_id}.wav")
+    cmd_extract_wav = [
+        ffmpeg_exe, "-y", "-i", in_video_path,
+        "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1",
+        orig_wav_path
+    ]
+    subprocess.run(cmd_extract_wav, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+
+    orig_mp3_path = os.path.join(temp_dir, f"live_orig_{vid_id}.mp3")
+    cmd_extract_mp3 = [
+        ffmpeg_exe, "-y", "-i", in_video_path,
+        "-vn", "-acodec", "libmp3lame", "-b:a", "128k",
+        orig_mp3_path
+    ]
+    subprocess.run(cmd_extract_mp3, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    with open(orig_mp3_path, "rb") as fo:
+        orig_mp3_b64 = base64.b64encode(fo.read()).decode("utf-8")
+    orig_audio_uri = f"data:audio/mp3;base64,{orig_mp3_b64}"
+
+    # 3. Extract 100% Vocal Clone Fingerprint
+    vocal_fp = extract_vocal_clone_fingerprint(orig_wav_path)
+
+    # 4. Transcribe Source Audio
+    if custom_transcript and custom_transcript.strip():
+        source_text = sanitize_text(custom_transcript)
+    else:
+        source_text = transcribe_audio_robust(orig_wav_path)
+
+    # 5. Language catalogs and voice mappings
+    LANG_META = {
+        "orig": {"label": "Original (मूळ)", "male": "", "female": ""},
+        "hi": {"label": "Hindi (हिंदी)", "male": "hi-IN-MadhurNeural", "female": "hi-IN-SwaraNeural"},
+        "mr": {"label": "Marathi (मराठी)", "male": "mr-IN-ManoharNeural", "female": "mr-IN-AarohiNeural"},
+        "en": {"label": "English (इंग्रजी)", "male": "en-US-ChristopherNeural", "female": "en-US-JennyNeural"},
+        "es": {"label": "Spanish (स्पॅनिश)", "male": "es-ES-AlvaroNeural", "female": "es-ES-ElviraNeural"},
+        "de": {"label": "German (जर्मन)", "male": "de-DE-ConradNeural", "female": "de-DE-KatjaNeural"},
+        "pt": {"label": "Portuguese (पोर्तुगीज)", "male": "pt-BR-AntonioNeural", "female": "pt-BR-FranciscaNeural"},
+        "it": {"label": "Italian (इटालियन)", "male": "it-IT-DiegoNeural", "female": "it-IT-ElsaNeural"},
+        "gu": {"label": "Gujarati (गुजराती)", "male": "gu-IN-NiranjanNeural", "female": "gu-IN-DhwaniNeural"},
+        "ta": {"label": "Tamil (तमिळ)", "male": "ta-IN-ValluvarNeural", "female": "ta-IN-PallaviNeural"},
+        "te": {"label": "Telugu (तेलगू)", "male": "te-IN-MohanNeural", "female": "te-IN-ShrutiNeural"},
+        "kn": {"label": "Kannada (कन्नड)", "male": "kn-IN-GaganNeural", "female": "kn-IN-SapnaNeural"},
+        "bn": {"label": "Bengali (बंगाली)", "male": "bn-IN-BashkarNeural", "female": "bn-IN-TanishaaNeural"}
+    }
+
+    audio_tracks = {
+        "orig": {"label": "Original (मूळ)", "src": orig_audio_uri}
+    }
+    translations = {"orig": source_text}
+    downloadable_videos = {}
+    downloadable_srts = {}
+
+    if not target_lang_codes:
+        target_lang_codes = ["hi", "mr", "en"]
+
+    dub_gender = vocal_fp.get("gender", "Male")
+    dub_pitch = vocal_fp.get("pitch_offset_str", "+0Hz")
+    dub_rate = vocal_fp.get("rate_str", "+0%")
+    dub_dsp = vocal_fp.get("dsp_filter", "volume=1.0")
+
+    if not clone_uploaded_voice and "Adaptive" not in voice_persona_name and "Clone" not in voice_persona_name:
+        all_p = get_all_studio_personas()
+        pdata = all_p.get(voice_persona_name, list(all_p.values())[0])
+        dub_gender = pdata.get("gender", "Male")
+        dub_pitch = pdata.get("pitch", "+0Hz")
+        dub_rate = pdata.get("rate", "+0%")
+        dub_dsp = pdata.get("dsp", "volume=1.0")
+
+    for lcode in target_lang_codes:
+        if lcode == "orig":
+            continue
+
+        meta = LANG_META.get(lcode, {"label": lcode.upper(), "male": "hi-IN-MadhurNeural", "female": "hi-IN-SwaraNeural"})
+        voice_code = meta["male"] if dub_gender == "Male" else meta["female"]
+
+        # Translate text
+        if lcode == "en":
+            tr_text = source_text
+        else:
+            tr_text = translate_text(source_text, source="auto", target=lcode)
+        translations[lcode] = tr_text
+
+        # Synthesize audio with 100% cloned profile
+        dub_mp3_path = os.path.join(temp_dir, f"live_dub_{lcode}_{vid_id}.mp3")
+        synthesize_speech_core(
+            text=tr_text,
+            voice_code=voice_code,
+            out_path=dub_mp3_path,
+            pitch_str=dub_pitch,
+            rate_str=dub_rate,
+            engine="Wani Neural Matrix Core",
+            lang_code=lcode,
+            gender=dub_gender,
+            dsp=dub_dsp
+        )
+
+        with open(dub_mp3_path, "rb") as fd:
+            mp3_b64 = base64.b64encode(fd.read()).decode("utf-8")
+
+        audio_tracks[lcode] = {
+            "label": meta["label"],
+            "src": f"data:audio/mp3;base64,{mp3_b64}"
+        }
+
+        # Mux full-resolution downloadable video
+        out_vid_path = os.path.join(temp_dir, f"live_video_{lcode}_{vid_id}.mp4")
+        if mix_bg_audio:
+            cmd_mux = [
+                ffmpeg_exe, "-y", "-i", in_video_path, "-i", dub_mp3_path,
+                "-filter_complex", "[0:a]volume=0.15[a0];[1:a]volume=1.0[a1];[a0][a1]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+                "-map", "0:v:0", "-map", "[aout]",
+                "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+                "-shortest", out_vid_path
+            ]
+        else:
+            cmd_mux = [
+                ffmpeg_exe, "-y", "-i", in_video_path, "-i", dub_mp3_path,
+                "-map", "0:v:0", "-map", "1:a:0",
+                "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+                "-shortest", out_vid_path
+            ]
+        subprocess.run(cmd_mux, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        downloadable_videos[lcode] = out_vid_path
+
+        # Generate SRT
+        srt_content = generate_srt_subtitles(tr_text, duration_seconds=15.0)
+        out_srt_path = os.path.join(temp_dir, f"live_subs_{lcode}_{vid_id}.srt")
+        with open(out_srt_path, "w", encoding="utf-8") as fs:
+            fs.write(srt_content)
+        downloadable_srts[lcode] = out_srt_path
+
+    return {
+        "preview_video_uri": preview_video_uri,
+        "audio_tracks": audio_tracks,
+        "source_text": source_text,
+        "translations": translations,
+        "vocal_fp": vocal_fp,
+        "downloadable_videos": downloadable_videos,
+        "downloadable_srts": downloadable_srts,
+        "video_filename": video_filename
+    }
 
 # ==============================================================
 # TAB 3: AUTOMATIC AI VIDEO DUBBING STUDIO (UP TO 500 MB)
@@ -3758,8 +3978,36 @@ def render_live_multilingual_dubbing_showcase():
 with tab_dubbing:
     st.markdown('<div class="studio-banner">🎬 AI Video Dubbing Studio — Automated Multilingual Video Dubbing with Audio Remuxing (Up to 500 MB)</div>', unsafe_allow_html=True)
     
-    # 1. RENDER ELEVENLABS-STYLE LIVE MULTILINGUAL DUBBING SHOWCASE
-    render_live_multilingual_dubbing_showcase()
+    # 1. RENDER ELEVENLABS-STYLE LIVE MULTILINGUAL DUBBING SHOWCASE OR USER'S UPLOADED LIVE PACK
+    custom_pack = st.session_state.get("custom_live_dubbing_pack")
+    
+    if custom_pack:
+        col_pk1, col_pk2 = st.columns([1.3, 1])
+        with col_pk1:
+            dub_player_mode = st.radio(
+                "🎬 Choose Live Interactive Player View:",
+                [
+                    f"🧬 My Uploaded Video — {custom_pack.get('video_filename', 'My Video')} (Live Dubbing Switcher)",
+                    "🌟 Official Showcase Demo (Dude Perfect Live Multilingual Dub)"
+                ],
+                horizontal=True,
+                key="dub_player_view_choice"
+            )
+        with col_pk2:
+            st.caption(f"⚡ Live Multi-track Player Active with **{len(custom_pack.get('audio_tracks', {}))} Languages**! Click any language pill directly in the video to switch speech instantly on the fly.")
+            
+        if "My Uploaded Video" in dub_player_mode:
+            render_live_multilingual_dubbing_showcase(
+                video_src=custom_pack["preview_video_uri"],
+                audio_tracks=custom_pack["audio_tracks"],
+                default_lang="hi" if "hi" in custom_pack["audio_tracks"] else list(custom_pack["audio_tracks"].keys())[0],
+                card_title=f"WaniStudio — {custom_pack.get('video_filename', 'My Video')}",
+                badge_text="100% CLONED LIVE DUBBING"
+            )
+        else:
+            render_live_multilingual_dubbing_showcase()
+    else:
+        render_live_multilingual_dubbing_showcase()
     
     st.markdown('<div id="dubbing-upload-anchor" style="margin-top: 24px;"></div>', unsafe_allow_html=True)
     st.markdown("---")
@@ -3859,11 +4107,65 @@ with tab_dubbing:
         )
         mix_bg = "Cinematic" in dub_audio_mode
         
+        pack_langs = st.multiselect(
+            "🌐 Target Languages for Real-Time Live Switcher (लाईव्ह स्विचिंगसाठी भाषा निवडा):",
+            options=["hi", "mr", "en", "es", "de", "gu", "ta", "te", "kn", "bn"],
+            default=["hi", "mr", "en", "es"],
+            format_func=lambda c: {
+                "hi": "Hindi (हिंदी)",
+                "mr": "Marathi (मराठी)",
+                "en": "English (इंग्रजी)",
+                "es": "Spanish (स्पॅनिश)",
+                "de": "German (जर्मन)",
+                "gu": "Gujarati (गुजराती)",
+                "ta": "Tamil (तमिळ)",
+                "te": "Telugu (तेलगू)",
+                "kn": "Kannada (कन्नड)",
+                "bn": "Bengali (बंगाली)"
+            }.get(c, c.upper()),
+            key="dub_pack_langs_choice"
+        )
+        
         with st.expander("📝 Optional Custom Dialogue / Script (Override Video Audio)"):
             custom_script = st.text_area("Enter dialogue text if you wish to override auto-transcription:", height=90, key="dub_custom_script")
             
-        dub_run_btn = st.button("🚀 Render AI Multilingual Dubbing (500 MB Engine)", type="primary", use_container_width=True, key="btn_execute_dub")
+        col_btn_a, col_btn_b = st.columns([1.5, 1])
+        with col_btn_a:
+            live_pack_run_btn = st.button("🚀 Generate 100% Cloned LIVE Multilingual Player for THIS Video", type="primary", use_container_width=True, key="btn_execute_live_pack")
+        with col_btn_b:
+            dub_run_btn = st.button("⚡ Fast Single-Language Mux", use_container_width=True, key="btn_execute_dub")
 
+    # Handler for Full Live Multilingual Pack
+    if live_pack_run_btn:
+        if not dub_video_file:
+            st.warning("Please upload a video file first.")
+        else:
+            active_email = st.session_state.current_user.get("email", "guest@wani.ai")
+            is_allowed, trial_msg, qdata = validate_user_trial(active_email, custom_script or "Automated Multilingual Video Dubbing Session")
+            
+            if not is_allowed:
+                st.error(trial_msg)
+            else:
+                with st.spinner(f"Extracting vocal fingerprint, translating into {len(pack_langs)} languages, and assembling Live Multilingual Dubbing Player..."):
+                    try:
+                        pack = process_multilingual_live_dubbing_pack(
+                            video_bytes=dub_v_bytes,
+                            target_lang_codes=pack_langs,
+                            voice_persona_name=dub_persona_choice,
+                            mix_bg_audio=mix_bg,
+                            custom_transcript=custom_script,
+                            clone_uploaded_voice=clone_uploaded,
+                            video_filename=dub_video_file.name
+                        )
+                        st.session_state["custom_live_dubbing_pack"] = pack
+                        st.session_state["dubbed_acoustic_info"] = pack["vocal_fp"]
+                        st.session_state["dub_player_switch_radio"] = f"🧬 My Uploaded Video — {dub_video_file.name}"
+                        st.success(f"✨ Live Multilingual Dubbing Player created with {len(pack['audio_tracks'])} tracks! Scroll up to play and switch languages live.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Live Dubbing Pack Pipeline Error: {str(e)}")
+
+    # Handler for Fast Single-Language Mux
     if dub_run_btn:
         if not dub_video_file:
             st.warning("Please upload a video file first.")
@@ -3893,7 +4195,102 @@ with tab_dubbing:
                     except Exception as e:
                         st.error(f"Dubbing Pipeline Error: {str(e)}")
 
-    if "dubbed_video_path" in st.session_state and os.path.exists(st.session_state["dubbed_video_path"]):
+    # Deliverables: Live Multilingual Pack Deliverables
+    if custom_pack:
+        st.markdown("---")
+        st.markdown("### 🎬 Custom Live Dubbing Deliverables & Language Tracks")
+        
+        ac_info = custom_pack.get("vocal_fp", {})
+        if ac_info:
+            st.markdown(f"""
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid rgba(16, 185, 129, 0.45); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;">
+                <div style="font-size: 11px; background: rgba(16, 185, 129, 0.25); color: #34D399; padding: 2px 8px; border-radius: 4px; display: inline-block; font-weight: 700;">🧬 100% UPLOADED VIDEO SPEAKER VOICE CLONED 🟢</div>
+                <div style="margin-top: 6px; font-size: 14px; color: #F8FAFC;">
+                    Detected Speaker: <b>{ac_info.get('gender', 'Male')}</b> • Fundamental Pitch: <code>{ac_info.get('avg_pitch_hz', 120)} Hz</code> • Pitch Modulation: <code>{ac_info.get('pitch_offset_str', '+0Hz')}</code> • Formant Shift: <code>{ac_info.get('formant_ratio', 1.0)}x</code>
+                </div>
+                <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">{ac_info.get('spectral_desc', '')}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.expander("💾 Save This Video Speaker's Voice to My Cloned Voices Library"):
+                vid_vname = st.text_input("Name this Voice:", value=f"Video Speaker ({ac_info.get('avg_pitch_hz', 120)}Hz)", key="vid_save_vname_pack")
+                if st.button("💾 Save Cloned Voice to Library", key="btn_save_vid_clone_pack"):
+                    cid = f"clone_{uuid.uuid4().hex[:8]}"
+                    avatar_url = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=faces" if ac_info.get('gender') == "Male" else "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces"
+                    clone_data = {
+                        "id": cid,
+                        "name": vid_vname.strip() or "Video Speaker",
+                        "gender": ac_info.get('gender', 'Male'),
+                        "avatar": avatar_url,
+                        "pitch_offset_str": ac_info.get('pitch_offset_str', '+0Hz'),
+                        "rate_str": ac_info.get('rate_str', '+0%'),
+                        "formant_ratio": ac_info.get('formant_ratio', 1.0),
+                        "dsp_filter": ac_info.get('dsp_filter', 'volume=1.0'),
+                        "spectral_desc": ac_info.get('spectral_desc', ''),
+                        "avg_pitch_hz": ac_info.get('avg_pitch_hz', 120),
+                        "voice_map": {
+                            "mr": "mr-IN-ManoharNeural" if ac_info.get('gender') == "Male" else "mr-IN-AarohiNeural",
+                            "hi": "hi-IN-MadhurNeural" if ac_info.get('gender') == "Male" else "hi-IN-SwaraNeural",
+                            "en": "en-US-ChristopherNeural" if ac_info.get('gender') == "Male" else "en-US-JennyNeural"
+                        },
+                        "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+                    }
+                    save_cloned_voice(cid, clone_data)
+                    st.toast(f"✅ Voice saved to library as '{vid_vname}'!")
+                    st.rerun()
+
+        st.markdown("#### 📦 Download Finished Media by Language Track")
+        LANG_NAMES_MAP = {
+            "hi": "Hindi (हिंदी)",
+            "mr": "Marathi (मराठी)",
+            "en": "English (इंग्रजी)",
+            "es": "Spanish (स्पॅनिश)",
+            "de": "German (जर्मन)",
+            "gu": "Gujarati (गुजराती)",
+            "ta": "Tamil (तमिळ)",
+            "te": "Telugu (तेलगू)",
+            "kn": "Kannada (कन्नड)",
+            "bn": "Bengali (बंगाली)"
+        }
+        dl_lang_keys = list(custom_pack.get("downloadable_videos", {}).keys())
+        if dl_lang_keys:
+            dl_tabs = st.tabs([f"🌐 {LANG_NAMES_MAP.get(lk, lk.upper())}" for lk in dl_lang_keys])
+            for tab, lk in zip(dl_tabs, dl_lang_keys):
+                with tab:
+                    vid_file_path = custom_pack["downloadable_videos"].get(lk)
+                    srt_file_path = custom_pack["downloadable_srts"].get(lk)
+                    
+                    dc_1, dc_2 = st.columns([1, 1])
+                    with dc_1:
+                        if vid_file_path and os.path.exists(vid_file_path):
+                            with open(vid_file_path, "rb") as vff:
+                                vff_bytes = vff.read()
+                            st.download_button(
+                                f"⬇️ Download Dubbed Video ({LANG_NAMES_MAP.get(lk, lk.upper())})",
+                                vff_bytes,
+                                file_name=f"wani_dubbed_{lk}_{custom_pack.get('video_filename', 'production.mp4')}",
+                                mime="video/mp4",
+                                use_container_width=True,
+                                type="primary",
+                                key=f"dl_live_vid_{lk}"
+                            )
+                    with dc_2:
+                        if srt_file_path and os.path.exists(srt_file_path):
+                            with open(srt_file_path, "rb") as sff:
+                                sff_bytes = sff.read()
+                            st.download_button(
+                                f"⬇️ Download Subtitles (.SRT - {lk.upper()})",
+                                sff_bytes,
+                                file_name=f"wani_{lk}_subtitles.srt",
+                                mime="text/plain",
+                                use_container_width=True,
+                                key=f"dl_live_srt_{lk}"
+                            )
+                    with st.expander(f"📝 View Translated Dialogue ({LANG_NAMES_MAP.get(lk, lk.upper())})"):
+                        st.info(custom_pack.get("translations", {}).get(lk, ""))
+
+    # Single-render deliverables fallback
+    elif "dubbed_video_path" in st.session_state and os.path.exists(st.session_state["dubbed_video_path"]):
         st.markdown("---")
         st.markdown("### 🎬 Dubbed Video Preview & Deliverables")
         
