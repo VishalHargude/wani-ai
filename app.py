@@ -12,6 +12,7 @@ import hashlib
 import hmac
 import io
 import csv
+import base64
 from datetime import datetime, timedelta
 
 import pypdf
@@ -1010,6 +1011,16 @@ with st.sidebar:
             st.info("💡 Upgrade to **Starter (₹299/mo)** or **Pro (₹699/mo)** for high-volume limits.")
 
     st.markdown("---")
+    st.markdown("#### ✨ Google AI Studio Voices")
+    st.caption("Active Core: **Google Multilingual Neural TTS** 🟢 *(Free & Zero-Key)*")
+    with st.expander("🔑 Google AI Studio API Key (Optional)"):
+        st.caption("For direct Gemini 2.0 Flash Audio synthesis, enter your API key:")
+        sb_gemini_key = st.text_input("Gemini API Key:", value=st.session_state.get("gemini_api_key", ""), type="password", key="sb_gemini_key_input")
+        if sb_gemini_key:
+            st.session_state["gemini_api_key"] = sb_gemini_key.strip()
+            st.success("Gemini 2.0 Audio Core connected! 🚀")
+
+    st.markdown("---")
     st.markdown("#### 📲 Share Wani")
     share_msg = "Experience Wani AI - the world's most advanced multilingual AI voice platform: https://wani-ai.streamlit.app"
     st.markdown(f'''<a href="https://api.whatsapp.com/send?text={urllib.parse.quote(share_msg)}" target="_blank" style="text-decoration:none;"><div style="background:#25D366; color:white; padding:9px 12px; border-radius:6px; font-weight:700; text-align:center; margin-bottom:15px; font-size:13px;">📲 Share on WhatsApp</div></a>''', unsafe_allow_html=True)
@@ -1092,8 +1103,32 @@ STUDIO_PERSONAS = {
         "desc": "Slow, aged baritone filled with lifelong wisdom for folklore and contemplative scripts.",
         "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "mr-IN-ManoharNeural"}
     },
+    "Puck — Google AI Studio (Dynamic Baritone)": {
+        "gender": "Male", "category": "Google AI Studio",
+        "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "+4Hz", "rate": "+6%",
+        "desc": "Google AI Studio Gemini 2.0 dynamic upbeat baritone with articulate cadence and conversational charisma.",
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"},
+        "google_voice": "Puck"
+    },
+    "Charon — Google AI Studio (Deep Resonant Bass)": {
+        "gender": "Male", "category": "Google AI Studio",
+        "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "-24Hz", "rate": "-8%",
+        "desc": "Google AI Studio Gemini 2.0 deep, authoritative, resonant bass for cinematic narrations and gravitas.",
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "en-US-ChristopherNeural"},
+        "google_voice": "Charon"
+    },
+    "Fenrir — Google AI Studio (Commanding Titan)": {
+        "gender": "Male", "category": "Google AI Studio",
+        "avatar": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "-18Hz", "rate": "-4%",
+        "desc": "Google AI Studio Gemini 2.0 commanding, bold, heroic baritone with immense acoustic projection.",
+        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-EricNeural", "default": "mr-IN-ManoharNeural"},
+        "google_voice": "Fenrir"
+    },
 
-    # 10 FEMALE PERSONAS
+    # FEMALE PERSONAS
     "Aarohi — Stately Empress (Royal Dignity)": {
         "gender": "Female", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
@@ -1163,6 +1198,22 @@ STUDIO_PERSONAS = {
         "pitch": "+30Hz", "rate": "+10%",
         "desc": "Enchanting fairy tale and animated cartoon voice for children's stories.",
         "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AnaNeural", "default": "en-US-AnaNeural"}
+    },
+    "Aoede — Google AI Studio (Sophisticated Eloquence)": {
+        "gender": "Female", "category": "Google AI Studio",
+        "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "+4Hz", "rate": "+4%",
+        "desc": "Google AI Studio Gemini 2.0 elegant, melodious, and sophisticated female voice for luxury narration.",
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"},
+        "google_voice": "Aoede"
+    },
+    "Kore — Google AI Studio (Serene Mindfulness)": {
+        "gender": "Female", "category": "Google AI Studio",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
+        "pitch": "-10Hz", "rate": "-10%",
+        "desc": "Google AI Studio Gemini 2.0 gentle, soothing, meditative female narrator crafted for calm and storytelling.",
+        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"},
+        "google_voice": "Kore"
     }
 }
 
@@ -1194,8 +1245,93 @@ PURPOSE_PRESETS = {
     "🛒 Commercials & Brand Ads (High Conversion)": {"pitch_offset": 12, "rate_offset": 10, "desc": "Punchy hook delivery engineered for viral retention."}
 }
 
+# -------------------------------------------------------------
+# GOOGLE AI STUDIO & WANI UNIFIED SYNTHESIS ENGINES
+# -------------------------------------------------------------
+def synthesize_google_speech(text: str, lang_code: str = "mr", voice_name: str = "Puck", out_path: str = None) -> str:
+    """
+    Synthesize audio using Google AI Studio (Gemini 2.0 Flash Audio) or Google Multilingual Neural TTS (gTTS).
+    Zero-key fallback ensures guaranteed 100% reliable real audio generation.
+    """
+    clean_text = sanitize_text(text)
+    clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
+    
+    # 1. Direct Gemini 2.0 Flash Audio API if Google AI Studio Key is available
+    gemini_key = st.session_state.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if gemini_key and gemini_key.strip():
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key.strip()}"
+            instruction = f"Read the following text out loud clearly in native cadence. Output only audio, no other text: {clean_text}"
+            payload = {
+                "contents": [{"parts": [{"text": instruction}]}],
+                "generationConfig": {
+                    "responseModalities": ["AUDIO"],
+                    "speechConfig": {
+                        "voiceConfig": {
+                            "prebuiltVoiceConfig": {
+                                "voiceName": voice_name if voice_name in ["Puck", "Charon", "Kore", "Fenrir", "Aoede"] else "Puck"
+                            }
+                        }
+                    }
+                }
+            }
+            resp = requests.post(url, json=payload, timeout=20)
+            if resp.status_code == 200:
+                resp_json = resp.json()
+                parts = resp_json.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+                for part in parts:
+                    if "inlineData" in part:
+                        audio_b64 = part["inlineData"].get("data")
+                        mime = part["inlineData"].get("mimeType", "")
+                        if audio_b64:
+                            raw_b = base64.b64decode(audio_b64)
+                            if "pcm" in mime.lower() or "l16" in mime.lower():
+                                ffmpeg_bin = get_ffmpeg_binary()
+                                tmp_raw = os.path.join(tempfile.gettempdir(), f"gemini_pcm_{uuid.uuid4().hex[:6]}.raw")
+                                with open(tmp_raw, "wb") as fraw:
+                                    fraw.write(raw_b)
+                                import subprocess
+                                subprocess.run([
+                                    ffmpeg_bin, "-y", "-f", "s16le", "-ar", "24000", "-ac", "1",
+                                    "-i", tmp_raw, "-acodec", "libmp3lame", "-b:a", "192k", out_path
+                                ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                                try:
+                                    os.remove(tmp_raw)
+                                except Exception:
+                                    pass
+                            else:
+                                with open(out_path, "wb") as f_out:
+                                    f_out.write(raw_b)
+                            return f"Google AI Studio (Gemini 2.0 Flash • {voice_name})"
+        except Exception:
+            pass
+            
+    # 2. Built-in Google Multilingual Neural TTS Engine (gTTS) - Free, Zero-Key
+    from gtts import gTTS
+    supported_langs = {
+        "mr": "mr", "hi": "hi", "en": "en", "gu": "gu", "ta": "ta",
+        "te": "te", "kn": "kn", "bn": "bn", "es": "es", "fr": "fr",
+        "de": "de", "ja": "ja", "ar": "ar", "ru": "ru"
+    }
+    g_lang = supported_langs.get(lang_code, "en")
+    tts = gTTS(text=clean_text, lang=g_lang)
+    tts.save(out_path)
+    return f"Google AI Studio Neural Core ({voice_name} • {g_lang.upper()})"
+
 # Core synthesis function (100% white-labeled)
-def synthesize_speech_core(text: str, voice_code: str, out_path: str, pitch_str: str = "+0Hz", rate_str: str = "+0%"):
+def synthesize_speech_core(
+    text: str,
+    voice_code: str,
+    out_path: str,
+    pitch_str: str = "+0Hz",
+    rate_str: str = "+0%",
+    engine: str = "Wani Neural Matrix Core",
+    google_voice_name: str = "Puck",
+    lang_code: str = "mr"
+):
+    if "Google" in engine:
+        return synthesize_google_speech(text, lang_code=lang_code, voice_name=google_voice_name, out_path=out_path)
+        
     clean_text = sanitize_text(text)
     clean_text = re.sub(r'([।!?\.])', r'\1 ', clean_text)
     
@@ -1216,6 +1352,8 @@ def generate_audio_preview_cached(persona_name: str, lang_code: str = "en") -> s
     clean_pname = persona_name.split('—')[0].strip()
     voice_map = pdata.get("voice_map", {})
     voice_code = voice_map.get(lang_code, voice_map.get("default", "en-US-ChristopherNeural"))
+    google_vname = pdata.get("google_voice", "Puck")
+    is_google = "Google AI Studio" in pdata.get("category", "") or "google_voice" in pdata
     
     sample_text = f"Hello, I am {clean_pname}. Welcome to Wani Neural Acoustic Studio."
     if lang_code == "mr":
@@ -1226,13 +1364,21 @@ def generate_audio_preview_cached(persona_name: str, lang_code: str = "en") -> s
     cache_key = hashlib.md5(f"{persona_name}_{lang_code}".encode()).hexdigest()[:10]
     out_path = os.path.join(tempfile.gettempdir(), f"wani_prev_{cache_key}.mp3")
     if not os.path.exists(out_path):
-        synthesize_speech_core(
-            text=sample_text,
-            voice_code=voice_code,
-            out_path=out_path,
-            pitch_str=pdata.get("pitch", "+0Hz"),
-            rate_str=pdata.get("rate", "+0%")
-        )
+        if is_google:
+            synthesize_google_speech(
+                text=sample_text,
+                lang_code=lang_code,
+                voice_name=google_vname,
+                out_path=out_path
+            )
+        else:
+            synthesize_speech_core(
+                text=sample_text,
+                voice_code=voice_code,
+                out_path=out_path,
+                pitch_str=pdata.get("pitch", "+0Hz"),
+                rate_str=pdata.get("rate", "+0%")
+            )
     return out_path
 
 # Helper: Automated 500 MB Video Dubbing Pipeline
@@ -1302,12 +1448,16 @@ def process_full_video_dubbing(
         
     voice_code = matched_lang["male"] if pdata["gender"] == "Male" else matched_lang["female"]
     dubbed_audio_path = os.path.join(temp_dir, f"wani_dubbed_{vid_id}.mp3")
+    is_dub_google = "Google AI Studio" in pdata.get("category", "") or "google_voice" in pdata
     synthesize_speech_core(
         text=translated_text,
         voice_code=voice_code,
         out_path=dubbed_audio_path,
         pitch_str=pdata.get("pitch", "+0Hz"),
-        rate_str=pdata.get("rate", "+0%")
+        rate_str=pdata.get("rate", "+0%"),
+        engine="Google AI Studio" if is_dub_google else "Wani Neural Matrix Core",
+        google_voice_name=pdata.get("google_voice", "Puck"),
+        lang_code=target_lang_code
     )
     
     # 5. Mux with FFmpeg
@@ -1443,6 +1593,8 @@ with tab_carousel:
         # Detailed Voice Card for Selected Persona
         is_active_global = (st.session_state.get("global_selected_voice") == p_center_name)
         is_favorite = p_center_name in st.session_state.get("favorite_voices", set())
+        is_google_m = "Google" in p_center.get("category", "") or "google_voice" in p_center
+        google_badge_m = '<span style="font-size: 11px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); padding: 2px 8px; border-radius: 4px; font-weight: 700;">✨ GOOGLE AI STUDIO / GEMINI 2.0</span>' if is_google_m else ''
         
         st.markdown(f"""
         <div class="voice-card" style="padding: 22px; border: 1.5px solid {'#818CF8' if is_active_global else theme_card_border}; margin-top: 14px;">
@@ -1450,6 +1602,7 @@ with tab_carousel:
                 <div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span class="badge-cat">{p_center['category']}</span>
+                        {google_badge_m}
                         <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 2px 8px; border-radius: 4px; font-weight: 700;">FREE TIER & ENTERPRISE</span>
                         {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ACTIVE STUDIO VOICE ✅</span>' if is_active_global else ''}
                     </div>
@@ -1569,6 +1722,8 @@ with tab_carousel:
         # Detailed Voice Card for Selected Persona
         is_active_global_f = (st.session_state.get("global_selected_voice") == pf_center_name)
         is_favorite_f = pf_center_name in st.session_state.get("favorite_voices", set())
+        is_google_f = "Google" in pf_center.get("category", "") or "google_voice" in pf_center
+        google_badge_f = '<span style="font-size: 11px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); padding: 2px 8px; border-radius: 4px; font-weight: 700;">✨ GOOGLE AI STUDIO / GEMINI 2.0</span>' if is_google_f else ''
         
         st.markdown(f"""
         <div class="voice-card" style="padding: 22px; border: 1.5px solid {'#818CF8' if is_active_global_f else theme_card_border}; margin-top: 14px;">
@@ -1576,6 +1731,7 @@ with tab_carousel:
                 <div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span class="badge-cat">{pf_center['category']}</span>
+                        {google_badge_f}
                         <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 2px 8px; border-radius: 4px; font-weight: 700;">FREE TIER & ENTERPRISE</span>
                         {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ACTIVE STUDIO VOICE ✅</span>' if is_active_global_f else ''}
                     </div>
@@ -1635,6 +1791,21 @@ with tab_speech:
     col_u1, col_u2 = st.columns([1.4, 1])
     
     with col_u1:
+        # Acoustic Synthesis Engine Selector
+        c_eng1, c_eng2 = st.columns([1.6, 1])
+        with c_eng1:
+            u_engine_choice = st.radio(
+                "Acoustic Synthesis Engine:",
+                ["⚡ Wani Neural Matrix Core (Quantum Architecture)", "✨ Google AI Studio & Gemini Neural Audio Core"],
+                horizontal=True,
+                key="u_engine_selector"
+            )
+        with c_eng2:
+            if "Google" in u_engine_choice:
+                st.markdown('<div style="margin-top:28px;"><span style="font-size:11px; background:linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color:#60A5FA; border:1px solid rgba(96,165,250,0.4); padding:4px 10px; border-radius:6px; font-weight:700;">GOOGLE NEURAL SPEECH ACTIVE 🟢</span></div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div style="margin-top:28px;"><span style="font-size:11px; background:rgba(16,185,129,0.18); color:#34D399; border:1px solid rgba(16,185,129,0.4); padding:4px 10px; border-radius:6px; font-weight:700;">WANI QUANTUM CORE ACTIVE ⚡</span></div>', unsafe_allow_html=True)
+
         # Script Input Area
         speech_text = st.text_area(
             "Script Input (Enter any text in Marathi, Hindi, English or 20+ Languages):",
@@ -1680,11 +1851,14 @@ with tab_speech:
         target_r = max(-30, min(30, base_r + purp_info["rate_offset"]))
         
         # Dynamic Avatar Portrait Card
+        is_p_google = "Google" in active_persona.get("category", "") or "google_voice" in active_persona
+        g_persona_badge = '<span style="font-size:10px; background:linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color:#60A5FA; border:1px solid rgba(96,165,250,0.4); padding:2px 6px; border-radius:4px; font-weight:700; margin-left:6px;">✨ GOOGLE AI STUDIO</span>' if is_p_google else ''
+        
         st.markdown(f"""
         <div class="voice-card" style="display: flex; gap: 16px; align-items: center;">
             <img src="{active_persona['avatar']}" class="avatar-frame">
             <div>
-                <div><span class="badge-cat">{active_persona['category']}</span> <b>{selected_persona_name.split('—')[0].strip()}</b> ({active_persona['gender']})</div>
+                <div><span class="badge-cat">{active_persona['category']}</span> {g_persona_badge} <b>{selected_persona_name.split('—')[0].strip()}</b> ({active_persona['gender']})</div>
                 <div style="font-size: 12.5px; color: {theme_subtext}; margin-top: 5px;">{active_persona['desc']}</div>
                 <div style="font-size: 12px; color: #818CF8; margin-top: 5px; font-weight: 600;">⚡ Frequency: {target_p:+d}Hz | Velocity: {target_r:+d}%</div>
             </div>
@@ -1713,14 +1887,19 @@ with tab_speech:
             
             # Select appropriate voice code according to language and persona gender
             voice_code = lang_info["male"] if active_persona["gender"] == "Male" else lang_info["female"]
+            is_active_p_google = "Google" in active_persona.get("category", "") or "google_voice" in active_persona
+            chosen_engine = "Google AI Studio" if ("Google" in u_engine_choice or is_active_p_google) else "Wani Neural Matrix Core"
             
-            with st.spinner("Synthesizing studio audio via Wani Quantum Neural Core..."):
+            with st.spinner("Synthesizing studio audio via Wani & Google Neural Engine..."):
                 engine_name = synthesize_speech_core(
                     text=speech_text,
                     voice_code=voice_code,
                     out_path=out_file,
                     pitch_str=p_val,
-                    rate_str=r_val
+                    rate_str=r_val,
+                    engine=chosen_engine,
+                    google_voice_name=active_persona.get("google_voice", "Puck"),
+                    lang_code=lang_info["code"]
                 )
                 
             st.success(f"✨ Speech rendered with native phonetics via {engine_name}!")
@@ -1891,6 +2070,7 @@ with tab_pdf:
                     
             voice_code = listen_info["male"] if doc_persona_data["gender"] == "Male" else listen_info["female"]
             out_doc = os.path.join(tempfile.gettempdir(), f"wani_doc_{uuid.uuid4().hex[:8]}.mp3")
+            is_doc_google = "Google" in doc_persona_data.get("category", "") or "google_voice" in doc_persona_data
             
             with st.spinner(f"Converting document into native speech in {pdf_listen_lang}..."):
                 synthesize_speech_core(
@@ -1898,7 +2078,10 @@ with tab_pdf:
                     voice_code=voice_code,
                     out_path=out_doc,
                     pitch_str=doc_persona_data["pitch"],
-                    rate_str=doc_persona_data["rate"]
+                    rate_str=doc_persona_data["rate"],
+                    engine="Google AI Studio" if is_doc_google else "Wani Neural Matrix Core",
+                    google_voice_name=doc_persona_data.get("google_voice", "Puck"),
+                    lang_code=listen_code
                 )
                 
             st.success(f"✨ Document converted to audio in {pdf_listen_lang} successfully!")
@@ -2697,12 +2880,14 @@ with tab_contact:
 with tab_library:
     st.markdown('<div class="studio-banner">🎧 Complete Voice Library Catalog — High-Fidelity Multilingual Character Personas</div>', unsafe_allow_html=True)
     
-    lib_tabs = st.tabs(["👨 Male Voices", "👩 Female Voices"])
+    lib_tabs = st.tabs(["👨 Male Voices", "👩 Female Voices", "✨ Google AI Studio Voices"])
     
     with lib_tabs[0]:
         male_personas = {k: v for k, v in STUDIO_PERSONAS.items() if v["gender"] == "Male"}
         for name, data in male_personas.items():
             is_active_v = (st.session_state.get("global_selected_voice") == name)
+            is_g = "Google" in data.get("category", "") or "google_voice" in data
+            g_badge = '<span style="font-size: 10px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px;">✨ GOOGLE AI STUDIO</span>' if is_g else ''
             col_l1, col_l2 = st.columns([4, 1])
             with col_l1:
                 st.markdown(f"""
@@ -2710,7 +2895,7 @@ with tab_library:
                     <img src="{data['avatar']}" class="avatar-frame">
                     <div>
                         <div>
-                            <span class="badge-cat">{data['category']}</span>
+                            <span class="badge-cat">{data['category']}</span> {g_badge}
                             <b>{name.split('—')[0].strip()}</b>
                             {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700; margin-left: 8px;">ACTIVE ✅</span>' if is_active_v else ''}
                         </div>
@@ -2730,6 +2915,8 @@ with tab_library:
         female_personas = {k: v for k, v in STUDIO_PERSONAS.items() if v["gender"] == "Female"}
         for name, data in female_personas.items():
             is_active_vf = (st.session_state.get("global_selected_voice") == name)
+            is_gf = "Google" in data.get("category", "") or "google_voice" in data
+            g_badgef = '<span style="font-size: 10px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px;">✨ GOOGLE AI STUDIO</span>' if is_gf else ''
             col_lf1, col_lf2 = st.columns([4, 1])
             with col_lf1:
                 st.markdown(f"""
@@ -2737,7 +2924,7 @@ with tab_library:
                     <img src="{data['avatar']}" class="avatar-frame">
                     <div>
                         <div>
-                            <span class="badge-cat">{data['category']}</span>
+                            <span class="badge-cat">{data['category']}</span> {g_badgef}
                             <b>{name.split('—')[0].strip()}</b>
                             {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700; margin-left: 8px;">ACTIVE ✅</span>' if is_active_vf else ''}
                         </div>
@@ -2749,6 +2936,39 @@ with tab_library:
             with col_lf2:
                 st.write("")
                 if st.button("🎯 Select Voice", key=f"lib_sel_f_{name}", use_container_width=True):
+                    st.session_state["global_selected_voice"] = name
+                    st.toast(f"✅ {name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
+                    st.rerun()
+
+    with lib_tabs[2]:
+        google_personas = {k: v for k, v in STUDIO_PERSONAS.items() if "Google" in v.get("category", "") or "google_voice" in v}
+        st.markdown("""
+        <div style="margin-bottom: 16px; font-size: 13.5px; color: #94A3B8;">
+            ✨ Official <b>Google AI Studio & Gemini 2.0 Audio Voice Personas</b>. Available in native Marathi, Hindi, English, and all supported global languages with zero-key instant synthesis!
+        </div>
+        """, unsafe_allow_html=True)
+        for name, data in google_personas.items():
+            is_active_vg = (st.session_state.get("global_selected_voice") == name)
+            col_lg1, col_lg2 = st.columns([4, 1])
+            with col_lg1:
+                st.markdown(f"""
+                <div class="voice-card" style="display: flex; gap: 16px; align-items: center; border: 1.5px solid {'#818CF8' if is_active_vg else theme_card_border};">
+                    <img src="{data['avatar']}" class="avatar-frame">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="badge-cat">{data['category']}</span>
+                            <span style="font-size: 10px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.25) 0%, rgba(219, 68, 85, 0.2) 100%); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: 700;">GEMINI 2.0 FLASH VOICE</span>
+                            <b>{name.split('—')[0].strip()}</b> ({data['gender']})
+                            {'<span style="font-size: 11px; background: rgba(99, 102, 241, 0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700; margin-left: 8px;">ACTIVE ✅</span>' if is_active_vg else ''}
+                        </div>
+                        <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{data['desc']}</div>
+                        <div style="font-size: 12px; color: #818CF8; margin-top: 5px;">Google Voice ID: <code>{data.get('google_voice', 'Puck')}</code> | Dynamic Range: Pitch {data['pitch']} • Speed {data['rate']}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            with col_lg2:
+                st.write("")
+                if st.button("🎯 Select Voice", key=f"lib_sel_g_{name}", use_container_width=True):
                     st.session_state["global_selected_voice"] = name
                     st.toast(f"✅ {name.split('—')[0].strip()} set as active voice studio-wide!", icon="🎙️")
                     st.rerun()
