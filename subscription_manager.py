@@ -68,18 +68,18 @@ DEFAULT_PLANS = {
         "badge": "FREE TRIAL 🎁",
         "price_inr_monthly": 0,
         "price_inr_yearly": 0,
-        "words_per_month": 3000,
-        "daily_trial_limit": 2,
-        "max_words_per_trial": 100,
-        "paragraphs_per_month": 15,
-        "translations_per_month": 10,
+        "words_per_month": 5000,
+        "daily_trial_limit": 10,
+        "max_words_per_trial": 150,
+        "paragraphs_per_month": 25,
+        "translations_per_month": 15,
         "premium_audio_minutes": 0,
         "has_premium_voices": False,
         "has_api_access": False,
         "razorpay_plan_id_monthly": None,
         "razorpay_plan_id_yearly": None,
         "features": [
-            "2 Daily Voice Trials (100 words max)",
+            "10 Free Voice Generations",
             "Standard Multi-language TTS",
             "Essential Studio Presets",
             "Community Support"
@@ -1099,11 +1099,11 @@ class SubscriptionManager:
                 u_usage["last_trial_date"] = today_str
 
             if not entitlements.get("is_paid", False):
-                daily_limit = quota_terms.get("daily_trial_limit", 2)
+                daily_limit = quota_terms.get("daily_trial_limit", 10)
                 if u_usage.get("daily_trials_today", 0) >= daily_limit:
                     return (
                         False,
-                        f"Daily trial limit reached ({daily_limit}/2 trials used today). Your free trials refresh tomorrow, or upgrade to Starter/Pro for immediate access.",
+                        f"Free Trial Limit Reached ({u_usage.get('daily_trials_today', 0)}/{daily_limit} free trials used). Please upgrade to Starter (₹299/mo) or Pro (₹699/mo) for unlimited voice generations.",
                         {"daily_trials_today": u_usage["daily_trials_today"]}
                     )
 

@@ -205,51 +205,77 @@ def extract_text_from_pdf(pdf_file_bytes) -> str:
 
 def detect_language_safe(text: str) -> tuple[str, str]:
     if not text or not text.strip():
-        return "en", "English 🌐"
+        return "en", "◈ English (Global & US)"
     
     # 1. Authentic Marathi marker 'ळ' (Retroflex Lateral)
     if 'ळ' in text:
-        return "mr", "Marathi (मराठी) 🚩"
+        return "mr", "◈ Marathi (मराठी)"
         
     # 2. Devanagari script evaluation
     if any('\u0900' <= c <= '\u097F' for c in text):
         marathi_markers = ["आहे", "आणि", "नाही", "होते", "झाले", "केले", "यांचे", "म्हणून", "त्यांच्या", "असेल", "झाला"]
         if any(m in text for m in marathi_markers):
-            return "mr", "Marathi (मराठी) 🚩"
-        return "hi", "Hindi (हिंदी) 🇮🇳"
+            return "mr", "◈ Marathi (मराठी)"
+        return "hi", "◈ Hindi (हिंदी)"
         
     if any('\u0A80' <= c <= '\u0AFF' for c in text):
-        return "gu", "Gujarati (ગુજરાતી) 🇮🇳"
+        return "gu", "◈ Gujarati (ગુજરાતી)"
     if any('\u0B80' <= c <= '\u0BFF' for c in text):
-        return "ta", "Tamil (தமிழ்) 🇮🇳"
+        return "ta", "◈ Tamil (தமிழ்)"
     if any('\u0C00' <= c <= '\u0C7F' for c in text):
-        return "te", "Telugu (తెలుగు) 🇮🇳"
+        return "te", "◈ Telugu (తెలుగు)"
     if any('\u0980' <= c <= '\u09FF' for c in text):
-        return "bn", "Bengali (বাংলা) 🇮🇳"
+        return "bn", "◈ Bengali (বাংলা)"
     if any('\u4E00' <= c <= '\u9FFF' or '\u3040' <= c <= '\u30FF' for c in text):
-        return "ja", "Japanese (日本語) 🇯🇵"
+        return "ja", "◈ Japanese (日本語)"
         
     try:
         from langdetect import detect
         code = detect(text[:1200])
         code_map = {
-            "mr": ("mr", "Marathi (मराठी) 🚩"),
-            "hi": ("hi", "Hindi (हिंदी) 🇮🇳"),
-            "en": ("en", "English 🌐"),
-            "es": ("es", "Spanish (Español) 🇪🇸"),
-            "fr": ("fr", "French (Français) 🇫🇷"),
-            "de": ("de", "German (Deutsch) 🇩🇪"),
-            "ja": ("ja", "Japanese (日本語) 🇯🇵"),
-            "gu": ("gu", "Gujarati (ગુજરાતી) 🇮🇳"),
-            "ta": ("ta", "Tamil (தமிழ்) 🇮🇳"),
-            "te": ("te", "Telugu (తెలుగు) 🇮🇳"),
-            "bn": ("bn", "Bengali (বাংলা) 🇮🇳"),
-            "ar": ("ar", "Arabic (العربية) 🇸🇦"),
-            "ru": ("ru", "Russian (Русский) 🇷🇺")
+            "mr": ("mr", "◈ Marathi (मराठी)"),
+            "hi": ("hi", "◈ Hindi (हिंदी)"),
+            "en": ("en", "◈ English (Global & US)"),
+            "es": ("es", "◈ Spanish (Español)"),
+            "fr": ("fr", "◈ French (Français)"),
+            "de": ("de", "◈ German (Deutsch)"),
+            "ja": ("ja", "◈ Japanese (日本語)"),
+            "gu": ("gu", "◈ Gujarati (ગુજરાતી)"),
+            "ta": ("ta", "◈ Tamil (தமிழ்)"),
+            "te": ("te", "◈ Telugu (తెలుగు)"),
+            "bn": ("bn", "◈ Bengali (বাংলা)"),
+            "ar": ("ar", "◈ Arabic (العربية)"),
+            "ru": ("ru", "◈ Russian (Русский)")
         }
-        return code_map.get(code, ("en", "English 🌐"))
+        return code_map.get(code, ("en", "◈ English (Global & US)"))
     except Exception:
-        return "en", "English 🌐"
+        return "en", "◈ English (Global & US)"
+
+# -------------------------------------------------------------
+# VIDEO AUDIO EXTRACTION ENGINE (UP TO 500 MB)
+# -------------------------------------------------------------
+def extract_audio_from_video(video_bytes, output_format="mp3") -> str:
+    """Extract high-fidelity audio track from any video file using imageio_ffmpeg."""
+    import imageio_ffmpeg
+    import subprocess
+    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_vid:
+        temp_vid.write(video_bytes)
+        temp_vid_path = temp_vid.name
+    
+    out_audio_path = os.path.join(tempfile.gettempdir(), f"wani_extracted_{uuid.uuid4().hex[:8]}.{output_format}")
+    cmd = [
+        ffmpeg_exe, "-y", "-i", temp_vid_path,
+        "-vn", "-acodec", "libmp3lame" if output_format == "mp3" else "pcm_s16le",
+        "-q:a", "2", out_audio_path
+    ]
+    subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    try:
+        os.remove(temp_vid_path)
+    except Exception:
+        pass
+    return out_audio_path
+
 
 # -------------------------------------------------------------
 # UNIVERSAL DESIGN: STRICT JOSEFIN SANS + DUAL THEME + CODE SHIELD
@@ -390,31 +416,21 @@ st.markdown(f"""
         border-bottom: 2px solid #6366F1 !important;
     }}
     
-    /* TOP LEFT-ALIGNED BRAND HEADER BAR WITH MICROPHONE SYMBOL */
-    .top-nav-bar {{
-        background: {theme_nav_bg};
-        border: 1px solid {theme_card_border};
-        border-radius: 12px;
-        padding: 12px 24px;
-        margin-bottom: 16px;
+    /* UNBOXED PURE BRAND HEADER (NO BOX, NO BORDER) */
+    .brand-unboxed {{
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
         gap: 16px;
-        box-shadow: {theme_shadow};
-    }}
-    
-    .brand-left-group {{
-        display: flex;
-        align-items: center;
-        gap: 12px;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 4px 0 10px 0 !important;
     }}
     
     .wani-brand-text {{
-        font-size: 38px;
-        font-weight: 700;
-        letter-spacing: -1px;
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: -1.2px;
         background: linear-gradient(135deg, #FF6B6B 0%, #9B51E0 50%, #4A90E2 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -423,24 +439,8 @@ st.markdown(f"""
         font-family: 'Josefin Sans', sans-serif !important;
     }}
     
-    .mic-symbol {{
-        font-size: 28px;
-        background: linear-gradient(135deg, #FF6B6B, #9B51E0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        filter: drop-shadow(0 2px 8px rgba(155, 81, 224, 0.4));
-        display: inline-block;
-    }}
-    
-    .brand-divider {{
-        color: {theme_card_border};
-        font-size: 24px;
-        font-weight: 300;
-        margin: 0 4px;
-    }}
-    
     .wani-tagline-inline {{
-        font-size: 11px;
+        font-size: 11.5px;
         letter-spacing: 2.2px;
         color: {theme_subtext};
         text-transform: uppercase;
@@ -528,6 +528,32 @@ st.markdown(f"""
         object-fit: cover;
         border: 2.5px solid #6366F1;
         box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        cursor: pointer;
+    }}
+    
+    .avatar-frame:hover {{
+        transform: scale(1.08);
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.7);
+        border-color: #818CF8;
+    }}
+    
+    .audition-card {{
+        background: {theme_card_bg};
+        border: 1px solid {theme_card_border};
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.25s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }}
+    
+    .audition-card:hover {{
+        border-color: #6366F1;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
     }}
     
     .badge-cat {{
@@ -596,26 +622,127 @@ elif "cancel" in status_code:
 else:
     status_html = '<span class="badge-cat">FREE TIER 🎁</span>'
 
-# TOP LEFT-ALIGNED ENTERPRISE NAVIGATION BAR WITH MICROPHONE SYMBOL
-st.markdown(f"""
-<div class="top-nav-bar protected-brand">
-    <div class="brand-left-group">
-        <span class="wani-brand-text">Wani</span>
-        <span class="mic-symbol">🎙️</span>
-        <span class="brand-divider">/</span>
-        <span class="wani-tagline-inline">The Voice of Intelligence • Neural Acoustic Studio</span>
-    </div>
-    <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="user-pill">
-            <span>👤 {user_name.split('(')[0].strip()}</span>
-            <span>|</span>
-            <span style="color:#818CF8;">{plan_badge}</span>
-            <span>|</span>
-            {status_html}
+# TOP LEFT-ALIGNED BRAND TITLE & UNBOXED LOGO (NO ENCLOSING BOX)
+col_brand_l, col_auth_r = st.columns([6.8, 3.2])
+with col_brand_l:
+    st.markdown(f"""
+    <div class="brand-unboxed protected-brand">
+        <svg width="48" height="48" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Microphone capsule with acoustic grille lines -->
+            <rect x="20" y="8" width="12" height="22" rx="6" fill="url(#micGrad)"/>
+            <line x1="22" y1="13" x2="30" y2="13" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="22" y1="17" x2="30" y2="17" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="22" y1="21" x2="30" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Mic cradle -->
+            <path d="M13 21C13 28.18 18.82 34 26 34C33.18 34 39 28.18 39 21" stroke="url(#micGrad)" stroke-width="3" stroke-linecap="round"/>
+            <!-- Stem & Base -->
+            <path d="M26 34V43M18 43H34" stroke="url(#micGrad)" stroke-width="3" stroke-linecap="round"/>
+            <!-- Left Soundwave lines (acoustic radiating waves) -->
+            <path d="M9 16C7 19 7 23 9 26" stroke="#818CF8" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M4 12C1 17 1 25 4 30" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Right Soundwave lines (acoustic radiating waves) -->
+            <path d="M43 16C45 19 45 23 43 26" stroke="#818CF8" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M48 12C51 17 51 25 48 30" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round"/>
+            <defs>
+                <linearGradient id="micGrad" x1="13" y1="8" x2="39" y2="43" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF6B6B"/>
+                    <stop offset="0.5" stop-color="#9B51E0"/>
+                    <stop offset="1" stop-color="#4F46E5"/>
+                </linearGradient>
+            </defs>
+        </svg>
+        <div>
+            <div class="wani-brand-text">Wani</div>
+            <div class="wani-tagline-inline">The Voice of Intelligence • Neural Acoustic Studio</div>
         </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+with col_auth_r:
+    col_acc_btn, col_thm_btn = st.columns([1.6, 1])
+    with col_acc_btn:
+        auth_btn_label = f"🔐 {user_name.split('(')[0].strip()}"
+        if st.button(auth_btn_label, use_container_width=True, key="top_auth_toggle_btn", help="Click to Sign In, Sign Up, or Switch Account"):
+            st.session_state["show_top_auth_modal"] = not st.session_state.get("show_top_auth_modal", False)
+    with col_thm_btn:
+        theme_btn_label = "☀️ Light" if is_dark else "🌙 Dark"
+        if st.button(theme_btn_label, use_container_width=True, key="top_theme_toggle_btn"):
+            st.session_state.theme = "Light" if is_dark else "Dark"
+            st.rerun()
+
+# Expandable Sign In / Sign Up Card right on top if triggered
+if st.session_state.get("show_top_auth_modal", False):
+    with st.container():
+        st.markdown(f"""
+        <div style="background:{theme_card_bg}; border:1.5px solid #6366F1; border-radius:12px; padding:18px 24px; margin-bottom:18px; box-shadow:{theme_shadow};">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="margin:0; color:#818CF8;">🔐 Member Portal & Identity Management</h4>
+                <span style="font-size:12px; color:{theme_subtext};">Active: <b>{user_email_active}</b> ({plan_badge})</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        ca1, ca2 = st.columns(2)
+        with ca1:
+            q_auth_mode = st.radio("Choose Action:", ["🔑 Sign In", "✨ Create New Account (10 Free Trials!)"], horizontal=True, key="q_auth_mode")
+            if "Sign In" in q_auth_mode:
+                q_email = st.text_input("Work Email:", value=user_email_active, key="q_in_email")
+                q_pass = st.text_input("Password:", type="password", value="admin" if "vishal" in user_email_active else "", key="q_in_pass")
+                if st.button("Authenticate Account 🚀", type="primary", use_container_width=True, key="q_btn_login"):
+                    cl_email = sanitize_text(q_email).lower()
+                    cl_hash = hash_credential(q_pass)
+                    if cl_email in users_db and hmac.compare_digest(users_db[cl_email].get("password_hash", ""), cl_hash):
+                        st.session_state.current_user = users_db[cl_email]
+                        st.session_state.current_user["email"] = cl_email
+                        st.session_state["show_top_auth_modal"] = False
+                        st.success(f"Welcome, {users_db[cl_email]['name']}!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials.")
+            else:
+                q_reg_name = st.text_input("Full Name:", key="q_reg_n")
+                q_reg_email = st.text_input("Email Address:", key="q_reg_e")
+                q_reg_pass = st.text_input("Password:", type="password", key="q_reg_p")
+                if st.button("Create Account (Get 10 Free Trials) 🎉", type="primary", use_container_width=True, key="q_btn_reg"):
+                    if q_reg_name and q_reg_email and q_reg_pass:
+                        c_re = sanitize_text(q_reg_email).lower()
+                        if c_re in users_db:
+                            st.error("Account already exists.")
+                        else:
+                            users_db[c_re] = {
+                                "name": sanitize_text(q_reg_name),
+                                "password_hash": hash_credential(q_reg_pass),
+                                "mobile": "",
+                                "plan": "FREE TRIAL 🎁",
+                                "trials_used_today": 0,
+                                "last_trial_date": datetime.now().strftime("%Y-%m-%d"),
+                                "credits": 10,
+                                "is_admin": False,
+                                "joined": datetime.now().strftime("%Y-%m-%d %H:%M")
+                            }
+                            save_secure_users(users_db)
+                            st.session_state.current_user = users_db[c_re]
+                            st.session_state.current_user["email"] = c_re
+                            st.session_state["show_top_auth_modal"] = False
+                            st.success(f"Account created for {q_reg_name}! 10 Free trials added.")
+                            st.rerun()
+                    else:
+                        st.warning("Please fill all fields.")
+        with ca2:
+            st.markdown("##### ⚡ Quick 1-Click Persona Switch (Testing)")
+            if st.button("👑 Vishal Hargude (Founder & CEO)", use_container_width=True, key="q_btn_vishal"):
+                st.session_state.current_user = users_db.get("vishal@wani.ai")
+                st.session_state.current_user["email"] = "vishal@wani.ai"
+                st.session_state["show_top_auth_modal"] = False
+                st.rerun()
+            if st.button("🎁 Guest Explorer (Free Tier - 10 Trials)", use_container_width=True, key="q_btn_guest"):
+                st.session_state.current_user = users_db.get("guest@wani.ai")
+                st.session_state.current_user["email"] = "guest@wani.ai"
+                st.session_state["show_top_auth_modal"] = False
+                st.rerun()
+            if st.button("❌ Close Panel", use_container_width=True, key="q_btn_close"):
+                st.session_state["show_top_auth_modal"] = False
+                st.rerun()
 
 # SILICON VALLEY HIGH-IMPACT SOCIAL PROOF BANNER
 st.markdown(f"""
@@ -634,14 +761,6 @@ st.markdown(f"""
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-# Quick Controls Bar (Theme Toggle)
-col_head1, col_head2 = st.columns([8, 2])
-with col_head2:
-    theme_btn_label = "☀️ Switch to Light Pearl" if is_dark else "🌙 Switch to Dark Obsidian"
-    if st.button(theme_btn_label, use_container_width=True, key="top_theme_toggle_btn"):
-        st.session_state.theme = "Light" if is_dark else "Dark"
-        st.rerun()
 
 # -------------------------------------------------------------
 # SIDEBAR NAVIGATION
@@ -682,9 +801,12 @@ with st.sidebar:
         if sub_d.get("current_period_end"):
             st.caption(f"Next Billing: `{sub_d['current_period_end'].split('T')[0]}`")
     else:
-        st.markdown(f"**Daily Free Trials:** `{2 - q['daily_trials_today']}` of `2` remaining today")
-        st.caption("Max 100 words per generation on Free Trial.")
-        st.info("💡 Upgrade to **Starter (₹299/mo)** or **Pro (₹699/mo)** for high-volume limits.")
+        rem_trials = max(0, 10 - q['daily_trials_today'])
+        st.markdown(f"**Free Voice Trials:** `{rem_trials}` of `10` remaining today")
+        st.caption("10 Free Voice Generations for your account. Max 150 words per generation.")
+        if rem_trials <= 0:
+            st.error("Free trial limit reached (10/10 used). Upgrade to continue.")
+            st.info("💡 Upgrade to **Starter (₹299/mo)** or **Pro (₹699/mo)** for high-volume limits.")
 
     st.markdown("---")
     st.markdown("#### 📲 Share Wani")
@@ -844,20 +966,20 @@ STUDIO_PERSONAS = {
 }
 
 LANGUAGE_CATALOG = {
-    "Marathi (मराठी) 🚩": {"code": "mr", "male": "mr-IN-ManoharNeural", "female": "mr-IN-AarohiNeural"},
-    "Hindi (हिंदी) 🇮🇳": {"code": "hi", "male": "hi-IN-MadhurNeural", "female": "hi-IN-SwaraNeural"},
-    "English (US & Global) 🌐": {"code": "en", "male": "en-US-ChristopherNeural", "female": "en-US-JennyNeural"},
-    "Gujarati (ગુજરાતી) 🇮🇳": {"code": "gu", "male": "gu-IN-NiranjanNeural", "female": "gu-IN-DhwaniNeural"},
-    "Tamil (தமிழ்) 🇮🇳": {"code": "ta", "male": "ta-IN-ValluvarNeural", "female": "ta-IN-PallaviNeural"},
-    "Telugu (తెలుగు) 🇮🇳": {"code": "te", "male": "te-IN-MohanNeural", "female": "te-IN-ShrutiNeural"},
-    "Kannada (ಕನ್ನಡ) 🇮🇳": {"code": "kn", "male": "kn-IN-GaganNeural", "female": "kn-IN-SapnaNeural"},
-    "Bengali (বাংলা) 🇮🇳": {"code": "bn", "male": "bn-IN-BashkarNeural", "female": "bn-IN-TanishaaNeural"},
-    "Spanish (Español) 🇪🇸": {"code": "es", "male": "es-ES-AlvaroNeural", "female": "es-ES-ElviraNeural"},
-    "French (Français) 🇫🇷": {"code": "fr", "male": "fr-FR-HenriNeural", "female": "fr-FR-DeniseNeural"},
-    "German (Deutsch) 🇩🇪": {"code": "de", "male": "de-DE-ConradNeural", "female": "de-DE-KatjaNeural"},
-    "Japanese (日本語) 🇯🇵": {"code": "ja", "male": "ja-JP-KeitaNeural", "female": "ja-JP-NanamiNeural"},
-    "Arabic (العربية) 🇸🇦": {"code": "ar", "male": "ar-SA-HamedNeural", "female": "ar-SA-ZariyahNeural"},
-    "Russian (Русский) 🇷🇺": {"code": "ru", "male": "ru-RU-DmitryNeural", "female": "ru-RU-SvetlanaNeural"}
+    "◈ Marathi (मराठी)": {"code": "mr", "male": "mr-IN-ManoharNeural", "female": "mr-IN-AarohiNeural"},
+    "◈ Hindi (हिंदी)": {"code": "hi", "male": "hi-IN-MadhurNeural", "female": "hi-IN-SwaraNeural"},
+    "◈ English (Global & US)": {"code": "en", "male": "en-US-ChristopherNeural", "female": "en-US-JennyNeural"},
+    "◈ Gujarati (ગુજરાતી)": {"code": "gu", "male": "gu-IN-NiranjanNeural", "female": "gu-IN-DhwaniNeural"},
+    "◈ Tamil (தமிழ்)": {"code": "ta", "male": "ta-IN-ValluvarNeural", "female": "ta-IN-PallaviNeural"},
+    "◈ Telugu (తెలుగు)": {"code": "te", "male": "te-IN-MohanNeural", "female": "te-IN-ShrutiNeural"},
+    "◈ Kannada (ಕನ್ನಡ)": {"code": "kn", "male": "kn-IN-GaganNeural", "female": "kn-IN-SapnaNeural"},
+    "◈ Bengali (বাংলা)": {"code": "bn", "male": "bn-IN-BashkarNeural", "female": "bn-IN-TanishaaNeural"},
+    "◈ Spanish (Español)": {"code": "es", "male": "es-ES-AlvaroNeural", "female": "es-ES-ElviraNeural"},
+    "◈ French (Français)": {"code": "fr", "male": "fr-FR-HenriNeural", "female": "fr-FR-DeniseNeural"},
+    "◈ German (Deutsch)": {"code": "de", "male": "de-DE-ConradNeural", "female": "de-DE-KatjaNeural"},
+    "◈ Japanese (日本語)": {"code": "ja", "male": "ja-JP-KeitaNeural", "female": "ja-JP-NanamiNeural"},
+    "◈ Arabic (العربية)": {"code": "ar", "male": "ar-SA-HamedNeural", "female": "ar-SA-ZariyahNeural"},
+    "◈ Russian (Русский)": {"code": "ru", "male": "ru-RU-DmitryNeural", "female": "ru-RU-SvetlanaNeural"}
 }
 
 PURPOSE_PRESETS = {
@@ -886,11 +1008,13 @@ def synthesize_speech_core(text: str, voice_code: str, out_path: str, pitch_str:
 # ==============================================================
 # WANI ENTERPRISE STUDIO TABS
 # ==============================================================
-tab_speech, tab_pdf, tab_stt, tab_dubbing, tab_dialogue, tab_pricing, tab_billing, tab_admin, tab_auth, tab_contact, tab_library = st.tabs([
+tab_speech, tab_showcase, tab_video, tab_pdf, tab_stt, tab_dubbing, tab_dialogue, tab_pricing, tab_billing, tab_admin, tab_auth, tab_contact, tab_library = st.tabs([
     "🎙️ Universal Voice Studio",
+    "✨ 20-Voice Live Showcase",
+    "🎬 Video Studio & Audio Separator",
     "📄 PDF & Document Reader",
     "🎤 Voice-to-Text (Transcribe)",
-    "🎬 AI Video Dubbing Studio",
+    "🎥 AI Video Dubbing Studio",
     "🎭 Multi-Voice Dialogue Studio",
     "💳 Subscription Plans",
     "📑 Customer Billing Dashboard",
@@ -1002,7 +1126,176 @@ with tab_speech:
                     st.download_button("⬇️ Download High-Res Audio (MP3)", f.read(), file_name=f"wani_{lang_info['code']}_master.mp3", mime="audio/mp3", use_container_width=True)
 
 # ==============================================================
-# TAB 2: PDF & DOCUMENT READER (AUTO-DETECT LANGUAGE & VOICE)
+# TAB 2: 20-VOICE LIVE SHOWCASE & INSTANT AUDITION
+# ==============================================================
+with tab_showcase:
+    st.markdown('<div class="studio-banner">✨ 20-Voice Live Showcase & Instant Audition — Audition All 10 Male & 10 Female Character Personas</div>', unsafe_allow_html=True)
+    
+    col_sc1, col_sc2 = st.columns([1.2, 1])
+    
+    with col_sc1:
+        st.markdown("#### 1. Select Voice Persona & Linguistic Profile")
+        sc_gender = st.radio("Gender Profile:", ["👨 10 Male Personas", "👩 10 Female Personas"], horizontal=True, key="sc_gender_radio")
+        is_male_showcase = "Male" in sc_gender
+        
+        sc_personas = {k: v for k, v in STUDIO_PERSONAS.items() if (v["gender"] == "Male" if is_male_showcase else v["gender"] == "Female")}
+        sc_selected_persona = st.selectbox("Select Character Voice:", list(sc_personas.keys()), key="sc_persona_select")
+        sc_pdata = sc_personas[sc_selected_persona]
+        
+        sc_selected_lang = st.selectbox("Audition Language:", list(LANGUAGE_CATALOG.keys()), index=0, key="sc_lang_select")
+        sc_linfo = LANGUAGE_CATALOG[sc_selected_lang]
+        
+        # Tailored default sample sentences
+        default_samples = {
+            "mr": "वाणी हे आधुनिक कृत्रिम बुद्धिमत्तेचे जागतिक दर्जाचे व्यासपीठ आहे, जे आपल्या शब्दांना अस्सल मानवी भावना आणि स्पष्टता देते.",
+            "hi": "वाणी एक अत्याधुनिक एआई वॉइस स्टूडियो है, जो आपकी आवाज़ को अद्वितीय मानवीय गहराई और अभिव्यक्ति प्रदान करता है।",
+            "en": "Wani is an enterprise neural acoustic intelligence platform engineered for studio-grade human realism and vocal depth.",
+            "gu": "વાણી એ અત્યાધુનિક આર્ટિફિશિયલ ઇન્ટેલિજન્સ વોઇસ સ્ટુડિયો છે, જે તમારા શબ્દોને વાસ્તવિક માનવીય લાગણી આપે છે."
+        }
+        suggested_sample = default_samples.get(sc_linfo["code"], "Wani AI delivers enterprise-grade neural acoustic voiceovers with emotional resonance.")
+        
+        sc_sample_text = st.text_area("Audition Script (Sample Paragraph):", value=suggested_sample, height=110, key="sc_sample_paragraph")
+
+    with col_sc2:
+        st.markdown("#### 2. Character Acoustic Portrait & Instant Audition")
+        
+        st.markdown(f"""
+        <div class="voice-card" style="padding: 20px;">
+            <div style="display: flex; gap: 18px; align-items: center;">
+                <img src="{sc_pdata['avatar']}" class="avatar-frame" style="width: 90px; height: 90px;">
+                <div>
+                    <div><span class="badge-cat">{sc_pdata['category']}</span></div>
+                    <div style="font-size: 18px; font-weight: 700; margin-top: 6px;">{sc_selected_persona.split('—')[0].strip()}</div>
+                    <div style="font-size: 13px; color: {theme_subtext}; margin-top: 4px;">{sc_pdata['desc']}</div>
+                    <div style="font-size: 12px; color: #818CF8; font-weight: 600; margin-top: 6px;">⚡ Pitch: {sc_pdata['pitch']} | Speed: {sc_pdata['rate']}</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button(f"▶️ Play Instant Voice Sample ({sc_selected_persona.split('—')[0].strip()})", type="primary", use_container_width=True, key="sc_play_btn"):
+            active_email = st.session_state.current_user.get("email", "guest@wani.ai")
+            is_allowed, trial_msg, qdata = validate_user_trial(active_email, sc_sample_text)
+            if not is_allowed:
+                st.error(trial_msg)
+            else:
+                v_code = sc_linfo["male"] if sc_pdata["gender"] == "Male" else sc_linfo["female"]
+                out_sc = os.path.join(tempfile.gettempdir(), f"wani_sc_{uuid.uuid4().hex[:8]}.mp3")
+                with st.spinner(f"Synthesizing sample audio in {sc_selected_lang}..."):
+                    synthesize_speech_core(
+                        text=sc_sample_text,
+                        voice_code=v_code,
+                        out_path=out_sc,
+                        pitch_str=sc_pdata["pitch"],
+                        rate_str=sc_pdata["rate"]
+                    )
+                st.success(f"✨ Sample generated for {sc_selected_persona.split('—')[0].strip()}!")
+                with open(out_sc, "rb") as f:
+                    st.audio(f.read(), format="audio/mp3")
+
+    st.markdown("---")
+    st.markdown(f"### 🎧 Complete {sc_gender} Audition Roster")
+    st.caption("Hover over any character portrait to inspect acoustics, or click to audition with 1-click:")
+    
+    sc_items = list(sc_personas.items())
+    for row_idx in range(0, len(sc_items), 2):
+        col_r1, col_r2 = st.columns(2)
+        cols = [col_r1, col_r2]
+        for col_i, item_i in enumerate([row_idx, row_idx + 1]):
+            if item_i < len(sc_items):
+                p_name_i, p_data_i = sc_items[item_i]
+                with cols[col_i]:
+                    st.markdown(f"""
+                    <div class="audition-card">
+                        <div style="display: flex; gap: 14px; align-items: center;">
+                            <img src="{p_data_i['avatar']}" class="avatar-frame" style="width: 70px; height: 70px;">
+                            <div>
+                                <span class="badge-cat">{p_data_i['category']}</span>
+                                <div style="font-size: 15px; font-weight: 700; margin-top: 4px;">{p_name_i.split('—')[0].strip()}</div>
+                                <div style="font-size: 12px; color: {theme_subtext}; margin-top: 3px;">{p_data_i['desc']}</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    if st.button(f"▶️ Audition {p_name_i.split('—')[0].strip()}", use_container_width=True, key=f"quick_aud_{item_i}"):
+                        v_code_i = sc_linfo["male"] if p_data_i["gender"] == "Male" else sc_linfo["female"]
+                        out_quick = os.path.join(tempfile.gettempdir(), f"wani_quick_{item_i}_{uuid.uuid4().hex[:6]}.mp3")
+                        synthesize_speech_core(
+                            text=sc_sample_text,
+                            voice_code=v_code_i,
+                            out_path=out_quick,
+                            pitch_str=p_data_i["pitch"],
+                            rate_str=p_data_i["rate"]
+                        )
+                        with open(out_quick, "rb") as f:
+                            st.audio(f.read(), format="audio/mp3")
+
+# ==============================================================
+# TAB 3: VIDEO STUDIO & AUDIO SEPARATOR (UP TO 500 MB)
+# ==============================================================
+with tab_video:
+    st.markdown('<div class="studio-banner">🎬 Video Studio & Audio Separator — Upload Videos (up to 500 MB), Separate Audio & Re-Dub</div>', unsafe_allow_html=True)
+    
+    col_v1, col_v2 = st.columns([1.3, 1])
+    
+    with col_v1:
+        st.markdown("#### 1. Upload Video (Max File Size: 500 MB)")
+        up_video = st.file_uploader(
+            "Select Video File (.mp4, .mkv, .mov, .avi, .webm):",
+            type=["mp4", "mkv", "mov", "avi", "webm"],
+            key="studio_video_uploader"
+        )
+        if up_video:
+            v_bytes = up_video.read()
+            size_mb = len(v_bytes) / (1024 * 1024)
+            st.caption(f"📁 **File:** `{up_video.name}` | **Size:** `{size_mb:.2f} MB` / 500 MB")
+            st.video(v_bytes)
+        else:
+            st.info("💡 Upload any HD/4K video file up to 500 MB to isolate its soundtrack or re-dub dialogue.")
+            
+    with col_v2:
+        st.markdown("#### 2. Audio Extraction Engine")
+        st.caption("Isolate pristine studio-grade audio tracks from your video file:")
+        
+        if up_video:
+            if st.button("🎵 Extract & Separate Audio Track (MP3)", type="primary", use_container_width=True, key="btn_extract_audio"):
+                with st.spinner("Extracting audio frequencies and rendering 320kbps MP3 audio track..."):
+                    try:
+                        extracted_path = extract_audio_from_video(v_bytes, output_format="mp3")
+                        st.session_state["last_extracted_audio"] = extracted_path
+                        st.session_state["last_extracted_audio_name"] = os.path.splitext(up_video.name)[0]
+                        st.success("✨ Audio track separated from video successfully!")
+                    except Exception as e:
+                        st.error(f"Extraction Error: {str(e)}")
+            
+            if "last_extracted_audio" in st.session_state and os.path.exists(st.session_state["last_extracted_audio"]):
+                extracted_path = st.session_state["last_extracted_audio"]
+                with open(extracted_path, "rb") as af:
+                    aud_bytes = af.read()
+                st.audio(aud_bytes, format="audio/mp3")
+                st.download_button(
+                    "⬇️ Download Separated Audio (MP3)",
+                    aud_bytes,
+                    file_name=f"wani_audio_{st.session_state.get('last_extracted_audio_name', 'track')}.mp3",
+                    mime="audio/mp3",
+                    use_container_width=True
+                )
+                
+                st.markdown("---")
+                st.markdown("#### 🚀 Downstream 1-Click Workflows")
+                c_wf1, c_wf2 = st.columns(2)
+                with c_wf1:
+                    if st.button("📝 Transcribe this Audio", use_container_width=True):
+                        st.session_state["audio_from_video_for_stt"] = extracted_path
+                        st.info("Audio loaded for transcription! Switch to Voice-to-Text tab.")
+                with c_wf2:
+                    if st.button("🎬 Re-Dub Dialogue", use_container_width=True):
+                        st.info("Switch to AI Video Dubbing Studio to translate and re-dub dialogue.")
+        else:
+            st.caption("Please upload a video file to enable extraction.")
+
+# ==============================================================
+# TAB 4: PDF & DOCUMENT READER (AUTO-DETECT LANGUAGE & VOICE)
 # ==============================================================
 with tab_pdf:
     st.markdown('<div class="studio-banner">📄 PDF & Document Reader — Upload Any Document, Auto-Detect Language & Synthesize Audio</div>', unsafe_allow_html=True)
@@ -1014,7 +1307,7 @@ with tab_pdf:
         
         extracted_text = ""
         detected_code = "en"
-        detected_name = "English 🌐"
+        detected_name = "◈ English (Global & US)"
         
         if uploaded_pdf:
             with st.spinner("Extracting text and analyzing linguistic script..."):
@@ -1028,7 +1321,7 @@ with tab_pdf:
                 st.session_state["pdf_detected_lang"] = (detected_code, detected_name)
         else:
             extracted_text = st.session_state.get("pdf_extracted_cache", "")
-            detected_code, detected_name = st.session_state.get("pdf_detected_lang", ("en", "English 🌐"))
+            detected_code, detected_name = st.session_state.get("pdf_detected_lang", ("en", "◈ English (Global & US)"))
 
         pdf_text_area = st.text_area("Extracted Document Text (Editable):", value=extracted_text, height=220, key="pdf_text_view")
 
@@ -1072,7 +1365,7 @@ with tab_pdf:
                     matched_lang = linfo
                     break
             if not matched_lang:
-                matched_lang = LANGUAGE_CATALOG["English (US & Global) 🌐"]
+                matched_lang = LANGUAGE_CATALOG.get("◈ English (Global & US)", list(LANGUAGE_CATALOG.values())[0])
                 
             voice_code = matched_lang["male"] if doc_persona_data["gender"] == "Male" else matched_lang["female"]
             out_doc = os.path.join(tempfile.gettempdir(), f"wani_doc_{uuid.uuid4().hex[:8]}.mp3")
@@ -1112,8 +1405,29 @@ with tab_stt:
         st.markdown("#### ⚡ Real-Time Audio Transcription")
         st.caption("Upload clear speech recordings for automated acoustic deciphering:")
         
+        if "audio_from_video_for_stt" in st.session_state and os.path.exists(st.session_state["audio_from_video_for_stt"]):
+            st.info("💡 Audio track from your uploaded video is loaded and ready for transcription!")
+            if st.button("⚡ Transcribe Extracted Video Audio Now", type="primary", use_container_width=True, key="btn_stt_video_now"):
+                v_aud_path = st.session_state["audio_from_video_for_stt"]
+                lang_code = audio_lang.split(" ")[0]
+                with st.spinner("Decoding audio frequencies and transcribing video dialogue..."):
+                    try:
+                        r = sr.Recognizer()
+                        from pydub import AudioSegment
+                        sound = AudioSegment.from_file(v_aud_path)
+                        wav_tmp = os.path.join(tempfile.gettempdir(), f"vid_stt_{uuid.uuid4().hex[:6]}.wav")
+                        sound.export(wav_tmp, format="wav")
+                        with sr.AudioFile(wav_tmp) as source:
+                            audio_data = r.record(source)
+                            transcribed = r.recognize_google(audio_data, language=lang_code)
+                            st.session_state["stt_transcription_result"] = transcribed
+                            st.success("✨ Video audio transcription completed!")
+                            st.rerun()
+                    except Exception as e:
+                        st.error(f"Transcription Error: {str(e)}")
+
         if st.button("Transcribe Audio to Text 🚀", type="primary", use_container_width=True, key="btn_run_stt"):
-            if not uploaded_audio:
+            if not uploaded_audio and "audio_from_video_for_stt" not in st.session_state:
                 st.warning("Please upload an audio file first.")
             else:
                 lang_code = audio_lang.split(" ")[0]
@@ -1828,24 +2142,23 @@ with tab_library:
             """, unsafe_allow_html=True)
 
 # ==============================================================
-# SMART CORPORATE FOOTER WITH ENTERPRISE COPYRIGHT PROTECTION
+# ENTERPRISE COPYRIGHT & COMPLIANCE FOOTER (CENTERED)
 # ==============================================================
 st.markdown(f"""
-<div class="enterprise-footer protected-brand">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-        <div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="wani-brand-text" style="font-size: 26px;">Wani AI</span>
-                <span class="mic-symbol" style="font-size: 20px;">🎙️</span>
-                <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ENTERPRISE EDITION</span>
-            </div>
-            <div style="font-size: 12px; color: {theme_subtext}; margin-top: 4px;">Next-Gen Multilingual Neural Acoustic Speech Synthesis • The Voice of Intelligence</div>
-        </div>
-        <div style="font-size: 11.5px; color: {theme_subtext}; text-align: right; line-height: 1.6;">
-            <div>© 2026 <b>Wani Technologies Inc. & Wani Technologies Pvt. Ltd.</b> All Rights Reserved.</div>
-            <div>Protected under Indian Copyright Act 1957, US Digital Millennium Copyright Act (DMCA), WIPO Treaties & UCC.</div>
-            <div style="color: #6366F1; font-weight: 600;">Proprietary Acoustic Architecture • ISO/IEC 27001 Certified • 99.99% Enterprise Uptime SLA</div>
-        </div>
+<div style="text-align: center; margin-top: 60px; padding: 36px 16px 28px 16px; border-top: 1px solid {theme_card_border}; font-size: 13px; color: {theme_subtext}; line-height: 1.85;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span class="wani-brand-text" style="font-size: 22px;">Wani AI</span>
+        <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ENTERPRISE EDITION</span>
+    </div>
+    <div style="font-weight: 700; color: {theme_text}; margin-bottom: 4px;">
+        © 2026 Wani Technologies Inc. & Wani Technologies Pvt. Ltd. All Rights Reserved.
+    </div>
+    <div style="margin-bottom: 4px;">
+        Protected under Indian Copyright Act 1957, US Digital Millennium Copyright Act (DMCA), WIPO Treaties & UCC.
+    </div>
+    <div style="color: #818CF8; font-weight: 600;">
+        Proprietary Acoustic Architecture • ISO/IEC 27001 Certified • 99.99% Enterprise Uptime SLA
     </div>
 </div>
 """, unsafe_allow_html=True)
+

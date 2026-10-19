@@ -7,3 +7,4 @@ pypdf>=5.0.0
 SpeechRecognition>=3.14.0
 pydub>=0.25.1
 langdetect>=1.0.9
+imageio-ffmpeg>=0.5.1
