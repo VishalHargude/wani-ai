@@ -38,7 +38,7 @@ from subscription_manager import SubscriptionManager, get_now_ist, format_iso
 sm = SubscriptionManager()
 
 st.set_page_config(
-    page_title="ElevenLabs — Generative AI Voice & Audio Platform",
+    page_title="Wani AI — Enterprise Multilingual AI Speech & Voiceover Platform",
     page_icon="🎙️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -914,8 +914,8 @@ with col_brand_l:
         </div>
         <div>
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="font-size: 34px; font-weight: 800; letter-spacing: -1px; color: {theme_text}; line-height: 1;">ElevenLabs</div>
-                <span style="background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(129, 140, 248, 0.45); color: #818CF8; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; letter-spacing: 0.5px;">CLONE STUDIO</span>
+                <div style="font-size: 34px; font-weight: 800; letter-spacing: -1px; color: {theme_text}; line-height: 1;">Wani AI</div>
+                <span style="background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(129, 140, 248, 0.45); color: #818CF8; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; letter-spacing: 0.5px;">ENTERPRISE STUDIO</span>
                 <div class="wave-container" title="Active Acoustic Matrix">
                     <div class="wave-bar"></div>
                     <div class="wave-bar"></div>
@@ -927,7 +927,7 @@ with col_brand_l:
                     <div class="wave-bar"></div>
                 </div>
             </div>
-            <div class="wani-tagline-inline" style="margin-top: 4px; letter-spacing: 1.5px; font-size: 11.5px;">Generative AI Voice Platform • Research, Voice Design, Cloning & Multilingual Dubbing</div>
+            <div class="wani-tagline-inline" style="margin-top: 4px; letter-spacing: 1.5px; font-size: 11.5px;">The Voice of Intelligence • Multilingual Speech Synthesis, Voice Cloning & AI Video Dubbing</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1040,7 +1040,7 @@ st.markdown(f"""
 # SIDEBAR NAVIGATION
 # -------------------------------------------------------------
 with st.sidebar:
-    st.markdown("### 🎙️ ElevenLabs Studio")
+    st.markdown("### 🎙️ Wani Studio Control")
     st.markdown(f"**Account:** `{user_name.split('(')[0].strip()}`")
     st.markdown(f"**Email:** `{user_email_active}`")
     st.markdown(f"**Plan Tier:** `{plan_badge}`")
@@ -1104,12 +1104,12 @@ with st.sidebar:
             st.success("Gemini 2.0 Audio Core connected! 🚀")
 
     st.markdown("---")
-    st.markdown("#### 📲 Share ElevenLabs Studio")
-    share_msg = "Experience ElevenLabs Clone Studio - Next-Gen Generative AI Voice Platform: https://wani-ai.streamlit.app"
+    st.markdown("#### 📲 Share Wani AI")
+    share_msg = "Experience Wani AI - The world's most advanced multilingual AI voice platform: https://wani-ai.streamlit.app"
     st.markdown(f'''<a href="https://api.whatsapp.com/send?text={urllib.parse.quote(share_msg)}" target="_blank" style="text-decoration:none;"><div style="background:#25D366; color:white; padding:9px 12px; border-radius:6px; font-weight:700; text-align:center; margin-bottom:15px; font-size:13px;">📲 Share on WhatsApp</div></a>''', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.caption("🛡️ ElevenLabs Generative Voice AI Core | 256-Bit SSL Encrypted | ISO 27001 Compliant")
+    st.caption("🛡️ Proprietary Software of Wani Technologies Pvt. Ltd. | 256-Bit SSL Encrypted | ISO 27001 Compliant")
 
 # ==============================================================
 # 20 DISTINCT STUDIO CHARACTER PERSONAS (10 MALE + 10 FEMALE WITH AVATARS)
@@ -2124,27 +2124,37 @@ if "favorite_voices" not in st.session_state:
 # ==============================================================
 # UNIFIED HEADACHE-FREE STUDIO ARCHITECTURE (5 CLEAN PILLARS)
 # ==============================================================
-tab_dubbing, tab_speech, tab_agents, tab_cloner, tab_library, tab_tools = st.tabs([
-    "🎬 AI Video Dubbing & Project Studio (व्हिडिओ डबिंग)",
+tab_dubbing, tab_speech, tab_cloner, tab_agents, tab_library_dock, tab_studio_tools, tab_account_plans = st.tabs([
+    "🎬 AI Video Dubbing (व्हिडिओ डबिंग)",
     "🎙️ Voice Studio (मजकूर ते आवाज)",
-    "🤖 ElevenAgents Studio (कॉन्व्हर्सेशन AI एजंट)",
     "🧬 Instant Voice Cloner (आवाज क्लोनिंग)",
-    "📚 Voice Library (सर्व ३५+ व्हॉइस)",
-    "⚙️ Tools, Plans & Account (प्लॅन्स व टूल्स)"
+    "🤖 WaniAgents (कॉन्व्हर्सेशन AI एजंट)",
+    "📚 Voice Library & 3D Stage (सर्व ३५+ व्हॉइस)",
+    "🛠️ Studio Tools (ऑडिओ टूल्स)",
+    "💳 Plans & Account (प्लॅन्स व बिलिंग)"
 ])
 
-with tab_tools:
-    tab_pricing, tab_billing, tab_pdf, tab_video, tab_stt, tab_dialogue, tab_carousel, tab_admin, tab_auth, tab_contact = st.tabs([
-        "💳 Subscription Plans",
-        "📑 Billing & Usage",
-        "📄 Document & PDF Reader",
-        "🎵 Audio Separator",
-        "🎤 Transcribe (STT)",
-        "🎭 Dialogue Studio",
-        "✨ 3D Voice Carousel",
-        "👑 Admin CRM",
-        "🔐 Account & Access",
-        "🏢 Enterprise HQs"
+with tab_library_dock:
+    tab_carousel, tab_library = st.tabs([
+        "✨ 3D Circular Voice Carousel",
+        "📚 Complete Voice Directory (३५+ व्हॉइस)"
+    ])
+
+with tab_studio_tools:
+    tab_stt, tab_pdf, tab_video, tab_dialogue = st.tabs([
+        "🎤 Transcribe (ऑडिओ ते मजकूर)",
+        "📄 Document & PDF Reader (दस्तऐवज वाचक)",
+        "🎵 Audio & Vocal Separator (व्होकल सेपरेटर)",
+        "🎭 Dialogue Studio (संवाद स्टुडिओ)"
+    ])
+
+with tab_account_plans:
+    tab_pricing, tab_billing, tab_auth, tab_admin, tab_contact = st.tabs([
+        "💎 Subscription Plans (प्लॅन्स)",
+        "📊 Billing & Usage (बिलिंग लेजर)",
+        "🔐 Account & Login (अकाऊंट प्रवेश)",
+        "👑 Admin CRM (प्रशासकीय कक्ष)",
+        "🏢 Enterprise HQs (कंपनी माहिती)"
     ])
 
 # ==============================================================
@@ -4947,10 +4957,10 @@ def render_elevenagents_studio():
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
             <div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="background: linear-gradient(135deg, #10B981, #059669); color: white; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px; letter-spacing: 0.5px; text-transform: uppercase;">Official ElevenLabs Feature</span>
+                    <span style="background: linear-gradient(135deg, #10B981, #059669); color: white; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px; letter-spacing: 0.5px; text-transform: uppercase;">Autonomous Voice Agents</span>
                     <span style="color: #94A3B8; font-size: 12.5px; font-weight: 600;">Purpose-Built Conversational AI Platform</span>
                 </div>
-                <h2 style="color: #FFFFFF; font-size: 25px; font-weight: 800; margin: 10px 0 6px 0; letter-spacing: -0.5px;">🤖 ElevenAgents — Conversational Voice AI Studio</h2>
+                <h2 style="color: #FFFFFF; font-size: 25px; font-weight: 800; margin: 10px 0 6px 0; letter-spacing: -0.5px;">🤖 WaniAgents — Conversational Voice AI Studio</h2>
                 <p style="color: #CBD5E1; font-size: 13.5px; margin: 0; max-width: 780px; line-height: 1.6;">
                     <em>"Most voice agents fall apart the second a customer goes off script. ElevenAgents does not. Purpose-built models, precise control, and guardrails you configure yourself."</em>
                 </p>
@@ -6131,11 +6141,11 @@ with tab_library:
 st.markdown(f"""
 <div style="text-align: center; margin-top: 60px; padding: 36px 16px 28px 16px; border-top: 1px solid {theme_card_border}; font-size: 13px; color: {theme_subtext}; line-height: 1.85;">
     <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 8px;">
-        <span style="font-size: 20px; font-weight: 800; color: {theme_text};">ElevenLabs Clone Studio</span>
+        <span style="font-size: 20px; font-weight: 800; color: {theme_text};">Wani AI</span>
         <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ENTERPRISE EDITION</span>
     </div>
     <div style="font-weight: 700; color: {theme_text}; margin-bottom: 4px;">
-        © 2026 ElevenLabs AI Research & Deployments. All Rights Reserved.
+        © 2026 Wani Technologies Inc. & Wani Technologies Pvt. Ltd. All Rights Reserved. • Made with ❤️ for Marathi & Multilingual Creators
     </div>
     <div style="margin-bottom: 4px;">
         Protected under International Copyright & Patent Laws, US DMCA & WIPO Treaties.
