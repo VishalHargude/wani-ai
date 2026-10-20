@@ -2122,24 +2122,29 @@ if "favorite_voices" not in st.session_state:
     st.session_state["favorite_voices"] = {"Aarav — Historic Authority (Warrior Baritone)", "Aarohi — Stately Empress (Royal Dignity)"}
 
 # ==============================================================
-# ELEVENLABS CLONE STUDIO TABS ARCHITECTURE
+# UNIFIED HEADACHE-FREE STUDIO ARCHITECTURE (5 CLEAN PILLARS)
 # ==============================================================
-tab_speech, tab_cloner, tab_dubbing, tab_library, tab_video, tab_pdf, tab_stt, tab_dialogue, tab_carousel, tab_pricing, tab_billing, tab_admin, tab_auth, tab_contact = st.tabs([
-    "🎙️ Speech Synthesis",
-    "🧬 Voice Cloning",
-    "🎬 AI Dubbing",
-    "📚 Voice Library",
-    "⚡ Voice Changer",
-    "🎧 Reader (PDF & Docs)",
-    "🎤 Transcribe (STT)",
-    "🎭 Projects & Dialogue",
-    "✨ Voice Showcase",
-    "💳 Subscription Plans",
-    "📑 Billing & Usage",
-    "👑 Admin CRM",
-    "🔐 Account & Access",
-    "🏢 Enterprise & Global HQs"
+tab_dubbing, tab_speech, tab_cloner, tab_library, tab_tools = st.tabs([
+    "🎬 AI Video Dubbing & Project Studio (व्हिडिओ डबिंग)",
+    "🎙️ Voice Studio (मजकूर ते आवाज)",
+    "🧬 Instant Voice Cloner (आवाज क्लोनिंग)",
+    "📚 Voice Library (सर्व ३५+ व्हॉइस)",
+    "⚙️ Tools, Plans & Account (प्लॅन्स व टूल्स)"
 ])
+
+with tab_tools:
+    tab_pricing, tab_billing, tab_pdf, tab_video, tab_stt, tab_dialogue, tab_carousel, tab_admin, tab_auth, tab_contact = st.tabs([
+        "💳 Subscription Plans",
+        "📑 Billing & Usage",
+        "📄 Document & PDF Reader",
+        "🎵 Audio Separator",
+        "🎤 Transcribe (STT)",
+        "🎭 Dialogue Studio",
+        "✨ 3D Voice Carousel",
+        "👑 Admin CRM",
+        "🔐 Account & Access",
+        "🏢 Enterprise HQs"
+    ])
 
 # ==============================================================
 # TAB 1: PREMIUM CIRCULAR VOICE CAROUSEL WITH HUMAN AVATARS
