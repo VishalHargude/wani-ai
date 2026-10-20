@@ -441,17 +441,17 @@ st.markdown(f"""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
     
     /* 100% UNIVERSAL ELEVENLABS INTER TYPOGRAPHY ACROSS ENTIRE PLATFORM */
-    * {
+    * {{
         font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, sans-serif !important;
-    }
+    }}
     
     html, body, [class*="css"], [class*="st-"], .stApp, button, input, textarea, select, 
     h1, h2, h3, h4, h5, h6, p, span, div, a, label, li, code, pre, .stMarkdown, 
     [data-testid="stMarkdownContainer"], [data-testid="stWidgetLabel"], 
     .stTabs [data-baseweb="tab"], .stTabs [data-baseweb="tab-list"], 
-    .stMetric, [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
+    .stMetric, [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
         font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, sans-serif !important;
-    }
+    }}
     
     /* COMPLETE CODE & BRAND WHITELABELING: HIDE GITHUB ICON & STREAMLIT CLOUD BADGES */
     header[data-testid="stHeader"], [data-testid="stHeader"] {{
