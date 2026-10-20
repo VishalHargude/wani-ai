@@ -1084,6 +1084,16 @@ with st.sidebar:
             st.info("💡 Upgrade to **Starter (₹299/mo)** or **Pro (₹699/mo)** for high-volume limits.")
 
     st.markdown("---")
+    st.markdown("#### ⚡ ElevenLabs Cloud API")
+    st.caption("Direct REST Integration: `api.elevenlabs.io`")
+    with st.expander("🔑 ElevenLabs API Key (xi-api-key)"):
+        st.caption("Enter your official API key from `https://elevenlabs.io` to synthesize via official cloud servers:")
+        sb_el_key = st.text_input("ElevenLabs API Key (xi-api-key):", value=st.session_state.get("elevenlabs_api_key", ""), type="password", key="sb_el_key_input")
+        if sb_el_key:
+            st.session_state["elevenlabs_api_key"] = sb_el_key.strip()
+            st.success("ElevenLabs Cloud API Active! 🚀 Direct calls enabled.")
+
+    st.markdown("---")
     st.markdown("#### ✨ Google AI Studio Voices")
     st.caption("Active Core: **Google Multilingual Neural TTS** 🟢 *(Free & Zero-Key)*")
     with st.expander("🔑 Google AI Studio API Key (Optional)"):
@@ -1514,6 +1524,84 @@ def synthesize_google_speech(
     asyncio.run(run_google_neural())
     return f"Google AI Studio Neural Core ({voice_name} • {gender})"
 
+# ==============================================================
+# ELEVENLABS OFFICIAL CLOUD API INTEGRATION (api.elevenlabs.io)
+# ==============================================================
+ELEVENLABS_OFFICIAL_VOICES = {
+    "Rachel": "21m00Tcm4TlvDq8ikWAM",
+    "Adam": "pNInz6obpgDQGcFmaJgB",
+    "Brian": "nPczCjzI2devNBz1zQrb",
+    "Christopher": "iP95p4xoKVk53GoZ742B",
+    "Antoni": "ErXwobaYiN019PkySvjV",
+    "Josh": "TxGEqnHWrfWFTfGW9XjX",
+    "Bella": "EXAVITQu4vr4xnSDxMaL",
+    "Nicole": "piTKgcLEGmPE4e6mEKli",
+    "Sam": "yoZ06aMxZJJ28mfd3POQ",
+    "Charlotte": "XB0fDUnXU5ikFXDhC15A",
+    "Alice": "Xb7hH8MSUJpSbSDYk0k2",
+    "Callum": "N2lVS1w4EtoT3dr4eOWO",
+    "Charlie": "IKne3meq5aSn9XLyUdCD",
+    "George": "JBFqnCBsd6RMkjVDRZzb",
+    "Liam": "TX3LPaxmHKxFdv7VOQHJ",
+    "Will": "bIHbv24MWmeRgasZH58o",
+    "Jessica": "cgSgspJ2msm6clMCkdW9",
+    "Eric": "cjVigY5qzO86Huf0OWal",
+    "Chris": "iP95p4xoKVk53GoZ742B",
+    "Lily": "pFZP5JQG7iQjIQuC4Bku",
+    "Daniel": "onwK4e9ZLuTAKqWW03F9",
+    "Aarav": "pNInz6obpgDQGcFmaJgB",
+    "Aarohi": "21m00Tcm4TlvDq8ikWAM",
+    "Default Male": "pNInz6obpgDQGcFmaJgB",
+    "Default Female": "21m00Tcm4TlvDq8ikWAM"
+}
+
+def synthesize_elevenlabs_cloud_api(
+    text: str,
+    voice_name: str,
+    api_key: str,
+    out_path: str,
+    model_id: str = "eleven_multilingual_v2",
+    stability: float = 0.5,
+    similarity_boost: float = 0.75,
+    style: float = 0.0,
+    use_speaker_boost: bool = True
+) -> tuple[bool, str]:
+    """Call official ElevenLabs REST API endpoint (https://api.elevenlabs.io)."""
+    clean_v = voice_name.split("—")[0].strip()
+    voice_id = ELEVENLABS_OFFICIAL_VOICES.get(clean_v, ELEVENLABS_OFFICIAL_VOICES.get("Adam"))
+    
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    headers = {
+        "xi-api-key": api_key.strip(),
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg"
+    }
+    payload = {
+        "text": text,
+        "model_id": model_id,
+        "voice_settings": {
+            "stability": float(stability),
+            "similarity_boost": float(similarity_boost),
+            "style": float(style),
+            "use_speaker_boost": bool(use_speaker_boost)
+        }
+    }
+    try:
+        res = requests.post(url, headers=headers, json=payload, timeout=45)
+        if res.status_code == 200:
+            with open(out_path, "wb") as f:
+                f.write(res.content)
+            return True, f"ElevenLabs Official Cloud API ({clean_v} • {voice_id[:8]})"
+        else:
+            try:
+                err_data = res.json()
+                err_msg = err_data.get("detail", {}).get("message", res.text)
+            except Exception:
+                err_msg = res.text
+            return False, f"ElevenLabs API Error ({res.status_code}): {err_msg}"
+    except Exception as ex:
+        return False, f"ElevenLabs Connection Error: {str(ex)}"
+
 # Core synthesis function (100% white-labeled)
 def synthesize_speech_core(
     text: str,
@@ -1583,6 +1671,18 @@ def synthesize_speech_core(
                 if linfo["code"] == lang_code:
                     voice_code = linfo["male"]
                     break
+
+    # Check if ElevenLabs Official Cloud API Key is active
+    el_key = st.session_state.get("elevenlabs_api_key", "").strip() if "elevenlabs_api_key" in st.session_state else ""
+    if el_key and ("Eleven" in engine or engine == "ElevenLabs Official Cloud API"):
+        ok, msg = synthesize_elevenlabs_cloud_api(
+            text=clean_text,
+            voice_name=voice_code or "Adam",
+            api_key=el_key,
+            out_path=out_path
+        )
+        if ok:
+            return msg
 
     if "Google" in engine:
         res_engine = synthesize_google_speech(
@@ -3222,6 +3322,88 @@ with tab_speech:
                     mime="audio/mp3",
                     use_container_width=True
                 )
+
+    st.markdown("---")
+    with st.expander("⚡ Official ElevenLabs API Call Code & Webhook Snippet"):
+        st.markdown("#### 📡 Direct REST API Call (api.elevenlabs.io)")
+        st.caption("Call ElevenLabs synthesis API directly using Python, cURL, or JavaScript with your current settings:")
+        
+        target_voice_name = selected_persona_name.split('—')[0].strip()
+        target_voice_id = ELEVENLABS_OFFICIAL_VOICES.get(target_voice_name, "pNInz6obpgDQGcFmaJgB")
+        active_api_key = st.session_state.get("elevenlabs_api_key") or "YOUR_ELEVENLABS_API_KEY"
+        escaped_script = speech_text.replace('"', '\\"').replace('\n', ' ')
+        
+        c_code_tab1, c_code_tab2, c_code_tab3 = st.tabs(["🐍 Python", "💻 cURL", "🌐 JavaScript (Node.js)"])
+        with c_code_tab1:
+            st.code(f"""import requests
+
+url = "https://api.elevenlabs.io/v1/text-to-speech/{target_voice_id}"
+
+headers = {{
+    "Accept": "audio/mpeg",
+    "Content-Type": "application/json",
+    "xi-api-key": "{active_api_key}"
+}}
+
+data = {{
+    "text": "{escaped_script[:120]}...",
+    "model_id": "eleven_multilingual_v2",
+    "voice_settings": {{
+        "stability": {el_stability / 100.0:.2f},
+        "similarity_boost": {el_similarity / 100.0:.2f},
+        "style": {el_style_exagg / 100.0:.2f},
+        "use_speaker_boost": {str(el_speaker_boost).lower()}
+    }}
+}}
+
+response = requests.post(url, json=data, headers=headers)
+with open("output.mp3", "wb") as f:
+    f.write(response.content)
+print("Audio saved successfully!")""", language="python")
+        with c_code_tab2:
+            st.code(f"""curl -X POST "https://api.elevenlabs.io/v1/text-to-speech/{target_voice_id}" \\
+     -H "Accept: audio/mpeg" \\
+     -H "Content-Type: application/json" \\
+     -H "xi-api-key: {active_api_key}" \\
+     -d '{{
+       "text": "{escaped_script[:100]}...",
+       "model_id": "eleven_multilingual_v2",
+       "voice_settings": {{
+         "stability": {el_stability / 100.0:.2f},
+         "similarity_boost": {el_similarity / 100.0:.2f},
+         "style": {el_style_exagg / 100.0:.2f},
+         "use_speaker_boost": {str(el_speaker_boost).lower()}
+       }}
+     }}' --output output.mp3""", language="bash")
+        with c_code_tab3:
+            st.code(f"""const fs = require('fs');
+const axios = require('axios');
+
+async function generateSpeech() {{
+  const response = await axios({{
+    method: 'post',
+    url: 'https://api.elevenlabs.io/v1/text-to-speech/{target_voice_id}',
+    headers: {{
+      'Accept': 'audio/mpeg',
+      'xi-api-key': '{active_api_key}',
+      'Content-Type': 'application/json'
+    }},
+    data: {{
+      text: "{escaped_script[:100]}...",
+      model_id: "eleven_multilingual_v2",
+      voice_settings: {{
+        stability: {el_stability / 100.0:.2f},
+        similarity_boost: {el_similarity / 100.0:.2f},
+        style: {el_style_exagg / 100.0:.2f},
+        use_speaker_boost: {str(el_speaker_boost).lower()}
+      }}
+    }},
+    responseType: 'arraybuffer'
+  }});
+  fs.writeFileSync('output.mp3', Buffer.from(response.data));
+  console.log('Audio file saved!');
+}}
+generateSpeech();""", language="javascript")
 
 
 # ==============================================================
