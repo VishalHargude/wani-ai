@@ -48,7 +48,7 @@ st.set_page_config(
 # THEME STATE SUBSYSTEM (DARK OBSIDIAN / LIGHT PEARL)
 # -------------------------------------------------------------
 if "theme" not in st.session_state:
-    st.session_state.theme = "Dark"
+    st.session_state.theme = "Light"
 
 # -------------------------------------------------------------
 # SECURITY & USER DATABASE SUBSYSTEM (SALTED SHA-256)
@@ -1032,6 +1032,29 @@ st.markdown(f"""
         <span style="color:#818CF8; font-weight:600;">⚡ 180M+ Voice Minutes Generated</span>
         <span style="margin: 0 10px;">•</span>
         <span>SOC-2 Type II & ISO 27001 Infrastructure</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# PROMINENT BEGINNER-FRIENDLY QUICK START GUIDE (स्पष्ट कृती फलक)
+st.markdown(f"""
+<div style="background: {'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08))' if is_dark else 'linear-gradient(135deg, #EEF2FF 0%, #FAF5FF 100%)'}; border: 1.5px solid {'rgba(99, 102, 241, 0.4)' if is_dark else '#6366F1'}; border-radius: 16px; padding: 18px 22px; margin-top: 14px; margin-bottom: 20px; box-shadow: {theme_shadow};">
+    <div style="font-size: 16px; font-weight: 800; color: {'#A5B4FC' if is_dark else '#312E81'}; margin-bottom: 8px;">
+        🚀 वाणी एआय (Wani AI) — ३ सोप्या पायऱ्यांत काम सुरू करा:
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+        <div style="background: {theme_card_bg}; border: 1px solid {theme_card_border}; border-radius: 10px; padding: 12px 14px;">
+            <div style="font-weight: 700; color: {'#FFFFFF' if is_dark else '#0F172A'}; font-size: 13.5px;">🎬 १. व्हिडिओ डबिंग (Video Dubbing)</div>
+            <div style="font-size: 12px; color: {theme_subtext}; margin-top: 4px;">खाली तुमचा व्हिडिओ (५०० MB पर्यंत) सिलेक्ट करा, भाषा निवडा आणि थेट १ क्लिकवर डबिंग सुरू करा!</div>
+        </div>
+        <div style="background: {theme_card_bg}; border: 1px solid {theme_card_border}; border-radius: 10px; padding: 12px 14px;">
+            <div style="font-weight: 700; color: {'#FFFFFF' if is_dark else '#0F172A'}; font-size: 13.5px;">🎙️ २. मजकूर ते आवाज (Voice Studio)</div>
+            <div style="font-size: 12px; color: {theme_subtext}; margin-top: 4px;">'Voice Studio' टॅबवर जा, मजकूर टाईप करा, आवडीचा आवाज निवडा आणि थेट ऑडिओ डाऊनलोड करा.</div>
+        </div>
+        <div style="background: {theme_card_bg}; border: 1px solid {theme_card_border}; border-radius: 10px; padding: 12px 14px;">
+            <div style="font-weight: 700; color: {'#FFFFFF' if is_dark else '#0F172A'}; font-size: 13.5px;">🧬 ३. आवाज क्लोनिंग (Voice Cloner)</div>
+            <div style="font-size: 12px; color: {theme_subtext}; margin-top: 4px;">'Voice Cloner' टॅबमध्ये कोणताही ऑडिओ/व्हिडिओ देऊन अवघ्या १ सेकंदात हुबेहूब आवाज क्लोन करा.</div>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -2124,37 +2147,27 @@ if "favorite_voices" not in st.session_state:
 # ==============================================================
 # UNIFIED HEADACHE-FREE STUDIO ARCHITECTURE (5 CLEAN PILLARS)
 # ==============================================================
-tab_dubbing, tab_speech, tab_cloner, tab_agents, tab_library_dock, tab_studio_tools, tab_account_plans = st.tabs([
+tab_dubbing, tab_speech, tab_cloner, tab_agents, tab_carousel, tab_library, tab_tools = st.tabs([
     "🎬 AI Video Dubbing (व्हिडिओ डबिंग)",
     "🎙️ Voice Studio (मजकूर ते आवाज)",
     "🧬 Instant Voice Cloner (आवाज क्लोनिंग)",
     "🤖 WaniAgents (कॉन्व्हर्सेशन AI एजंट)",
-    "📚 Voice Library & 3D Stage (सर्व ३५+ व्हॉइस)",
-    "🛠️ Studio Tools (ऑडिओ टूल्स)",
-    "💳 Plans & Account (प्लॅन्स व बिलिंग)"
+    "✨ 3D Voice Carousel (३डी कॅरोसेल)",
+    "📚 Voice Library (सर्व ३५+ व्हॉइस)",
+    "⚙️ Tools, Plans & Account (टूल्स व प्लॅन्स)"
 ])
 
-with tab_library_dock:
-    tab_carousel, tab_library = st.tabs([
-        "✨ 3D Circular Voice Carousel",
-        "📚 Complete Voice Directory (३५+ व्हॉइस)"
-    ])
-
-with tab_studio_tools:
-    tab_stt, tab_pdf, tab_video, tab_dialogue = st.tabs([
-        "🎤 Transcribe (ऑडिओ ते मजकूर)",
-        "📄 Document & PDF Reader (दस्तऐवज वाचक)",
-        "🎵 Audio & Vocal Separator (व्होकल सेपरेटर)",
-        "🎭 Dialogue Studio (संवाद स्टुडिओ)"
-    ])
-
-with tab_account_plans:
-    tab_pricing, tab_billing, tab_auth, tab_admin, tab_contact = st.tabs([
-        "💎 Subscription Plans (प्लॅन्स)",
-        "📊 Billing & Usage (बिलिंग लेजर)",
-        "🔐 Account & Login (अकाऊंट प्रवेश)",
-        "👑 Admin CRM (प्रशासकीय कक्ष)",
-        "🏢 Enterprise HQs (कंपनी माहिती)"
+with tab_tools:
+    tab_pricing, tab_billing, tab_pdf, tab_video, tab_stt, tab_dialogue, tab_admin, tab_auth, tab_contact = st.tabs([
+        "💳 Subscription Plans",
+        "📑 Billing & Usage",
+        "📄 Document & PDF Reader",
+        "🎵 Audio Separator",
+        "🎤 Transcribe (STT)",
+        "🎭 Dialogue Studio",
+        "👑 Admin CRM",
+        "🔐 Account & Access",
+        "🏢 Enterprise HQs"
     ])
 
 # ==============================================================
