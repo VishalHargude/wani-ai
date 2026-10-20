@@ -1115,297 +1115,296 @@ with st.sidebar:
 # 20 DISTINCT STUDIO CHARACTER PERSONAS (10 MALE + 10 FEMALE WITH AVATARS)
 # ==============================================================
 STUDIO_PERSONAS = {
-    # 17 MALE PERSONAS (100% Masculine • 100% Distinct Photos & Distinct Neural Models)
+    # 17 DISTINCT MALE PERSONAS (100% Unique Acoustics, Timbre & Frequencies)
     "Aarav — Historic Authority (Warrior Baritone)": {
         "gender": "Male", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-18Hz", "rate": "-6%",
         "desc": "Ultra-heavy thunderous baritone with deep historic resonance and gravelly authority.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "mr-IN-ManoharNeural"},
-        "dsp": "bass=g=5:f=110"
+        "voice_map": {'mr': 'mr-IN-ManoharNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-ChristopherNeural', 'default': 'mr-IN-ManoharNeural'},
+        "dsp": "asetrate=24000*0.83,atempo=1/0.83,bass=g=7:f=110,equalizer=f=220:t=o:w=1.5:g=5,compand=0.01:0.05:-50/-50|-20/-5|0/0:5:0:0:0.02"
     },
     "Vikram — Hollywood Trailer (Sub-Woofer Bass)": {
         "gender": "Male", "category": "Cinematic & Drama",
         "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-22Hz", "rate": "-10%",
         "desc": "Sub-woofer level resonant trailer titan bass for monumental cinema announcements.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-EricNeural", "default": "en-US-EricNeural"},
-        "dsp": "bass=g=9:f=95,volume=1.2"
+        "voice_map": {'mr': 'hi-IN-MadhurNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-EricNeural', 'default': 'hi-IN-MadhurNeural'},
+        "dsp": "asetrate=24000*0.78,atempo=1/0.78,bass=g=9:f=80,equalizer=f=120:t=o:w=1:g=6,volume=1.2"
     },
     "Marcus — Silicon Valley Keynote (Charismatic)": {
         "gender": "Male", "category": "Corporate & Enterprise",
         "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "+4%",
         "desc": "Clean, charismatic, tech visionary presentation cadence for corporate demos.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "en-US-AndrewMultilingualNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"},
-        "dsp": "treble=g=5:f=3500,highpass=f=100"
+        "voice_map": {'mr': 'hi-IN-MadhurNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-GuyNeural', 'default': 'hi-IN-MadhurNeural'},
+        "dsp": "asetrate=24000*1.04,atempo=1/1.04,treble=g=4:f=3500,equalizer=f=2500:t=o:w=1.2:g=3"
     },
     "Kabir — Resolute Heritage (Patriotic Gravitas)": {
         "gender": "Male", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-14Hz", "rate": "-6%",
         "desc": "Steadfast, heroic defender baritone with resolute conviction and presence.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-RyanNeural", "default": "mr-IN-ManoharNeural"},
-        "dsp": "aecho=0.8:0.7:30:0.25"
+        "voice_map": {'mr': 'mr-IN-ManoharNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-GB-RyanNeural', 'default': 'mr-IN-ManoharNeural'},
+        "dsp": "asetrate=24000*0.91,atempo=1/0.91,bass=g=5:f=120,volume=1.1"
     },
     "Anup — Mystery & Thriller (Suspense Anchor)": {
         "gender": "Male", "category": "Crime & Thriller",
         "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-10Hz", "rate": "-8%",
         "desc": "Tense, investigative narration style tailored for unsolved mysteries and noir fiction.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-SteffanNeural", "default": "mr-IN-ManoharNeural"},
-        "dsp": "equalizer=f=300:width_type=h:width=200:g=4"
+        "voice_map": {'mr': 'hi-IN-MadhurNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-SteffanNeural', 'default': 'hi-IN-MadhurNeural'},
+        "dsp": "asetrate=24000*0.88,atempo=1/0.88,equalizer=f=200:t=o:w=1.5:g=4,equalizer=f=3000:t=o:w=1:g=-3"
     },
     "Rohan — Primetime News (Urgent Desk Anchor)": {
         "gender": "Male", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+4Hz", "rate": "+14%",
         "desc": "Fast-paced, urgent broadcast delivery for breaking news and political bulletins.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-RogerNeural", "default": "en-US-RogerNeural"},
-        "dsp": "volume=1.2,treble=g=4:f=3500"
+        "voice_map": {'mr': 'mr-IN-ManoharNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-RogerNeural', 'default': 'mr-IN-ManoharNeural'},
+        "dsp": "asetrate=24000*1.06,atempo=1/1.06,equalizer=f=3500:t=o:w=1.2:g=5,equalizer=f=250:t=o:w=1.5:g=-3,compand=0.02:0.05:-45/-45|-18/-4|0/0:4:0:0:0.04,volume=1.15"
     },
     "Brian — BBC Prestige (British Documentary)": {
         "gender": "Male", "category": "Documentary & Nature",
         "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-8Hz", "rate": "-6%",
         "desc": "Distinguished British prestige baritone for global nature and history sagas.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-ThomasNeural", "default": "en-GB-ThomasNeural"},
-        "dsp": "equalizer=f=150:width_type=h:width=100:g=3"
+        "voice_map": {'mr': 'hi-IN-MadhurNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-GB-ThomasNeural', 'default': 'hi-IN-MadhurNeural'},
+        "dsp": "asetrate=24000*0.95,atempo=1/0.95,equalizer=f=180:t=o:w=1.5:g=3,treble=g=2:f=3000"
     },
     "Sagar — Dynamic FM Host (Commercial RJ)": {
         "gender": "Male", "category": "Broadcast & Media",
         "avatar": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "+10%",
         "desc": "Warm, energetic, upbeat host delivery crafted for viral Reels and commercial radio.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-IN-PrabhatNeural", "default": "en-IN-PrabhatNeural"},
-        "dsp": "treble=g=5:f=3000,volume=1.15"
+        "voice_map": {'mr': 'hi-IN-MadhurNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-IN-PrabhatNeural', 'default': 'hi-IN-MadhurNeural'},
+        "dsp": "asetrate=24000*1.12,atempo=1/1.12,treble=g=5:f=4000,compand=0.01:0.04:-40/-40|-15/-3|0/0:4:0:0:0.02,volume=1.15"
     },
     "Christopher — Monumental Cinematic Storyteller": {
         "gender": "Male", "category": "Cinematic & Drama",
         "avatar": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-16Hz", "rate": "-8%",
         "desc": "Deep cinematic baritone for monumental trailers, audiobooks, and dramatic voiceovers.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "en-US-ChristopherNeural"},
-        "dsp": "bass=g=6:f=90"
+        "voice_map": {'mr': 'mr-IN-ManoharNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-ChristopherNeural', 'default': 'mr-IN-ManoharNeural'},
+        "dsp": "asetrate=24000*0.81,atempo=1/0.81,bass=g=8:f=95,volume=1.2"
     },
     "Eshwar — Elder Patriarch (Measured Wisdom)": {
         "gender": "Male", "category": "Documentary & Wisdom",
         "avatar": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-18Hz", "rate": "-12%",
         "desc": "Slow, aged baritone filled with lifelong wisdom for folklore and contemplative scripts.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-BrianNeural", "default": "en-US-BrianNeural"},
-        "dsp": "asetrate=24000*0.93,atempo=1/0.93"
+        "voice_map": {'mr': 'mr-IN-ManoharNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-BrianNeural', 'default': 'mr-IN-ManoharNeural'},
+        "dsp": "asetrate=24000*0.75,atempo=1/0.75,atempo=0.90,bass=g=8:f=90,equalizer=f=160:t=o:w=1:g=5"
     },
     "Puck — Google AI Studio (Dynamic Baritone)": {
         "gender": "Male", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "+4%",
         "desc": "Google AI Studio Gemini 2.0 dynamic upbeat baritone with articulate cadence and conversational charisma.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "en-US-AndrewMultilingualNeural", "en": "en-US-AndrewMultilingualNeural", "default": "en-US-AndrewMultilingualNeural"},
+        "voice_map": {'mr': 'hi-IN-MadhurNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-AndrewMultilingualNeural', 'default': 'hi-IN-MadhurNeural'},
         "google_voice": "Puck",
-        "dsp": "treble=g=3:f=3200"
+        "dsp": "asetrate=24000*1.02,atempo=1/1.02,treble=g=3:f=3200"
     },
     "Charon — Google AI Studio (Deep Resonant Bass)": {
         "gender": "Male", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-16Hz", "rate": "-8%",
         "desc": "Google AI Studio Gemini 2.0 deep, authoritative, resonant bass for cinematic narrations and gravitas.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "en-US-BrianMultilingualNeural", "en": "en-US-BrianMultilingualNeural", "default": "en-US-BrianMultilingualNeural"},
+        "voice_map": {'mr': 'mr-IN-ManoharNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-BrianMultilingualNeural', 'default': 'mr-IN-ManoharNeural'},
         "google_voice": "Charon",
-        "dsp": "bass=g=7:f=110"
+        "dsp": "asetrate=24000*0.77,atempo=1/0.77,bass=g=8:f=90,volume=1.15"
     },
     "Fenrir — Google AI Studio (Commanding Titan)": {
         "gender": "Male", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-14Hz", "rate": "-4%",
         "desc": "Google AI Studio Gemini 2.0 commanding, bold, heroic baritone with immense acoustic projection.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-AU-WilliamMultilingualNeural", "default": "en-AU-WilliamMultilingualNeural"},
+        "voice_map": {'mr': 'hi-IN-MadhurNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-AU-WilliamMultilingualNeural', 'default': 'hi-IN-MadhurNeural'},
         "google_voice": "Fenrir",
-        "dsp": "volume=1.2,bass=g=4:f=140"
+        "dsp": "asetrate=24000*0.76,atempo=1/0.76,bass=g=9:f=85,volume=1.25"
     },
     "Tanaji — Maratha Commander (Battlefield War Cry)": {
         "gender": "Male", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-16Hz", "rate": "-4%",
         "desc": "Thunderous, roaring Maratha commander baritone with fierce patriotic passion and unyielding grit.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-ChristopherNeural", "default": "mr-IN-ManoharNeural"},
-        "dsp": "bass=g=8:f=105,volume=1.2"
+        "voice_map": {'mr': 'mr-IN-ManoharNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-ChristopherNeural', 'default': 'mr-IN-ManoharNeural'},
+        "dsp": "asetrate=24000*0.82,atempo=1/0.82,bass=g=8:f=100,volume=1.25,compand=0.01:0.05:-40/-40|-18/-4|0/0:6:0:0:0.02"
     },
     "Aditya — Investigative Crime & Thriller (Dark Suspense)": {
         "gender": "Male", "category": "Suspense & Crime Thriller",
         "avatar": "https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-12Hz", "rate": "-6%",
         "desc": "Gravelly, whispery suspense narrator for crime documentaries, mystery podcasts, and thrillers.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-GB-RyanNeural", "default": "en-GB-RyanNeural"},
-        "dsp": "highpass=f=90,equalizer=f=1200:width_type=h:width=600:g=2,volume=1.1"
+        "voice_map": {'mr': 'hi-IN-MadhurNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-GB-RyanNeural', 'default': 'hi-IN-MadhurNeural'},
+        "dsp": "asetrate=24000*0.86,atempo=1/0.86,highpass=f=90,equalizer=f=1200:t=o:w=1:g=3,volume=1.1"
     },
     "Omkar — Sacred Vedic Scholar & Temple Chants": {
         "gender": "Male", "category": "Spiritual & Sacred",
         "avatar": "https://images.unsplash.com/photo-1544717305-2782549b5136?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-14Hz", "rate": "-8%",
         "desc": "Deep reverberant Vedic diction for mantras, stotras, temple ceremonies, and spiritual discourses.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-IN-PrabhatNeural", "default": "en-IN-PrabhatNeural"},
-        "dsp": "bass=g=6:f=120,volume=1.15"
+        "voice_map": {'mr': 'mr-IN-ManoharNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-IN-PrabhatNeural', 'default': 'mr-IN-ManoharNeural'},
+        "dsp": "asetrate=24000*0.87,atempo=1/0.87,aecho=0.8:0.7:40:0.3,equalizer=f=200:t=o:w=1.2:g=4"
     },
     "Rishi — Business Leader & TEDx Speaker (Inspirational)": {
         "gender": "Male", "category": "Leadership & Keynote",
         "avatar": "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-6Hz", "rate": "+4%",
         "desc": "Charismatic, authoritative corporate visionary voice for keynotes, leadership talks, and investor summits.",
-        "voice_map": {"mr": "mr-IN-ManoharNeural", "hi": "hi-IN-MadhurNeural", "en": "en-US-GuyNeural", "default": "en-US-GuyNeural"},
-        "dsp": "treble=g=3:f=3500,volume=1.1"
+        "voice_map": {'mr': 'hi-IN-MadhurNeural', 'hi': 'hi-IN-MadhurNeural', 'en': 'en-US-GuyNeural', 'default': 'hi-IN-MadhurNeural'},
+        "dsp": "asetrate=24000*1.15,atempo=1/1.15,highpass=f=120,treble=g=4:f=3800,volume=1.1"
     },
 
-    # 18 DISTINCT FEMALE PERSONAS (100% Feminine • 100% Distinct Photos & Distinct Neural Models)
+    # 18 DISTINCT FEMALE PERSONAS (100% Unique Acoustics, Timbre & Frequencies)
     "Aarohi — Stately Empress (Royal Dignity)": {
         "gender": "Female", "category": "Historical & Epic",
         "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-4%",
         "desc": "Noble, regal matriarch voice resonant with strategic valor and maternal warmth.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaExpressiveNeural", "default": "mr-IN-AarohiNeural"},
-        "dsp": "highpass=f=80,equalizer=f=3000:width_type=h:width=1200:g=2,volume=1.05"
+        "voice_map": {'mr': 'mr-IN-AarohiNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-IN-NeerjaExpressiveNeural', 'default': 'mr-IN-AarohiNeural'},
+        "dsp": "asetrate=24000*0.91,atempo=1/0.91,bass=g=4:f=160,equalizer=f=2500:t=o:w=1.2:g=3,volume=1.1"
     },
     "Jenny — Global Financial Anchor (Executive)": {
         "gender": "Female", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+4Hz", "rate": "+10%",
         "desc": "Immaculate corporate broadcast voice for financial summits and B2B reports.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"},
-        "dsp": "treble=g=3:f=3800,highpass=f=90"
+        "voice_map": {'mr': 'hi-IN-SwaraNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-JennyNeural', 'default': 'hi-IN-SwaraNeural'},
+        "dsp": "asetrate=24000*1.06,atempo=1/1.06,equalizer=f=3200:t=o:w=1:g=4,compand=0.02:0.05:-45/-45|-18/-4|0/0:4:0:0:0.04"
     },
     "Ananya — National News Anchor (Assertive Desk)": {
         "gender": "Female", "category": "News & Broadcast",
         "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+4Hz", "rate": "+10%",
         "desc": "Rapid, crisp, assertive news delivery for breaking news and prime-time broadcasts.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AvaNeural", "default": "en-US-AvaNeural"},
-        "dsp": "volume=1.1,equalizer=f=2800:width_type=h:width=1000:g=2"
+        "voice_map": {'mr': 'mr-IN-AarohiNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-AvaNeural', 'default': 'mr-IN-AarohiNeural'},
+        "dsp": "asetrate=24000*1.04,atempo=1/1.04,equalizer=f=2800:t=o:w=1:g=3,volume=1.15"
     },
     "Emma — Theatrical Literature (Classic Drama)": {
         "gender": "Female", "category": "Documentary & Nature",
         "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-4%",
         "desc": "Intense theatrical delivery for cinematic drama, poetry, and classical audiobooks.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-SoniaNeural", "default": "en-GB-SoniaNeural"},
-        "dsp": "equalizer=f=1500:width_type=h:width=800:g=1.5,volume=1.05"
+        "voice_map": {'mr': 'mr-IN-AarohiNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-GB-SoniaNeural', 'default': 'mr-IN-AarohiNeural'},
+        "dsp": "asetrate=24000*0.96,atempo=1/0.96,equalizer=f=1500:t=o:w=1:g=2,volume=1.05"
     },
     "Tara — Serene Guided ASMR & Mindfulness": {
         "gender": "Female", "category": "Mindfulness & Sleep",
         "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "-6%",
         "desc": "Soothing, gentle whisper cadence for stress relief, yoga, and guided rest.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "en-IN-NeerjaNeural"},
-        "dsp": "highpass=f=100,equalizer=f=2400:width_type=h:width=1000:g=-1,volume=0.98"
+        "voice_map": {'mr': 'hi-IN-SwaraNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-IN-NeerjaNeural', 'default': 'hi-IN-SwaraNeural'},
+        "dsp": "asetrate=24000*0.94,atempo=1/0.94,atempo=0.92,lowpass=f=6000,volume=1.05"
     },
     "Priya — Commercial Producer (Viral Lifestyle Host)": {
         "gender": "Female", "category": "Broadcast & Media",
         "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+6Hz", "rate": "+10%",
         "desc": "Bright, playful, ultra-trendy tone designed for viral lifestyle reels and podcasts.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-AriaNeural", "default": "en-US-AriaNeural"},
-        "dsp": "treble=g=4:f=3800,volume=1.1"
+        "voice_map": {'mr': 'hi-IN-SwaraNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-AriaNeural', 'default': 'hi-IN-SwaraNeural'},
+        "dsp": "asetrate=24000*1.18,atempo=1/1.18,treble=g=4:f=3800,volume=1.12"
     },
     "Sonia — Sleep & Deep Relaxation Guide": {
         "gender": "Female", "category": "Mindfulness & Sleep",
         "avatar": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-6%",
         "desc": "Warm, restorative, breathy cadence for bedtime routines and meditation.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "en-IN-NeerjaNeural"},
-        "dsp": "highpass=f=90,equalizer=f=1800:width_type=h:width=800:g=-1,volume=1.0"
+        "voice_map": {'mr': 'mr-IN-AarohiNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-IN-NeerjaNeural', 'default': 'mr-IN-AarohiNeural'},
+        "dsp": "asetrate=24000*0.93,atempo=1/0.93,atempo=0.92,highpass=f=90,equalizer=f=1800:t=o:w=1:g=-2,volume=0.98"
     },
     "Shreya — Cultural Storyteller (Heritage Warmth)": {
         "gender": "Female", "category": "Documentary & Wisdom",
         "avatar": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "-4%",
         "desc": "Affectionate, experienced narrative tone for timeless bedtime stories and parables.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-GB-MaisieNeural", "default": "en-GB-MaisieNeural"},
-        "dsp": "equalizer=f=1000:width_type=h:width=600:g=2,volume=1.05"
+        "voice_map": {'mr': 'mr-IN-AarohiNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-GB-MaisieNeural', 'default': 'mr-IN-AarohiNeural'},
+        "dsp": "asetrate=24000*0.97,atempo=1/0.97,equalizer=f=1000:t=o:w=1:g=2.5,volume=1.05"
     },
     "Gauri — National Geographic Documentary Host": {
         "gender": "Female", "category": "Documentary & Nature",
         "avatar": "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "+0%",
         "desc": "Elegant, informative cadence for travelogues, documentaries, and nature programs.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-MichelleNeural", "default": "en-US-MichelleNeural"},
-        "dsp": "treble=g=2:f=3200,volume=1.05"
+        "voice_map": {'mr': 'hi-IN-SwaraNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-MichelleNeural', 'default': 'hi-IN-SwaraNeural'},
+        "dsp": "asetrate=24000*1.02,atempo=1/1.02,treble=g=2:f=3200,volume=1.05"
     },
     "Diya — Animation & Character Fantasy Voice": {
         "gender": "Female", "category": "Kids & Animation",
         "avatar": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+8Hz", "rate": "+6%",
         "desc": "Enchanting fairy tale and animated cartoon voice for children's stories.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AnaNeural", "default": "en-US-AnaNeural"},
-        "dsp": "treble=g=3:f=4200,volume=1.08"
+        "voice_map": {'mr': 'mr-IN-AarohiNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-AnaNeural', 'default': 'mr-IN-AarohiNeural'},
+        "dsp": "asetrate=24000*1.36,atempo=1/1.36,highpass=f=240,treble=g=6:f=5000"
     },
     "Aoede — Google AI Studio (Sophisticated Eloquence)": {
         "gender": "Female", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "+4%",
         "desc": "Google AI Studio Gemini 2.0 elegant, melodious, and sophisticated female voice for luxury narration.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-AvaMultilingualNeural", "default": "en-US-AvaMultilingualNeural"},
+        "voice_map": {'mr': 'hi-IN-SwaraNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-AvaMultilingualNeural', 'default': 'hi-IN-SwaraNeural'},
         "google_voice": "Aoede",
-        "dsp": "treble=g=3:f=3500"
+        "dsp": "asetrate=24000*1.05,atempo=1/1.05,treble=g=3:f=3500"
     },
     "Kore — Google AI Studio (Serene Mindfulness)": {
         "gender": "Female", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1512485800893-b09746423100?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-6%",
         "desc": "Google AI Studio Gemini 2.0 gentle, soothing, meditative female narrator crafted for calm and storytelling.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-MichelleNeural", "default": "en-US-MichelleNeural"},
+        "voice_map": {'mr': 'mr-IN-AarohiNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-MichelleNeural', 'default': 'mr-IN-AarohiNeural'},
         "google_voice": "Kore",
-        "dsp": "equalizer=f=1800:width_type=h:width=900:g=1"
+        "dsp": "asetrate=24000*0.95,atempo=1/0.95,equalizer=f=1800:t=o:w=1:g=1"
     },
     "Meera — Spiritual & Devotional (Bhakti Sangeet & Sant Vani)": {
         "gender": "Female", "category": "Spiritual & Devotion",
         "avatar": "https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+0Hz", "rate": "-4%",
         "desc": "Divine, soul-stirring devotional voice for abhangs, aarti, spiritual discourses, and Sant Vani.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"},
-        "dsp": "equalizer=f=1800:width_type=h:width=900:g=2.5,volume=1.05"
+        "voice_map": {'mr': 'hi-IN-SwaraNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-IN-NeerjaNeural', 'default': 'hi-IN-SwaraNeural'},
+        "dsp": "asetrate=24000*0.96,atempo=1/0.96,aecho=0.7:0.6:30:0.2,equalizer=f=1200:t=o:w=1:g=3"
     },
     "Tanvi — Corporate Tech Narrator (Modern Pune/Mumbai IT)": {
         "gender": "Female", "category": "Corporate & Tech",
         "avatar": "https://images.unsplash.com/photo-1573497019236-17f8177b81e8?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+4Hz", "rate": "+8%",
         "desc": "Sharp, articulate, ultra-modern tech presenter cadence for software demos and venture pitches.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-JennyNeural", "default": "en-US-JennyNeural"},
-        "dsp": "treble=g=3:f=3600,highpass=f=90"
+        "voice_map": {'mr': 'hi-IN-SwaraNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-JennyNeural', 'default': 'hi-IN-SwaraNeural'},
+        "dsp": "asetrate=24000*1.10,atempo=1/1.10,treble=g=3:f=3500"
     },
     "Radhika — Traditional Storyteller (Aaji / Kaki Warmth)": {
         "gender": "Female", "category": "Heritage & Wisdom",
         "avatar": "https://images.unsplash.com/photo-1548142813-c348350df52b?w=300&h=300&fit=crop&crop=faces",
         "pitch": "-2Hz", "rate": "-6%",
         "desc": "Deeply affectionate, comforting maternal warmth for folktales, parables, and classic literature.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaExpressiveNeural", "default": "mr-IN-AarohiNeural"},
-        "dsp": "equalizer=f=800:width_type=h:width=400:g=2,volume=1.05"
+        "voice_map": {'mr': 'mr-IN-AarohiNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-IN-NeerjaExpressiveNeural', 'default': 'mr-IN-AarohiNeural'},
+        "dsp": "asetrate=24000*0.83,atempo=1/0.83,atempo=0.90,equalizer=f=3000:t=o:w=1.5:g=-4,bass=g=5:f=140"
     },
     "Sayali — Hyper-Energetic RJ & Youth Influencer": {
         "gender": "Female", "category": "Radio & Youth Entertainment",
         "avatar": "https://images.unsplash.com/photo-1524502397800-2eeaad7c3fe5?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+6Hz", "rate": "+12%",
         "desc": "Bubbly, vibrant, high-tempo youth delivery packed with spontaneity and charisma.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-US-AvaNeural", "default": "en-US-AvaNeural"},
-        "dsp": "treble=g=4:f=4000,volume=1.12"
+        "voice_map": {'mr': 'hi-IN-SwaraNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-AvaNeural', 'default': 'hi-IN-SwaraNeural'},
+        "dsp": "asetrate=24000*1.18,atempo=1/1.18,treble=g=5:f=4000,volume=1.15"
     },
     "Kavita — Poetry & Emotional Ghazal Reciter": {
         "gender": "Female", "category": "Poetry & Emotion",
         "avatar": "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "-6%",
         "desc": "Deeply expressive, melodic cadence crafted for emotional poetry, romantic verses, and ghazals.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "hi-IN-SwaraNeural", "en": "en-IN-NeerjaNeural", "default": "mr-IN-AarohiNeural"},
-        "dsp": "equalizer=f=2200:width_type=h:width=1000:g=2,volume=1.02"
+        "voice_map": {'mr': 'mr-IN-AarohiNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-IN-NeerjaNeural', 'default': 'mr-IN-AarohiNeural'},
+        "dsp": "asetrate=24000*0.98,atempo=1/0.98,equalizer=f=2200:t=o:w=1:g=2,volume=1.02"
     },
     "Zephyr — Google AI Studio (Dynamic Modern Storyteller)": {
         "gender": "Female", "category": "Google AI Studio",
         "avatar": "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=300&h=300&fit=crop&crop=faces",
         "pitch": "+2Hz", "rate": "+4%",
         "desc": "Google AI Studio Gemini 2.0 next-gen lively female protagonist with expressive, nuanced storytelling.",
-        "voice_map": {"mr": "mr-IN-AarohiNeural", "hi": "en-US-AvaMultilingualNeural", "en": "en-US-AvaMultilingualNeural", "default": "en-US-AvaMultilingualNeural"},
+        "voice_map": {'mr': 'hi-IN-SwaraNeural', 'hi': 'hi-IN-SwaraNeural', 'en': 'en-US-AvaMultilingualNeural', 'default': 'hi-IN-SwaraNeural'},
         "google_voice": "Aoede",
-        "dsp": "treble=g=3:f=3400"
-    }
+        "dsp": "asetrate=24000*1.08,atempo=1/1.08,treble=g=3:f=3400"
+    },
 }
-
 LANGUAGE_CATALOG = {
     "◈ Marathi (मराठी)": {"code": "mr", "male": "mr-IN-ManoharNeural", "female": "mr-IN-AarohiNeural"},
     "◈ Hindi (हिंदी)": {"code": "hi", "male": "hi-IN-MadhurNeural", "female": "hi-IN-SwaraNeural"},
@@ -1703,7 +1702,7 @@ def synthesize_speech_core(
             ffmpeg_exe = get_ffmpeg_binary()
             tmp_dsp = out_path + ".dsp_in.mp3"
             shutil.move(out_path, tmp_dsp)
-            cmd = [ffmpeg_exe, "-y", "-i", tmp_dsp, "-af", dsp, "-c:a", "libmp3lame", "-b:a", "192k", out_path]
+            cmd = [ffmpeg_exe, "-y", "-i", tmp_dsp, "-af", dsp, "-ar", "24000", "-c:a", "libmp3lame", "-b:a", "192k", out_path]
             subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
             if os.path.exists(tmp_dsp):
                 try:
@@ -1766,7 +1765,8 @@ def generate_audio_preview_cached(persona_name: str, lang_code: str = "en") -> s
                 out_path=out_path,
                 pitch_str=pdata.get("pitch", "+0Hz"),
                 rate_str=pdata.get("rate", "+0%"),
-                gender=gender
+                gender=gender,
+                dsp=pdata.get("dsp")
             )
     return out_path
 
@@ -6048,7 +6048,8 @@ with tab_library:
                 </div>
                 """, unsafe_allow_html=True)
             with col_l2:
-                p_aud = PREVIEWS_BASE64_CACHE.get(name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(name, {}).get("en")
+                s_id = name.split()[0].lower()
+                p_aud = PREVIEWS_BASE64_CACHE.get(name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(s_id, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(name, {}).get("en") or PREVIEWS_BASE64_CACHE.get(s_id, {}).get("en")
                 if p_aud:
                     st.markdown(f"""<audio controls style="width:100%; height:32px; margin-top:6px; margin-bottom:6px;"><source src="data:audio/mp3;base64,{p_aud}" type="audio/mp3"></audio>""", unsafe_allow_html=True)
                 if st.button("🎙️ Use in Studio", key=f"lib_sel_m_{name}", use_container_width=True):
@@ -6079,7 +6080,8 @@ with tab_library:
                 </div>
                 """, unsafe_allow_html=True)
             with col_lf2:
-                pf_aud = PREVIEWS_BASE64_CACHE.get(name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(name, {}).get("en")
+                sf_id = name.split()[0].lower()
+                pf_aud = PREVIEWS_BASE64_CACHE.get(name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(sf_id, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(name, {}).get("en") or PREVIEWS_BASE64_CACHE.get(sf_id, {}).get("en")
                 if pf_aud:
                     st.markdown(f"""<audio controls style="width:100%; height:32px; margin-top:6px; margin-bottom:6px;"><source src="data:audio/mp3;base64,{pf_aud}" type="audio/mp3"></audio>""", unsafe_allow_html=True)
                 if st.button("🎙️ Use in Studio", key=f"lib_sel_f_{name}", use_container_width=True):
@@ -6114,7 +6116,8 @@ with tab_library:
                 </div>
                 """, unsafe_allow_html=True)
             with col_lg2:
-                pg_aud = PREVIEWS_BASE64_CACHE.get(name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(name, {}).get("en")
+                sg_id = name.split()[0].lower()
+                pg_aud = PREVIEWS_BASE64_CACHE.get(name, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(sg_id, {}).get("mr") or PREVIEWS_BASE64_CACHE.get(name, {}).get("en") or PREVIEWS_BASE64_CACHE.get(sg_id, {}).get("en")
                 if pg_aud:
                     st.markdown(f"""<audio controls style="width:100%; height:32px; margin-top:6px; margin-bottom:6px;"><source src="data:audio/mp3;base64,{pg_aud}" type="audio/mp3"></audio>""", unsafe_allow_html=True)
                 if st.button("🎙️ Use in Studio", key=f"lib_sel_g_{name}", use_container_width=True):
