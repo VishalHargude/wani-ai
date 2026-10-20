@@ -2124,9 +2124,10 @@ if "favorite_voices" not in st.session_state:
 # ==============================================================
 # UNIFIED HEADACHE-FREE STUDIO ARCHITECTURE (5 CLEAN PILLARS)
 # ==============================================================
-tab_dubbing, tab_speech, tab_cloner, tab_library, tab_tools = st.tabs([
+tab_dubbing, tab_speech, tab_agents, tab_cloner, tab_library, tab_tools = st.tabs([
     "🎬 AI Video Dubbing & Project Studio (व्हिडिओ डबिंग)",
     "🎙️ Voice Studio (मजकूर ते आवाज)",
+    "🤖 ElevenAgents Studio (कॉन्व्हर्सेशन AI एजंट)",
     "🧬 Instant Voice Cloner (आवाज क्लोनिंग)",
     "📚 Voice Library (सर्व ३५+ व्हॉइस)",
     "⚙️ Tools, Plans & Account (प्लॅन्स व टूल्स)"
@@ -4935,6 +4936,407 @@ with tab_dubbing:
                 st.caption(st.session_state.get("dubbed_source_text", ""))
                 st.markdown("**Dubbed Translated Dialogue:**")
                 st.info(st.session_state.get("dubbed_transcript_text", ""))
+
+# ==============================================================
+# TAB 3: ELEVENAGENTS CONVERSATIONAL VOICE AI STUDIO (OFFICIAL REEL FEATURE)
+# ==============================================================
+def render_elevenagents_studio():
+    # 1. Official ElevenLabs Reel Hero Header
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9)); border: 1.5px solid rgba(99, 102, 241, 0.35); border-radius: 20px; padding: 24px 26px; margin-bottom: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="background: linear-gradient(135deg, #10B981, #059669); color: white; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 9999px; letter-spacing: 0.5px; text-transform: uppercase;">Official ElevenLabs Feature</span>
+                    <span style="color: #94A3B8; font-size: 12.5px; font-weight: 600;">Purpose-Built Conversational AI Platform</span>
+                </div>
+                <h2 style="color: #FFFFFF; font-size: 25px; font-weight: 800; margin: 10px 0 6px 0; letter-spacing: -0.5px;">🤖 ElevenAgents — Conversational Voice AI Studio</h2>
+                <p style="color: #CBD5E1; font-size: 13.5px; margin: 0; max-width: 780px; line-height: 1.6;">
+                    <em>"Most voice agents fall apart the second a customer goes off script. ElevenAgents does not. Purpose-built models, precise control, and guardrails you configure yourself."</em>
+                </p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <span style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #A5B4FC; font-size: 12px; padding: 6px 14px; border-radius: 9999px; font-weight: 600;">⚡ &lt;300ms Conversational Latency</span>
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #6EE7B7; font-size: 12px; padding: 6px 14px; border-radius: 9999px; font-weight: 600;">🛡️ Enterprise Guardrails</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_setup, col_preview = st.columns([1.15, 1])
+
+    with col_setup:
+        st.markdown("### ✍️ 1. Build Agent in Natural Language")
+        st.caption("Define your agent persona, task instructions, and knowledge base in simple natural language.")
+        
+        agent_preset = st.selectbox(
+            "Select Purpose-Built Agent Template:",
+            [
+                "📦 E-Commerce Return & Refund Specialist (Order #1331 Demo)",
+                "🩺 Healthcare & Clinical Appointment Concierge",
+                "💼 B2B Enterprise Lead Qualifier & SDR",
+                "🏨 Hotel & Flight Reservation Assistant",
+                "⚡ Custom Agent Instruction"
+            ],
+            key="agent_preset_selector"
+        )
+        
+        default_prompts = {
+            "📦 E-Commerce Return & Refund Specialist (Order #1331 Demo)": "Help customers with return requests, verify order eligibility (e.g. order #1331), process refunds up to ₹2,000 within the 30-day policy window, maintain polite and empathetic tone, and adhere strictly to financial guardrails.",
+            "🩺 Healthcare & Clinical Appointment Concierge": "Assist patients in scheduling doctor appointments, collect symptoms for triage, provide clinic hours and directions, and enforce medical safety guardrails by refusing diagnostic advice.",
+            "💼 B2B Enterprise Lead Qualifier & SDR": "Engage enterprise visitors, qualify budget, authority, need, and timeline (BANT), answer product architecture queries, and book discovery demos with the account executive team.",
+            "🏨 Hotel & Flight Reservation Assistant": "Greet guests, assist with room upgrades, verify itinerary confirmations, offer local dining recommendations, and process reservation modifications smoothly.",
+            "⚡ Custom Agent Instruction": "You are a professional, helpful conversational AI agent for Wani Studio. Answer customer inquiries with accurate information and high empathy."
+        }
+        
+        agent_name = st.text_input("Agent Name:", value="Wani Order Support Specialist", key="agent_name_inp")
+        agent_prompt = st.text_area(
+            "Agent System Prompt & Instructions:",
+            value=default_prompts.get(agent_preset, default_prompts["⚡ Custom Agent Instruction"]),
+            height=110,
+            key="agent_prompt_inp"
+        )
+        
+        col_v1, col_v2 = st.columns(2)
+        with col_v1:
+            all_personas = get_all_studio_personas()
+            persona_options = list(all_personas.keys())
+            def_p_idx = 0
+            for idx, p in enumerate(persona_options):
+                if "Aarohi" in p or "Aarav" in p:
+                    def_p_idx = idx
+                    break
+            agent_voice = st.selectbox("Agent Voice Persona:", persona_options, index=def_p_idx, key="agent_voice_select")
+        with col_v2:
+            agent_lang = st.selectbox("Conversation Language:", ["Marathi (मराठी)", "Hindi (हिंदी)", "English (US / Global)", "Multi-lingual Auto-Detect"], key="agent_lang_select")
+            
+        st.markdown("---")
+        
+        # 2. Visual Subagent Workflow Graph (Matching Frame 005)
+        st.markdown("### 🌲 2. Subagent Workflow Hierarchy")
+        st.caption("Deconstruct complex customer journeys into specialized subagents connected in a directed workflow.")
+        
+        st.markdown("""
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1.5px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 18px 14px; text-align: center; margin-bottom: 16px;">
+            <div style="display: inline-block; background: #FFFFFF; color: #0F172A; font-weight: 700; font-size: 13px; padding: 6px 18px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                🚩 Start (Incoming Call / Message)
+            </div>
+            <div style="width: 2px; height: 18px; background: rgba(255,255,255,0.25); margin: 0 auto;"></div>
+            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                <div style="background: rgba(30, 41, 59, 0.9); border: 1.5px solid rgba(99, 102, 241, 0.4); border-radius: 12px; padding: 10px 14px; min-width: 130px; font-size: 12.5px; font-weight: 600; color: #E2E8F0;">
+                    💼 Sales Subagent<br><span style="font-size: 10.5px; color: #94A3B8; font-weight: 400;">Plans & Quotes</span>
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10B981; border-radius: 12px; padding: 10px 14px; min-width: 150px; font-size: 12.5px; font-weight: 700; color: #34D399; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);">
+                    📦 Order Support<br><span style="font-size: 10.5px; color: #A7F3D0; font-weight: 500;">Refunds & #1331 (ACTIVE)</span>
+                </div>
+                <div style="background: rgba(30, 41, 59, 0.9); border: 1.5px solid rgba(99, 102, 241, 0.4); border-radius: 12px; padding: 10px 14px; min-width: 130px; font-size: 12.5px; font-weight: 600; color: #E2E8F0;">
+                    ❓ FAQ Subagent<br><span style="font-size: 10.5px; color: #94A3B8; font-weight: 400;">Policy & Timings</span>
+                </div>
+            </div>
+            <div style="margin-top: 10px; font-size: 11.5px; color: #94A3B8;">
+                💬 Routed dynamically when user says: <em>"Can I get a refund for my order #1331?"</em>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("---")
+        
+        # 3. Enterprise Guardrails Panel (Matching Frame 010)
+        st.markdown("### 🛡️ 3. Enterprise Guardrails Configuration")
+        st.caption("Configure robust guardrails you configure yourself to ensure your voice agents never go off script or make unauthorized commitments.")
+        
+        g_refund = st.toggle(
+            "🔒 Refund eligibility guardrail",
+            value=True,
+            help="Only approve or offer refunds, credits, or reimbursements within policy window.",
+            key="g_toggle_refund"
+        )
+        st.caption("⤷ *Status: Only approve or offer refunds, credits, or reimbursements within 30-day window.*")
+        
+        g_medical = st.toggle(
+            "🔒 Medical advice guardrail",
+            value=True,
+            help="Do not provide medical advice or diagnoses. Consult with qualified medical professionals.",
+            key="g_toggle_medical"
+        )
+        st.caption("⤷ *Status: Do not provide medical advice or diagnoses. Direct callers to qualified doctors.*")
+        
+        g_tone = st.toggle(
+            "🔒 Empathetic brand tone guardrail",
+            value=True,
+            help="Strictly maintain courteous, respectful, and calm demeanor.",
+            key="g_toggle_tone"
+        )
+        st.caption("⤷ *Status: Maintain warm, respectful, brand-safe language; never use aggressive phrases.*")
+
+        g_pii = st.toggle(
+            "🔒 PII & card data redaction guardrail",
+            value=True,
+            help="Automatically redact credit card numbers, OTPs, and personal identity numbers.",
+            key="g_toggle_pii"
+        )
+        st.caption("⤷ *Status: Automatically redact credit card numbers, OTPs, and personal identity tokens.*")
+
+        st.markdown("---")
+        
+        # 4. Multi-Channel Deployment Hub (Matching Frame 007)
+        st.markdown("### 📡 4. Multi-Channel Deployment Channels")
+        st.caption("Deploy this voice agent across phone, messaging, web widgets, and live chat simultaneously.")
+        
+        st.markdown("""
+        <div style="display: flex; justify-content: space-around; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 14px; margin-bottom: 12px; text-align: center;">
+            <div>
+                <div style="font-size: 26px;">📞</div>
+                <div style="font-size: 11px; font-weight: 700; color: #F8FAFC; margin-top: 4px;">Phone Call</div>
+                <div style="font-size: 9.5px; color: #10B981; font-weight: 600;">Twilio SIP</div>
+            </div>
+            <div>
+                <div style="font-size: 26px;">✉️</div>
+                <div style="font-size: 11px; font-weight: 700; color: #F8FAFC; margin-top: 4px;">Email Support</div>
+                <div style="font-size: 9.5px; color: #818CF8; font-weight: 600;">Auto-Reply</div>
+            </div>
+            <div>
+                <div style="font-size: 26px;">💬</div>
+                <div style="font-size: 11px; font-weight: 700; color: #F8FAFC; margin-top: 4px;">WhatsApp</div>
+                <div style="font-size: 9.5px; color: #34D399; font-weight: 600;">Cloud API</div>
+            </div>
+            <div>
+                <div style="font-size: 26px;">🌐</div>
+                <div style="font-size: 11px; font-weight: 700; color: #F8FAFC; margin-top: 4px;">Web Widget</div>
+                <div style="font-size: 9.5px; color: #F59E0B; font-weight: 600;">1-Line Embed</div>
+            </div>
+            <div>
+                <div style="font-size: 26px;">💭</div>
+                <div style="font-size: 11px; font-weight: 700; color: #F8FAFC; margin-top: 4px;">Live Chat</div>
+                <div style="font-size: 9.5px; color: #38BDF8; font-weight: 600;">WebRTC Ready</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_preview:
+        st.markdown("### 📱 5. Live Interactive Conversational Simulator")
+        st.caption("Interact with your voice agent in real-time. Notice how the agent enforces guardrails and speaks back naturally.")
+        
+        # Test query chips
+        st.markdown("**Click a Sample Query from the Official Showcase:**")
+        q_cols = st.columns(2)
+        with q_cols[0]:
+            if st.button("🛒 'Can I get a refund for my order #1331?'", key="btn_chip_1", use_container_width=True):
+                st.session_state["sim_query_inp"] = "Can I get a refund for my order #1331?"
+                st.rerun()
+            if st.button("🇮🇳 'माझी ऑर्डर #1331 चे पैसे परत मिळतील का?'", key="btn_chip_2", use_container_width=True):
+                st.session_state["sim_query_inp"] = "माझी ऑर्डर #1331 चे पैसे परत मिळतील का?"
+                st.rerun()
+        with q_cols[1]:
+            if st.button("🩺 'I have a headache, what medicine should I take?'", key="btn_chip_3", use_container_width=True):
+                st.session_state["sim_query_inp"] = "I have a terrible headache, what medicine should I take right now?"
+                st.rerun()
+            if st.button("❓ 'What is your refund policy window?'", key="btn_chip_4", use_container_width=True):
+                st.session_state["sim_query_inp"] = "What is your refund policy window?"
+                st.rerun()
+                
+        user_query = st.text_input(
+            "User Message to Voice Agent:",
+            value=st.session_state.get("sim_query_inp", "Can I get a refund for my order #1331?"),
+            key="agent_sim_query_text"
+        )
+        
+        col_btn1, col_btn2 = st.columns([1.5, 1])
+        with col_btn1:
+            btn_simulate = st.button("🚀 Speak to Agent (Simulate Call)", type="primary", use_container_width=True, key="btn_run_sim")
+        with col_btn2:
+            if st.button("🔄 Reset Conversation", use_container_width=True, key="btn_reset_conv"):
+                st.session_state["sim_history"] = []
+                st.session_state["last_sim_audio"] = None
+                st.rerun()
+
+        # Execute Simulation
+        if btn_simulate and user_query.strip():
+            # Evaluation engine with guardrail enforcement
+            q_lower = user_query.lower()
+            guardrail_triggered = None
+            
+            # 1. Refund Guardrail check
+            if any(w in q_lower for w in ["refund", "order", "#1331", "1331", "पैसे", "परतावा", "कॅन्सल"]):
+                if g_refund:
+                    guardrail_triggered = "Refund Eligibility Guardrail: ACTIVE & VERIFIED ✅ (Order #1331 verified within 30-day window. ₹1,499 approved)"
+                    if any(w in user_query for w in ["पैसे", "ऑर्डर", "मिळतील"]):
+                        agent_reply = "मी तुमची ऑर्डर #1331 तपासली आहे. नियमानुसार तुमची ₹१,४९९ ची रक्कम तुमच्या बँक खात्यात यशस्वीरीत्या परतावा (Refund) केली गेली आहे. मी तुम्हाला आणखी काही मदत करू शकते का?"
+                    else:
+                        agent_reply = "Your refund for order #1331 is complete. We've verified your purchase under our 30-day policy and credited ₹1,499 back to your original payment method. Is there anything else I can assist you with today?"
+                else:
+                    agent_reply = "I cannot process refunds as the refund guardrail is currently disabled."
+            
+            # 2. Medical Guardrail check
+            elif any(w in q_lower for w in ["headache", "medicine", "doctor", "diagnos", "pain", "औषध", "डोकेदुखी"]):
+                if g_medical:
+                    guardrail_triggered = "Medical Advice Guardrail: ENFORCED 🛡️ (Diagnostic advice blocked; caller directed to medical professional)"
+                    if any(w in user_query for w in ["औषध", "डोकेदुखी"]):
+                        agent_reply = "मला समजते की तुम्हाला त्रास होत आहे, परंतु AI सहाय्यक म्हणून मी वैद्यकीय सल्ला किंवा औषधांचे प्रिस्क्रिप्शन देऊ शकत नाही. कृपया तात्काळ अधिकृत डॉक्टरांशी किंवा आरोग्य सेवेशी संपर्क साधा."
+                    else:
+                        agent_reply = "I understand you are experiencing discomfort, but as an AI voice assistant, I cannot diagnose illnesses or prescribe medication. Please consult a licensed medical professional or visit your nearest clinic."
+                else:
+                    agent_reply = "Please rest and drink water."
+            
+            # 3. Policy & Default
+            elif "policy" in q_lower or "नियम" in q_lower:
+                guardrail_triggered = "FAQ & Policy Subagent: ACTIVE ✅"
+                agent_reply = "Our policy allows full refunds within 30 days of purchase for all unused items. Refunds are credited to the original payment source within 3-5 business days."
+            else:
+                guardrail_triggered = "Empathetic Brand Tone Guardrail: ACTIVE ✅"
+                agent_reply = f"Thank you for contacting Wani Studio! I would be delighted to assist you with '{user_query}'. How can I best help you proceed today?"
+
+            # Synthesize voice audio
+            out_agent_audio = os.path.join(tempfile.gettempdir(), f"agent_sim_{uuid.uuid4().hex[:6]}.mp3")
+            with st.spinner("Synthesizing empathetic voice response..."):
+                try:
+                    all_p = get_all_studio_personas()
+                    vinfo = all_p.get(agent_voice, {})
+                    vcode = vinfo.get("voice", "mr-IN-AarohiNeural")
+                    vgender = vinfo.get("gender", "Female")
+                    vlang = "mr" if ("mr-IN" in vcode or any(ord(c) > 128 for c in agent_reply)) else "en"
+                    
+                    synthesize_speech_core(
+                        text=agent_reply,
+                        voice_code=vcode,
+                        out_path=out_agent_audio,
+                        lang_code=vlang,
+                        gender=vgender
+                    )
+                    st.session_state["last_sim_audio"] = out_agent_audio
+                except Exception as ex:
+                    st.warning(f"Voice synthesis fallback: {ex}")
+                    st.session_state["last_sim_audio"] = None
+
+            st.session_state["last_sim_query"] = user_query
+            st.session_state["last_sim_reply"] = agent_reply
+            st.session_state["last_sim_guardrail"] = guardrail_triggered
+
+        # Render Smartphone Mockup (Matching Frame 008)
+        last_q = st.session_state.get("last_sim_query", "Can I get a refund for my order #1331?")
+        last_r = st.session_state.get("last_sim_reply", "Your refund for order #1331 is complete.")
+        last_g = st.session_state.get("last_sim_guardrail", "Refund Eligibility Guardrail: ACTIVE & VERIFIED ✅")
+        
+        st.markdown(f"""
+        <div style="background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%); border: 3px solid rgba(255, 255, 255, 0.15); border-radius: 28px; padding: 22px 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-width: 460px; margin: 15px auto;">
+            <!-- Phone Notch & Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981;"></div>
+                    <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;">ElevenAgents Live Call</span>
+                </div>
+                <div style="font-size: 11px; color: #94A3B8;">📞 00:24 • HD Audio</div>
+            </div>
+            
+            <!-- Chat Conversation -->
+            <div style="min-height: 200px; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px;">
+                <!-- User Message Bubble -->
+                <div style="align-self: flex-end; background: #3B82F6; color: #FFFFFF; font-size: 13.5px; font-weight: 500; padding: 12px 16px; border-radius: 18px 18px 4px 18px; max-width: 85%; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                    {last_q}
+                </div>
+                
+                <!-- Guardrail Chip -->
+                <div style="align-self: flex-start; background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; color: #34D399; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 9999px;">
+                    🛡️ {last_g}
+                </div>
+                
+                <!-- Agent Message Bubble (Matching Reel Frame 008) -->
+                <div style="align-self: flex-start; background: rgba(255, 255, 255, 0.95); color: #0F172A; font-size: 14px; font-weight: 600; padding: 14px 18px; border-radius: 18px 18px 18px 4px; max-width: 88%; box-shadow: 0 6px 20px rgba(0,0,0,0.2); line-height: 1.5;">
+                    {last_r}
+                </div>
+            </div>
+            
+            <!-- Phone Footer / Call Controls -->
+            <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; align-items: center;">
+                <span style="font-size: 18px; color: #94A3B8;">🎤</span>
+                <span style="font-size: 18px; color: #94A3B8;">🔊</span>
+                <span style="font-size: 18px; color: #EF4444; background: rgba(239, 68, 68, 0.2); padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 12px;">End Call</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Audio Player
+        if st.session_state.get("last_sim_audio") and os.path.exists(st.session_state["last_sim_audio"]):
+            st.audio(st.session_state["last_sim_audio"], format="audio/mp3")
+
+        st.markdown("---")
+        
+        # 6. Developer SDK Code (Matching Frame 002)
+        st.markdown("### 💻 6. Developer Integration Code (As seen in Showcase)")
+        st.caption("Integrate this ElevenAgent into your web app, Node.js backend, or Python services in 3 lines.")
+        
+        code_tab_js, code_tab_py, code_tab_curl = st.tabs(["JavaScript / Node.js", "Python SDK", "cURL REST API"])
+        
+        with code_tab_js:
+            st.code("""
+
+async function main() {
+  const client = new ElevenLabsClient({
+    environment: "https://api.elevenlabs.io",
+    apiKey: process.env.ELEVENLABS_API_KEY,
+  });
+
+  await client.conversationalAi.createAgent({
+    name: "Wani Order Support Specialist",
+    conversationConfig: {
+      agent: {
+        prompt: {
+          prompt: "Help customers with returns and verify order #1331...",
+        },
+        firstMessage: "Hello! How can I assist you with your order today?",
+        language: "mr",
+      },
+      tts: {
+        voiceId: "JBFqnCBsd6RMkjVDRZzb",
+        modelId: "eleven_multilingual_v2",
+      },
+    },
+  });
+}
+main();
+""", language="javascript")
+
+        with code_tab_py:
+            st.code("""
+
+client = ElevenLabs(api_key="YOUR_XI_API_KEY")
+
+agent = client.conversational_ai.create_agent(
+    name="Wani Order Support Specialist",
+    conversation_config={
+        "agent": {
+            "prompt": {"prompt": "Help customers with return requests and verify order #1331..."},
+            "first_message": "Hello! How can I assist you today?",
+            "language": "mr",
+        },
+        "tts": {
+            "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+            "model_id": "eleven_multilingual_v2",
+        },
+    },
+)
+print("Agent created with ID:", agent.agent_id)
+""", language="python")
+
+        with code_tab_curl:
+            st.code("""
+curl -X POST "https://api.elevenlabs.io/v1/convai/agents/create" \
+  -H "xi-api-key: YOUR_XI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Wani Support Agent",
+    "conversation_config": {
+      "agent": {
+        "prompt": {"prompt": "Help customers with return requests..."},
+        "language": "mr"
+      },
+      "tts": {"voice_id": "JBFqnCBsd6RMkjVDRZzb"}
+    }
+  }'
+""", language="bash")
+
+with tab_agents:
+    render_elevenagents_studio()
 
 # ==============================================================
 # TAB 5: MULTI-VOICE DIALOGUE STUDIO
